@@ -1,10 +1,12 @@
 {
   "name": "claudemd",
   "description": "Skills based on official Claude Code documentation and related open standards. Each skill covers one topic with word-for-word documentation and source references.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Hlib Koval"
   },
+  "repository": "https://github.com/hlibkoval/claudemd",
+  "homepage": "https://github.com/hlibkoval/claudemd",
   "license": "MIT",
   "keywords": ["claude-code", "documentation", "reference", "skills", "agents", "hooks", "plugins"]
 }

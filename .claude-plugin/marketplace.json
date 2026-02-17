@@ -1,0 +1,16 @@
+{
+  "name": "claudemd",
+  "owner": {
+    "name": "Hlib Koval",
+    "url": "https://github.com/hlibkoval"
+  },
+  "description": "Official Claude Code documentation packaged as Agent Skills",
+  "plugins": [
+    {
+      "name": "claudemd",
+      "description": "Claude Code documentation as skills — covers skills, hooks, plugins, MCP, sub-agents, settings, CLI, IDE integrations, and more",
+      "version": "0.2.0",
+      "source": ".."
+    }
+  ]
+}
