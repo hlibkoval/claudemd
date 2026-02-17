@@ -1,6 +1,6 @@
 # claudemd
 
-Official Claude Code documentation packaged as a plugin. Gives Claude instant access to up-to-date reference docs for skills, hooks, plugins, MCP, sub-agents, settings, CLI, IDE integrations, and more — without web searches or hallucinated APIs.
+[Official Claude Code documentation](https://code.claude.com/docs) packaged as a plugin. Gives Claude instant access to up-to-date reference docs for skills, hooks, plugins, MCP, sub-agents, settings, CLI, IDE integrations, and more — without web searches or hallucinated APIs.
 
 ## What's included
 
@@ -27,7 +27,7 @@ Official Claude Code documentation packaged as a plugin. Gives Claude instant ac
 | `security` | Sandboxing, devcontainers, network config, data policies |
 | `cloud-providers` | Bedrock, Vertex AI, Foundry, LLM gateways |
 
-Each skill includes a concise `SKILL.md` summary and `references/` with 57 word-for-word copies of the official docs.
+Each skill includes a concise `SKILL.md` summary and `references/` with 57 word-for-word copies of the official docs, sourced from [code.claude.com/docs](https://code.claude.com/docs).
 
 ## Installation
 
