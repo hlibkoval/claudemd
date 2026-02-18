@@ -58,21 +58,23 @@ for skill in $(jq -r '.skills | keys[]' "$SKILL_MAP"); do
   done
 done
 
-# Build expected set for fast lookup
-declare -A expected_set
+# Build expected set as newline-separated string for grep lookup
+expected_set=""
 for f in "${expected_files[@]}"; do
-  expected_set["$f"]=1
+  expected_set="$expected_set
+$f"
 done
 
 # Find and delete orphans
-while IFS= read -r -d '' actual_file; do
+while IFS= read -r actual_file; do
+  [[ -z "$actual_file" ]] && continue
   rel_path="${actual_file#"$PROJECT_ROOT"/}"
-  if [[ -z "${expected_set["$rel_path"]+_}" ]]; then
+  if ! echo "$expected_set" | grep -qxF "$rel_path"; then
     rm "$actual_file"
     echo "DELETED orphan: $rel_path"
-    ((deleted++))
+    ((deleted++)) || true
   fi
-done < <(find "$BASE_DIR" -path '*/references/*.md' -type f -print0)
+done < <(find "$BASE_DIR" -path '*/references/*.md' -type f)
 
 # Remove empty skill directories (only if they have an empty references/ and no SKILL.md)
 for dir in "$BASE_DIR"/*/; do

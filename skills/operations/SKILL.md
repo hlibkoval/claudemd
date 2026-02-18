@@ -1,6 +1,6 @@
 ---
 name: operations
-description: Reference documentation for Claude Code operations — cost management, OpenTelemetry monitoring, analytics dashboards, and troubleshooting. Use when tracking costs, setting rate limits, configuring telemetry, viewing team analytics, diagnosing installation issues, or optimizing token usage.
+description: Reference documentation for Claude Code operations — analytics dashboards, cost tracking and spend limits, OpenTelemetry monitoring, troubleshooting common issues, and the version changelog. Use when tracking team usage, managing token costs, configuring observability metrics and events, debugging installation or runtime problems, or reviewing what changed in a recent Claude Code release.
 user-invocable: false
 ---
 
@@ -163,6 +163,7 @@ For the complete official documentation, see the reference files:
 - [Monitoring](references/claude-code-monitoring-usage.md) -- OpenTelemetry setup, metrics, events, backend considerations
 - [Analytics](references/claude-code-analytics.md) -- dashboards, contribution metrics, GitHub integration, ROI measurement
 - [Troubleshooting](references/claude-code-troubleshooting.md) -- installation, permissions, performance, IDE integration
+- [Changelog](references/claude-code-changelog.md) -- version history and release notes for Claude Code
 
 ## Sources
 
@@ -170,3 +171,4 @@ For the complete official documentation, see the reference files:
 - Monitoring: https://code.claude.com/docs/en/monitoring-usage.md
 - Analytics: https://code.claude.com/docs/en/analytics.md
 - Troubleshooting: https://code.claude.com/docs/en/troubleshooting.md
+- Changelog: https://code.claude.com/docs/en/changelog.md

@@ -26,8 +26,8 @@ All providers disable `/login` and `/logout` since authentication is handled by 
 
 | Provider         | Primary model                                      | Small/fast model                            |
 |:-----------------|:---------------------------------------------------|:--------------------------------------------|
-| Bedrock          | `global.anthropic.claude-sonnet-4-5-20250929-v1:0` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
-| Vertex AI        | `claude-sonnet-4-5@20250929`                       | `claude-haiku-4-5@20251001`                 |
+| Bedrock          | `global.anthropic.claude-sonnet-4-6`               | `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
+| Vertex AI        | `claude-sonnet-4-6`                                | `claude-haiku-4-5@20251001`                 |
 | Foundry          | Set via `ANTHROPIC_DEFAULT_SONNET_MODEL`            | Set via `ANTHROPIC_DEFAULT_HAIKU_MODEL`     |
 
 Override with `ANTHROPIC_MODEL` and `ANTHROPIC_SMALL_FAST_MODEL`. For Foundry, set deployment names via `ANTHROPIC_DEFAULT_SONNET_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL`, `ANTHROPIC_DEFAULT_OPUS_MODEL`.

@@ -1,5 +1,5 @@
 ---
-name: CLI & Interactive Mode
+name: cli
 description: Reference for Claude Code CLI flags, built-in commands, keyboard shortcuts, keybindings, terminal configuration, vim mode, and interactive features. Use when invoking Claude from the command line, customizing shortcuts, configuring terminal behavior, or using interactive session features.
 user-invocable: false
 ---

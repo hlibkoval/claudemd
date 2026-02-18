@@ -81,7 +81,8 @@
       {"url": "https://code.claude.com/docs/en/analytics.md", "file": "claude-code-analytics.md"},
       {"url": "https://code.claude.com/docs/en/costs.md", "file": "claude-code-costs.md"},
       {"url": "https://code.claude.com/docs/en/monitoring-usage.md", "file": "claude-code-monitoring-usage.md"},
-      {"url": "https://code.claude.com/docs/en/troubleshooting.md", "file": "claude-code-troubleshooting.md"}
+      {"url": "https://code.claude.com/docs/en/troubleshooting.md", "file": "claude-code-troubleshooting.md"},
+      {"url": "https://code.claude.com/docs/en/changelog.md", "file": "claude-code-changelog.md"}
     ],
     "features": [
       {"url": "https://code.claude.com/docs/en/fast-mode.md", "file": "claude-code-fast-mode.md"},
