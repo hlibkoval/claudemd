@@ -43,7 +43,7 @@ Skills extend what Claude can do. Create a `SKILL.md` file with instructions, an
 | `$ARGUMENTS`           | All arguments passed when invoking the skill        |
 | `$ARGUMENTS[N]` / `$N`| Specific argument by 0-based index                  |
 | `${CLAUDE_SESSION_ID}` | Current session ID                                  |
-| `` !`command` ``       | Dynamic context injection (shell command output)    |
+| `!` + `` `command` ``  | Dynamic context injection (shell command output)    |
 
 ### Invocation Control
 

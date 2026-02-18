@@ -92,3 +92,4 @@ For the complete official documentation, see the reference files:
 4. Include source URLs for every referenced document.
 5. Extract the original URL from each reference file's first lines (look for `> Source:` or the `> Fetch the complete documentation index at:` pattern, or reconstruct from the filename).
 6. Read the skill-map at `.claude/skills/crawl/skill-map.json` to get the exact source URLs for this skill's docs.
+7. **NEVER write `!` immediately followed by a backtick.** Claude Code's permission system interprets this as a bash command pattern and blocks the skill from loading. Always separate them — write `!` + (backtick)command(backtick) as two separate code spans.
