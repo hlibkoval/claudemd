@@ -1,7 +1,6 @@
 ---
 name: generate-skill-md
 description: Generate a SKILL.md file for a claudemd plugin skill from its reference docs.
-disable-model-invocation: true
 context: fork
 agent: general-purpose
 allowed-tools: Read, Write, Glob, Grep, Bash, Skill
