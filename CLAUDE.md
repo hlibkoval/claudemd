@@ -27,7 +27,7 @@ skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-ed
 
 ## Versioning
 
-**IMPORTANT:** Uses **calendar versioning** in `YYYY.MM.DD` format (e.g., `2026.02.19`). The version MUST be set in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — always keep them in sync. Bump the version on each release to the current date.
+**IMPORTANT:** Uses **calendar versioning** in `YY.M.D` format (e.g., `26.2.19`). The version MUST be set in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — always keep them in sync. Bump the version on each release to the current date.
 
 ## Maintenance Workflow
 

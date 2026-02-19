@@ -1,7 +1,7 @@
 {
   "name": "claudemd",
   "description": "Skills based on official Claude Code documentation and related open standards. Each skill covers one topic with word-for-word documentation and source references.",
-  "version": "2026.02.19",
+  "version": "26.2.19",
   "author": {
     "name": "Hlib Koval"
   },
