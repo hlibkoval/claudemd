@@ -25,6 +25,10 @@ skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-ed
 - **All plugin skills use `user-invocable: false`** — they're background knowledge Claude loads automatically, not user commands.
 - **skill-map.json is the canonical mapping** of which doc URLs belong to which skill. Adding a new skill means adding an entry here.
 
+## Versioning
+
+**IMPORTANT:** Uses **calendar versioning** in `YYYY.MM.DD` format (e.g., `2026.02.19`). The version MUST be set in both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — always keep them in sync. Bump the version on each release to the current date.
+
 ## Maintenance Workflow
 
 Run `/crawl` to update all docs. It:
