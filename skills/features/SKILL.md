@@ -1,129 +1,105 @@
 ---
 name: features
-description: Reference documentation for Claude Code features including the extension overview (CLAUDE.md, Skills, MCP, Subagents, Agent Teams, Hooks, Plugins), model configuration and aliases, fast mode, output styles, checkpointing, and the status line. Use when asking about model selection, opusplan, effort levels, rewinding sessions, output style customization, or the status bar.
+description: Reference documentation for Claude Code features — model configuration (aliases, effort levels, extended context, opusplan), fast mode (2.5x speed toggle), output styles (custom system prompts), status line customization, checkpointing (rewind/restore/summarize), and the extensibility overview (CLAUDE.md, skills, MCP, hooks, subagents, plugins comparison).
 user-invocable: false
 ---
 
 # Features Documentation
 
-This skill provides the complete official documentation for Claude Code's core features and configuration options.
+This skill provides the complete official documentation for Claude Code features including model configuration, fast mode, output styles, status line customization, checkpointing, and the extensibility features overview.
 
 ## Quick Reference
 
-### Extension Overview
+### Model Configuration
 
-| Feature        | What it does                                          | Context cost              | Best for                                      |
-|:---------------|:------------------------------------------------------|:--------------------------|:----------------------------------------------|
-| **CLAUDE.md**  | Persistent context loaded every session               | Full content, every req   | "Always do X" rules, project conventions      |
-| **Skills**     | Reusable knowledge and invocable workflows            | Low (descriptions at start) | Reference docs, repeatable tasks (`/deploy`) |
-| **Subagents**  | Isolated workers returning summarized results         | Isolated from main        | Context isolation, parallel focused tasks     |
-| **Agent teams**| Multiple independent sessions coordinating            | Each is a full instance   | Complex parallel work, competing hypotheses   |
-| **MCP**        | Connect Claude to external services                   | Tool defs, every req      | Database queries, Slack, browser control      |
-| **Hooks**      | Deterministic scripts on lifecycle events             | Zero                      | ESLint on edit, logging, side effects         |
-| **Plugins**    | Bundle and distribute the above                       | —                         | Reuse setup across repos, share with others   |
+#### Model Aliases
 
-### Feature Layering Priority
+| Alias        | Behavior                                                                 |
+|:-------------|:-------------------------------------------------------------------------|
+| `default`    | Recommended model for your account type                                  |
+| `sonnet`     | Latest Sonnet (currently Sonnet 4.6)                                     |
+| `opus`       | Latest Opus (currently Opus 4.6)                                         |
+| `haiku`      | Fast and efficient Haiku for simple tasks                                |
+| `sonnet[1m]` | Sonnet with 1M token context window                                      |
+| `opusplan`   | Opus for planning, Sonnet for execution                                  |
 
-- **CLAUDE.md**: additive — all levels contribute simultaneously
-- **Skills**: override by name — managed > user > project
-- **Subagents**: managed > CLI flag > project > user > plugin
-- **MCP**: local > project > user
-- **Hooks**: merge — all registered hooks fire
+Pin to a specific version with full model name (e.g., `claude-opus-4-6`) or environment variables.
 
-### Model Aliases
+#### Setting the Model
 
-| Alias         | Behavior                                                        |
-|:--------------|:----------------------------------------------------------------|
-| `default`     | Recommended model for your account type                         |
-| `sonnet`      | Latest Sonnet (currently 4.6) for daily coding tasks            |
-| `opus`        | Latest Opus (currently 4.6) for complex reasoning               |
-| `haiku`       | Fast and efficient for simple tasks                             |
-| `sonnet[1m]`  | Sonnet with 1M token context window                             |
-| `opusplan`    | Opus during plan mode, switches to Sonnet for execution         |
+1. **In session:** `/model <alias|name>`
+2. **At startup:** `claude --model <alias|name>`
+3. **Environment variable:** `ANTHROPIC_MODEL=<alias|name>`
+4. **Settings file:** `"model": "opus"`
 
-### Setting the Model
+#### Effort Levels
 
-```bash
-# At startup
-claude --model opus
+Three levels: **low**, **medium**, **high** (default). Set via `/model` slider, `CLAUDE_CODE_EFFORT_LEVEL` env var, or `effortLevel` in settings. Supported on Opus 4.6.
 
-# During session
-/model sonnet
-```
+#### Model Environment Variables
 
-Or via settings: `{ "model": "opus" }`, or env var `ANTHROPIC_MODEL=<alias|name>`.
+| Variable                         | Controls                                    |
+|:---------------------------------|:--------------------------------------------|
+| `ANTHROPIC_DEFAULT_OPUS_MODEL`   | Model for `opus` / `opusplan` plan mode     |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | Model for `sonnet` / `opusplan` exec mode   |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL`  | Model for `haiku` / background tasks        |
+| `CLAUDE_CODE_SUBAGENT_MODEL`     | Model for subagents                         |
 
-### Default Model by Account Type
+#### Default Model by Account Type
 
-| User type                        | Default model  |
-|:---------------------------------|:---------------|
-| Max, Team Premium, or Pro        | Opus 4.6       |
-| Pay-as-you-go (API)              | Sonnet 4.5     |
-
-### Effort Levels (Opus 4.6 only)
-
-Controls adaptive reasoning depth: `low`, `medium`, `high` (default).
-
-- In `/model`: use left/right arrow keys on the effort slider
-- Env var: `CLAUDE_CODE_EFFORT_LEVEL=low|medium|high`
-- Settings: `effortLevel` field
+| Account type          | Default model |
+|:----------------------|:--------------|
+| Max, Team, Pro        | Opus 4.6      |
+| Pay-as-you-go (API)   | Sonnet 4.5    |
 
 ### Fast Mode
 
-2.5x faster Opus 4.6 at higher cost. Not a different model — same quality, lower latency.
+Toggle with `/fast`. Same Opus 4.6 model, 2.5x faster, higher cost. Persists across sessions.
 
-| Mode                        | Input (MTok) | Output (MTok) |
-|:----------------------------|:-------------|:--------------|
-| Fast mode Opus 4.6 (<200K)  | $30          | $150          |
-| Fast mode Opus 4.6 (>200K)  | $60          | $225          |
+| Mode                            | Input (MTok) | Output (MTok) |
+|:--------------------------------|:-------------|:--------------|
+| Fast mode Opus 4.6 (<200K)      | $30          | $150          |
+| Fast mode Opus 4.6 (>200K)      | $60          | $225          |
 
-Toggle: `/fast` or `"fastMode": true` in settings. Persists across sessions. Requires extra usage enabled. Not available on Bedrock, Vertex, or Azure.
-
-Combine fast mode + low effort for maximum speed on straightforward tasks.
-
-### Checkpointing
-
-Every user prompt creates a checkpoint automatically. Checkpoints persist for 30 days.
-
-Open rewind menu: press `Esc` twice or run `/rewind`. Options:
-
-| Action                     | Effect                                                  |
-|:---------------------------|:--------------------------------------------------------|
-| Restore code and conversation | Revert both to the selected point                    |
-| Restore conversation       | Rewind messages, keep current code                      |
-| Restore code               | Revert file changes, keep conversation                  |
-| Summarize from here        | Compress messages from this point forward (frees context)|
-
-Note: checkpointing only tracks files edited via Claude's file tools. Bash command side-effects (rm, mv, cp) are not tracked.
+- Requires extra usage enabled; billed directly to extra usage
+- Rate limit fallback: auto-falls back to standard speed, `fast-mode` icon turns gray
+- Teams/Enterprise: admin must enable fast mode first
 
 ### Output Styles
 
-Modify Claude's system prompt to change its behavior and tone.
+Change with `/output-style` or `/output-style [style]`. Saved in `.claude/settings.local.json`.
 
-| Style           | Behavior                                                    |
-|:----------------|:------------------------------------------------------------|
-| `default`       | Standard software engineering mode                          |
-| `explanatory`   | Adds "Insights" explaining implementation choices           |
-| `learning`      | Interactive mode with `TODO(human)` markers for you to fill |
+| Built-in Style  | Purpose                                                        |
+|:----------------|:---------------------------------------------------------------|
+| **Default**     | Standard software engineering system prompt                    |
+| **Explanatory** | Adds educational "Insights" while coding                       |
+| **Learning**    | Collaborative learn-by-doing, adds `TODO(human)` markers      |
 
-Switch: `/output-style [style]` or edit `outputStyle` in settings.
+Custom output styles are Markdown files with frontmatter, saved in `~/.claude/output-styles` (user) or `.claude/output-styles` (project).
 
-Custom styles are Markdown files in `~/.claude/output-styles` or `.claude/output-styles` with frontmatter:
+| Frontmatter                | Purpose                                          | Default   |
+|:---------------------------|:-------------------------------------------------|:----------|
+| `name`                     | Display name                                     | File name |
+| `description`              | Shown in `/output-style` UI                      | None      |
+| `keep-coding-instructions` | Keep coding parts of default system prompt       | false     |
 
-```markdown
----
-name: My Style
-description: What it does
-keep-coding-instructions: false
----
-Your custom instructions here.
-```
+### Checkpointing
+
+Every user prompt creates a checkpoint. Press `Esc` twice or use `/rewind` to open the rewind menu.
+
+| Action                          | Effect                                              |
+|:--------------------------------|:----------------------------------------------------|
+| Restore code and conversation   | Revert both to that point                           |
+| Restore conversation            | Rewind messages, keep current code                  |
+| Restore code                    | Revert files, keep conversation                     |
+| Summarize from here             | Compress subsequent messages into a summary         |
+
+Limitations: bash command changes and external edits are not tracked. Not a replacement for Git.
 
 ### Status Line
 
-A customizable bar at the bottom of Claude Code powered by a shell script.
+Customizable bar at the bottom of Claude Code. Runs a shell script receiving JSON session data on stdin.
 
-Configure in settings:
 ```json
 {
   "statusLine": {
@@ -134,20 +110,29 @@ Configure in settings:
 }
 ```
 
-Generate a script automatically: `/statusline show model name and context percentage with a progress bar`
+Use `/statusline <description>` to auto-generate a script, or manually create one. Key available JSON fields: `model.display_name`, `context_window.used_percentage`, `cost.total_cost_usd`, `cost.total_duration_ms`, `workspace.current_dir`, `session_id`, `vim.mode`.
 
-The script receives JSON session data on stdin (context usage, cost, model, git info, etc.).
+### Extensibility Overview
+
+| Feature         | What it does                              | When to use                              |
+|:----------------|:------------------------------------------|:-----------------------------------------|
+| **CLAUDE.md**   | Persistent context every session          | Project conventions, "always do X" rules |
+| **Skill**       | On-demand knowledge and workflows         | Reusable content, reference docs, tasks  |
+| **Subagent**    | Isolated execution, returns summaries     | Context isolation, parallel tasks        |
+| **Agent teams** | Multiple independent sessions coordinated | Parallel research, competing hypotheses  |
+| **MCP**         | Connect to external services              | External data or actions                 |
+| **Hook**        | Deterministic script on events            | Predictable automation, no LLM involved  |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Features Overview](references/claude-code-features-overview.md) — when to use CLAUDE.md vs Skills vs MCP vs Subagents vs Agent Teams vs Hooks, context costs, layering
-- [Model Configuration](references/claude-code-model-config.md) — model aliases, opusplan, effort levels, availableModels, extended context
-- [Fast Mode](references/claude-code-fast-mode.md) — toggling fast mode, cost tradeoff, rate limit behavior, org admin setup
-- [Output Styles](references/claude-code-output-styles.md) — built-in styles, custom styles, frontmatter, comparison with CLAUDE.md and agents
-- [Checkpointing](references/claude-code-checkpointing.md) — automatic tracking, rewind menu, summarize, limitations
-- [Status Line](references/claude-code-statusline.md) — setup, available data fields, examples
+- [Features Overview](references/claude-code-features-overview.md) -- extensibility comparison (CLAUDE.md, skills, MCP, subagents, hooks, plugins), context costs, and how features layer
+- [Model Configuration](references/claude-code-model-config.md) -- model aliases, effort levels, extended context, opusplan, environment variables, prompt caching
+- [Fast Mode](references/claude-code-fast-mode.md) -- toggling fast mode, cost tradeoffs, requirements, rate limit behavior
+- [Output Styles](references/claude-code-output-styles.md) -- built-in styles, custom output style creation, frontmatter options
+- [Status Line](references/claude-code-statusline.md) -- setup, available JSON data, script examples (progress bars, git status, cost tracking, clickable links, caching)
+- [Checkpointing](references/claude-code-checkpointing.md) -- automatic tracking, rewind menu, restore vs summarize, limitations
 
 ## Sources
 
@@ -155,5 +140,5 @@ For the complete official documentation, see the reference files:
 - Model Configuration: https://code.claude.com/docs/en/model-config.md
 - Fast Mode: https://code.claude.com/docs/en/fast-mode.md
 - Output Styles: https://code.claude.com/docs/en/output-styles.md
-- Checkpointing: https://code.claude.com/docs/en/checkpointing.md
 - Status Line: https://code.claude.com/docs/en/statusline.md
+- Checkpointing: https://code.claude.com/docs/en/checkpointing.md
