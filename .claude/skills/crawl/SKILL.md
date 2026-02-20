@@ -58,7 +58,15 @@ Print a summary table:
 | mcp | 1 file | missing | generate |
 | skills | 0 files | exists | skip |
 
-### 4. Regenerate changed skills
+### 4. Update CHANGELOG.md
+
+Invoke the generate-changelog skill to analyze reference diffs and add an entry:
+
+```
+/generate-changelog
+```
+
+### 5. Regenerate changed skills
 
 For each skill that needs (re)generation:
 
@@ -74,7 +82,7 @@ For each skill that needs (re)generation:
 
 Process skills in parallel.
 
-### 5. Final summary
+### 6. Final summary
 
 After all regenerations complete, run:
 
