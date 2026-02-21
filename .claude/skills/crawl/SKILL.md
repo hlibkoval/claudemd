@@ -1,7 +1,6 @@
 ---
 name: crawl
 description: Crawl Claude Code documentation, download reference pages, detect changes, and regenerate SKILL.md files for the claudemd plugin.
-disable-model-invocation: true
 allowed-tools: Bash, Read, Glob, Grep, Skill
 ---
 
