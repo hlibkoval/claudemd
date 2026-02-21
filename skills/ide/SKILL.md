@@ -1,122 +1,125 @@
 ---
 name: ide
-description: Reference documentation for Claude Code IDE integrations — VS Code extension, JetBrains plugin, Desktop app (Code tab), and Chrome browser automation. Covers installation, keyboard shortcuts, permission modes, diff review, session management, plugin management, SSH/remote sessions, enterprise configuration, and troubleshooting for each surface.
+description: Reference documentation for Claude Code IDE integrations — Desktop app (macOS/Windows), VS Code extension, JetBrains plugin, and Chrome browser extension. Covers installation, permission modes, session management, diff review, app preview, PR monitoring, connectors, plugins, SSH/remote sessions, keyboard shortcuts, extension settings, and troubleshooting.
 user-invocable: false
 ---
 
-# IDE Integration Documentation
+# IDE Integrations Documentation
 
-This skill provides the complete official documentation for using Claude Code in VS Code, JetBrains IDEs, the Desktop app, and Chrome.
+This skill provides the complete official documentation for using Claude Code across Desktop, VS Code, JetBrains IDEs, and Chrome.
 
 ## Quick Reference
 
-### Supported Surfaces
+### Surfaces Overview
 
-| Surface | Install | Key Feature |
-|:--------|:--------|:------------|
-| **VS Code** | Extension from Marketplace | Graphical panel with inline diffs, @-mentions, checkpoints |
-| **JetBrains** | Plugin from JetBrains Marketplace | IDE diff viewer, diagnostic sharing, selection context |
-| **Desktop app** | Standalone app (macOS, Windows) | Visual diff review, parallel sessions with worktree isolation, remote/SSH sessions |
-| **Chrome** | Chrome extension + `--chrome` flag | Browser automation, live debugging, session recording |
+| Surface | Platforms | Key capabilities |
+|:--------|:----------|:-----------------|
+| **Desktop app** | macOS, Windows | Visual diff review, live app preview, PR monitoring, parallel sessions with worktree isolation, connectors, remote sessions |
+| **VS Code extension** | macOS, Windows, Linux | Inline diffs, @-mentions with line ranges, multiple conversation tabs, checkpoints, plugin manager UI |
+| **JetBrains plugin** | IntelliJ, PyCharm, WebStorm, GoLand, PhpStorm, Android Studio | Diff viewing in IDE, selection context sharing, diagnostic sharing |
+| **Chrome extension** | Chrome, Edge | Browser automation, console log reading, form filling, GIF recording, authenticated site access |
 
-### VS Code Keyboard Shortcuts
+### Desktop Permission Modes
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Cmd+Esc` / `Ctrl+Esc` | Toggle focus between editor and Claude |
-| `Cmd+Shift+Esc` / `Ctrl+Shift+Esc` | Open new conversation tab |
-| `Option+K` / `Alt+K` | Insert @-mention reference from selection |
-| `Cmd+N` / `Ctrl+N` | New conversation (Claude focused) |
-| `Cmd+Shift+P` / `Ctrl+Shift+P` | Command Palette (search "Claude Code") |
-| `Shift+Enter` | Multi-line input (no send) |
+| Mode | Settings key | Behavior |
+|:-----|:-------------|:---------|
+| Ask permissions | `default` | Asks before editing files or running commands |
+| Auto accept edits | `acceptEdits` | Auto-accepts file edits, asks before commands |
+| Plan mode | `plan` | Analyzes and plans without modifying files |
+| Bypass permissions | `bypassPermissions` | No permission prompts (sandboxed environments only) |
+
+### Desktop Environments
+
+| Environment | Description |
+|:------------|:------------|
+| **Local** | Runs on your machine with direct file access |
+| **Remote** | Runs on Anthropic cloud; continues if you close the app |
+| **SSH** | Runs on a remote machine you connect to over SSH |
+
+### Desktop Preview Server Config (`.claude/launch.json`)
+
+| Field | Type | Description |
+|:------|:-----|:------------|
+| `name` | string | Unique server identifier |
+| `runtimeExecutable` | string | Command to run (e.g. `npm`, `yarn`) |
+| `runtimeArgs` | string[] | Arguments (e.g. `["run", "dev"]`) |
+| `port` | number | Server port (default 3000) |
+| `cwd` | string | Working directory relative to project root |
+| `env` | object | Additional environment variables |
+| `autoPort` | boolean | `true` = auto-find free port, `false` = fail on conflict |
+| `program` | string | Script to run with `node` directly |
+| `autoVerify` | boolean | Auto-verify changes after edits (default true, set at top level) |
 
 ### VS Code Extension Settings
 
 | Setting | Default | Description |
 |:--------|:--------|:------------|
 | `selectedModel` | `default` | Model for new conversations |
-| `useTerminal` | `false` | CLI mode instead of graphical panel |
+| `useTerminal` | `false` | Launch in terminal mode instead of graphical panel |
 | `initialPermissionMode` | `default` | `default`, `plan`, `acceptEdits`, or `bypassPermissions` |
-| `autosave` | `true` | Auto-save files before Claude reads/writes |
-| `useCtrlEnterToSend` | `false` | Require Ctrl/Cmd+Enter to send |
-| `respectGitIgnore` | `true` | Exclude .gitignore patterns from search |
-| `disableLoginPrompt` | `false` | Skip auth prompts (third-party providers) |
+| `autosave` | `true` | Auto-save files before Claude reads/writes them |
+| `useCtrlEnterToSend` | `false` | Use Ctrl/Cmd+Enter instead of Enter to send |
 | `allowDangerouslySkipPermissions` | `false` | Bypass all permission prompts |
+
+### VS Code Keyboard Shortcuts
+
+| Command | Mac | Windows/Linux |
+|:--------|:----|:--------------|
+| Focus Input (toggle editor/Claude) | Cmd+Esc | Ctrl+Esc |
+| Open in New Tab | Cmd+Shift+Esc | Ctrl+Shift+Esc |
+| New Conversation | Cmd+N | Ctrl+N |
+| Insert @-Mention Reference | Option+K | Alt+K |
 
 ### JetBrains Keyboard Shortcuts
 
-| Shortcut | Action |
-|:---------|:-------|
-| `Cmd+Esc` / `Ctrl+Esc` | Open Claude Code |
-| `Cmd+Option+K` / `Alt+Ctrl+K` | Insert file reference (@File#L1-99) |
-
-### JetBrains Plugin Settings (Settings > Tools > Claude Code)
-
-- **Claude command**: custom path (e.g., `/usr/local/bin/claude`, or `wsl -d Ubuntu -- bash -lic "claude"` for WSL)
-- **Enable Option+Enter for multi-line prompts** (macOS only)
-- **Enable automatic updates**
-
-### Desktop App Permission Modes
-
-| Mode | Settings key | Behavior |
-|:-----|:-------------|:---------|
-| **Ask** | `default` | Approval before each edit/command (default) |
-| **Code** | `acceptEdits` | Auto-accepts file edits, asks for commands |
-| **Plan** | `plan` | Analyzes and plans without modifying files |
-| **Act** | `bypassPermissions` | No permission prompts (sandboxed environments only) |
-
-### Desktop App Environments
-
-| Environment | Description |
-|:------------|:------------|
-| **Local** | Runs on your machine with direct file access |
-| **Remote** | Anthropic cloud infrastructure; continues when app is closed |
-| **SSH** | Connect to remote machine (`user@hostname` or SSH config host) |
+| Command | Mac | Windows/Linux |
+|:--------|:----|:--------------|
+| Open Claude Code | Cmd+Esc | Ctrl+Esc |
+| Insert file reference | Cmd+Option+K | Alt+Ctrl+K |
 
 ### Chrome Integration
 
-- Start with `claude --chrome` or `/chrome` in-session
-- Enable by default via `/chrome` > "Enabled by default"
-- Requires Chrome/Edge + [Claude in Chrome extension](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) v1.0.36+
-- Manage site permissions through Chrome extension settings
-- VS Code: use `@browser` prefix in prompt box
+Start with `--chrome` flag or run `/chrome` in an existing session. Requires the Claude in Chrome extension (v1.0.36+). Works with Chrome and Edge. Not available through third-party providers (Bedrock, Vertex, Foundry).
 
-### CLI-to-Desktop Bridge
+### Desktop vs CLI Feature Comparison
 
-| CLI Command / Flag | Desktop Equivalent |
-|:-------------------|:-------------------|
-| `--model sonnet` | Model dropdown next to send button |
-| `--resume` / `--continue` | Click session in sidebar |
-| `--permission-mode` | Mode selector next to send button |
-| `--add-dir` | **+** button in remote sessions |
-| `/desktop` (in CLI) | Transfers CLI session to Desktop app |
+| Feature | CLI | Desktop |
+|:--------|:----|:--------|
+| Permission modes | All modes including `dontAsk` | Ask, Auto accept, Plan, Bypass |
+| Third-party providers | Bedrock, Vertex, Foundry | Not available |
+| MCP servers | Settings files | Connectors UI + settings files |
+| File attachments | Not available | Images, PDFs |
+| Session isolation | `--worktree` flag | Automatic worktrees |
+| Scripting/automation | `--print`, Agent SDK | Not available |
+| Linux support | Yes | Not available |
 
-### Feature Availability by Surface
+### VS Code Extension vs CLI
 
-| Feature | CLI | VS Code | Desktop | Chrome |
-|:--------|:----|:--------|:--------|:-------|
-| Third-party providers | Yes | Yes | No | N/A |
-| File attachments | No | Yes | Yes | N/A |
-| Session isolation (worktrees) | `--worktree` flag | Manual | Automatic | N/A |
-| Checkpoints / rewind | Yes | Yes | Yes | N/A |
-| Remote sessions | No | Resume only | Yes | N/A |
-| Browser automation | `--chrome` | `@browser` | N/A | Core feature |
-| ` ! ` bash shortcut | Yes | No | N/A | N/A |
+| Feature | CLI | VS Code Extension |
+|:--------|:----|:------------------|
+| Commands and skills | All | Subset (type `/` to see available) |
+| MCP server config | Yes | No (configure via CLI, use in extension) |
+| Checkpoints | Yes | Yes |
+| Tab completion | Yes | No |
+
+### Shared Configuration (Desktop + CLI)
+
+Both surfaces read the same CLAUDE.md files, MCP server configs, hooks, skills, and settings files. MCP servers in `claude_desktop_config.json` (chat app) are separate from Claude Code.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Use Claude Code Desktop](references/claude-code-desktop.md) — permission modes, parallel sessions, diff review, connectors, SSH, enterprise configuration, CLI comparison
-- [Get Started with Desktop](references/claude-code-desktop-quickstart.md) — installation, first session, and quickstart guide
-- [Use Claude Code in VS Code](references/claude-code-vs-code.md) — extension installation, keyboard shortcuts, settings, plugin management, checkpoints, third-party providers
-- [JetBrains IDEs](references/claude-code-jetbrains.md) — plugin installation, supported IDEs, configuration, remote development, WSL setup
-- [Use Claude Code with Chrome](references/claude-code-chrome.md) — browser automation, capabilities, troubleshooting, example workflows
+- [Use Claude Code Desktop](references/claude-code-desktop.md) -- permission modes, diff review, app preview, PR monitoring, parallel sessions, connectors, plugins, SSH/remote sessions, enterprise config, troubleshooting
+- [Desktop Quickstart](references/claude-code-desktop-quickstart.md) -- installation, first session setup, getting started guide
+- [VS Code Extension](references/claude-code-vs-code.md) -- installation, prompt box, @-mentions, keyboard shortcuts, extension settings, checkpoints, plugin management, Chrome integration, third-party providers, troubleshooting
+- [JetBrains Plugin](references/claude-code-jetbrains.md) -- supported IDEs, installation, configuration, remote development, WSL setup, troubleshooting
+- [Chrome Extension](references/claude-code-chrome.md) -- setup, browser automation capabilities, example workflows, site permissions, troubleshooting
 
 ## Sources
 
 - Use Claude Code Desktop: https://code.claude.com/docs/en/desktop.md
-- Get Started with Desktop: https://code.claude.com/docs/en/desktop-quickstart.md
-- Use Claude Code in VS Code: https://code.claude.com/docs/en/vs-code.md
-- JetBrains IDEs: https://code.claude.com/docs/en/jetbrains.md
-- Use Claude Code with Chrome: https://code.claude.com/docs/en/chrome.md
+- Desktop Quickstart: https://code.claude.com/docs/en/desktop-quickstart.md
+- VS Code Extension: https://code.claude.com/docs/en/vs-code.md
+- JetBrains Plugin: https://code.claude.com/docs/en/jetbrains.md
+- Chrome Extension: https://code.claude.com/docs/en/chrome.md
