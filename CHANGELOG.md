@@ -2,6 +2,25 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.2.22
+
+**9 references updated across 8 skills:** best-practices, cli, features, getting-started, hooks, operations, settings, sub-agents
+
+### New
+- **`WorktreeCreate` hook event** — replaces default git worktree behavior for non-git VCS (SVN, Perforce, Mercurial); hook prints the created worktree path on stdout (hooks)
+- **`WorktreeRemove` hook event** — cleanup counterpart to `WorktreeCreate`; fires at session exit or when a subagent finishes; receives `worktree_path` in input (hooks)
+- **Subagent worktree isolation** — subagents can use `isolation: worktree` in frontmatter for parallel conflict-free work; worktrees auto-clean when subagent finishes without changes (best-practices)
+- **`claude agents` CLI command** — lists all configured subagents grouped by source without starting an interactive session (cli, sub-agents)
+- **`CLAUDE_CODE_DISABLE_1M_CONTEXT` env var** — set to `1` to hide 1M model variants from the model picker; useful for compliance environments (features, settings)
+
+### Changed
+- **Hook type support matrix reorganized** — explicit lists of which events support `command`/`prompt`/`agent` hook types replace the previous inline paragraph (hooks)
+- **`ConfigChange` matcher values documented** — matches on `user_settings`, `project_settings`, `local_settings`, `policy_settings`, `skills` (hooks)
+- **`SessionStart` source values updated** — `clear` added to the list alongside `startup`, `resume`, `compact` (hooks)
+- **Default model tier table removed** — replaced with a link to the new `#default-model-setting` anchor (features)
+- **Sonnet 4.5 references updated to Sonnet 4.6** in model configuration examples (features)
+- Minor wording/formatting updates across getting-started, operations docs
+
 ## 26.2.21
 
 **6 references updated across 4 skills:** best-practices, getting-started, ide, operations
