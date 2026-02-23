@@ -2,6 +2,12 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.2.23
+
+**1 reference updated across 1 skill:** operations
+
+Minor formatting updates only
+
 ## 26.2.22
 
 **9 references updated across 8 skills:** best-practices, cli, features, getting-started, hooks, operations, settings, sub-agents
