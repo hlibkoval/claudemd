@@ -2,6 +2,17 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.2.24
+
+**3 references updated across 3 skills:** agent-teams, cli, operations
+
+### New
+- **Team sizing guidance** — new section recommending 3-5 teammates per team and 5-6 tasks per teammate; covers token cost scaling, coordination overhead, and diminishing returns (agent-teams)
+
+### Changed
+- **Notification setup rewritten** — Kitty and Ghostty now noted as supporting desktop notifications natively; iTerm 2 setup steps updated to use "Notification Center Alerts"; macOS Terminal explicitly listed as unsupported; notification hooks clarified as additive, not replacement (cli)
+- Minor wording/formatting updates across operations docs
+
 ## 26.2.23
 
 **1 reference updated across 1 skill:** operations
