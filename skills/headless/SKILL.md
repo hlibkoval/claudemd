@@ -1,135 +1,115 @@
 ---
 name: headless
-description: Reference documentation for running Claude Code programmatically via CLI (`claude -p`) and on the web (claude.ai/code) — covers structured output, streaming, tool auto-approval, session continuation, cloud environments, network access, teleporting sessions, and CI/CD patterns.
+description: Reference documentation for running Claude Code programmatically (headless / CLI mode with -p flag) and Claude Code on the web (cloud sessions). Covers structured output, streaming, auto-approving tools, session continuation, system prompt customization, web session lifecycle, teleport, diff review, cloud environments, network policies, and allowed domains.
 user-invocable: false
 ---
 
-# Headless & Cloud Execution
+# Headless & Web Documentation
 
-This skill covers two modes of non-interactive Claude Code execution: the CLI (`claude -p`, formerly "headless mode") and Claude Code on the web (cloud sessions via claude.ai/code).
+This skill provides the complete official documentation for running Claude Code programmatically via the CLI and for Claude Code on the web (cloud sessions).
 
-## CLI (`claude -p`) Quick Reference
+## Quick Reference
 
-Pass `-p` (or `--print`) to run Claude Code non-interactively. All [CLI flags](references/claude-code-headless.md) work with `-p`.
+### CLI Mode (`-p` flag)
 
-### Output Formats
-
-| Format          | Flag                              | Description                                    |
-|:----------------|:----------------------------------|:-----------------------------------------------|
-| Plain text      | `--output-format text` (default)  | Raw text response                              |
-| JSON            | `--output-format json`            | Structured JSON with `result`, `session_id`    |
-| Streaming JSON  | `--output-format stream-json`     | Newline-delimited JSON events in real time      |
-
-#### Structured Output with JSON Schema
+Pass `-p` (or `--print`) to run Claude Code non-interactively. All CLI options work with `-p`.
 
 ```bash
-claude -p "Extract function names from auth.py" \
-  --output-format json \
-  --json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}},"required":["functions"]}'
+claude -p "Find and fix the bug in auth.py" --allowedTools "Read,Edit,Bash"
 ```
 
-Result is in `structured_output` field. Use `jq -r '.result'` to extract text, `jq '.structured_output'` for schema output.
+#### Output Formats
 
-#### Streaming Text Deltas
+| Format          | Flag                                | Description                                |
+|:----------------|:------------------------------------|:-------------------------------------------|
+| `text`          | `--output-format text` (default)    | Plain text output                          |
+| `json`          | `--output-format json`              | Structured JSON with `result`, `session_id`, metadata |
+| `stream-json`   | `--output-format stream-json`       | Newline-delimited JSON for real-time streaming |
+
+Use `--json-schema` with `--output-format json` for schema-constrained output (result in `structured_output` field).
+
+#### Common Patterns
+
+| Task                    | Command                                                                                  |
+|:------------------------|:-----------------------------------------------------------------------------------------|
+| Auto-approve tools      | `--allowedTools "Bash,Read,Edit"`                                                        |
+| Create a commit         | `--allowedTools "Bash(git diff *),Bash(git log *),Bash(git status *),Bash(git commit *)"` |
+| Append system prompt    | `--append-system-prompt "You are a security engineer."`                                  |
+| Replace system prompt   | `--system-prompt "Custom prompt here"`                                                   |
+| Continue last session   | `--continue`                                                                             |
+| Resume specific session | `--resume <session_id>`                                                                  |
+| Stream tokens           | `--output-format stream-json --verbose --include-partial-messages`                       |
+
+#### Extracting Results with jq
 
 ```bash
+# Text result from JSON output
+claude -p "Summarize this project" --output-format json | jq -r '.result'
+
+# Structured output
+claude -p "Extract functions" --output-format json \
+  --json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}}}' \
+  | jq '.structured_output'
+
+# Stream text deltas
 claude -p "Write a poem" --output-format stream-json --verbose --include-partial-messages | \
   jq -rj 'select(.type == "stream_event" and .event.delta.type? == "text_delta") | .event.delta.text'
 ```
 
-### Auto-Approve Tools
+Note: User-invoked skills (e.g. `/commit`) and built-in commands are only available in interactive mode. In `-p` mode, describe the task directly.
 
-Use `--allowedTools` with [permission rule syntax](references/claude-code-headless.md):
+### Claude Code on the Web
 
-```bash
-claude -p "Run tests and fix failures" --allowedTools "Bash,Read,Edit"
+Cloud sessions run on Anthropic-managed VMs. Available to Pro, Max, Team, and Enterprise users.
+
+#### Getting Started
+
+1. Visit [claude.ai/code](https://claude.ai/code)
+2. Connect GitHub account
+3. Install Claude GitHub app in repositories
+4. Select default environment
+5. Submit task, review diff, create PR
+
+#### Terminal-to-Web (`&` prefix)
+
+```
+& Fix the authentication bug in src/auth/login.ts
 ```
 
-Prefix matching with trailing ` *` (space-asterisk): `Bash(git diff *)` allows any command starting with `git diff`.
-
-### Continue / Resume Conversations
-
-| Pattern                       | Flag                          |
-|:------------------------------|:------------------------------|
-| Continue most recent session  | `--continue`                  |
-| Resume a specific session     | `--resume <session_id>`       |
-
-Capture session ID for later resumption:
+Or from the command line:
 
 ```bash
-session_id=$(claude -p "Start a review" --output-format json | jq -r '.session_id')
-claude -p "Continue that review" --resume "$session_id"
+claude --remote "Fix the authentication bug in src/auth/login.ts"
 ```
 
-### Customize System Prompt
+Use `/tasks` to monitor. Each `&` command creates an independent parallel session.
 
-| Flag                       | Effect                                  |
-|:---------------------------|:----------------------------------------|
-| `--append-system-prompt`   | Add instructions, keep default behavior |
-| `--system-prompt`          | Fully replace the default prompt        |
+#### Web-to-Terminal (Teleport)
 
-```bash
-gh pr diff "$1" | claude -p \
-  --append-system-prompt "You are a security engineer. Review for vulnerabilities." \
-  --output-format json
-```
+| Method             | Command / Action                                         |
+|:-------------------|:---------------------------------------------------------|
+| Interactive picker | `/teleport` or `/tp` inside Claude Code                  |
+| CLI                | `claude --teleport` or `claude --teleport <session-id>`  |
+| From `/tasks`      | Press `t` to teleport into a session                     |
+| Web UI             | Click "Open in CLI", paste command                       |
 
-### Common Patterns
+**Teleport requirements:** clean git state, correct repository (not a fork), branch pushed to remote, same Claude.ai account.
 
-| Task            | Command                                                                                      |
-|:----------------|:---------------------------------------------------------------------------------------------|
-| Ask about code  | `claude -p "What does the auth module do?"`                                                  |
-| Auto-commit     | `claude -p "Create a commit" --allowedTools "Bash(git diff *),Bash(git log *),Bash(git status *),Bash(git commit *)"` |
-| Code review     | `gh pr diff "$1" \| claude -p --append-system-prompt "Review for security issues" --output-format json` |
+#### Cloud Environment
 
-> **Note:** User-invoked skills (`/commit`, etc.) and built-in commands are only available in interactive mode. With `-p`, describe the task directly.
+**Pre-installed:** Python 3.x, Node.js LTS, Ruby 3.3.6, PHP 8.4, Java (OpenJDK), Go, Rust, C++ (GCC/Clang). Databases: PostgreSQL 16, Redis 7.0. Run ` ` `check-tools` ` ` to see versions.
 
----
+#### Network Access Levels
 
-## Claude Code on the Web
-
-Run Claude Code tasks asynchronously on Anthropic-managed cloud VMs at [claude.ai/code](https://claude.ai/code). Currently in **research preview**.
-
-### Availability
-
-Pro, Max, Team, and Enterprise users (Enterprise requires premium or Chat + Claude Code seats).
-
-### How It Works
-
-1. Repository is cloned to an isolated VM (default branch; specify another in the prompt)
-2. Environment is prepared; hooks run (including SessionStart)
-3. Network access configured per environment settings
-4. Claude executes the task, writing code, running tests, iterating
-5. Changes are pushed to a branch; you create a PR from the UI
-
-### Moving Between Web and Terminal
-
-| Direction           | Method                                                                 |
-|:--------------------|:-----------------------------------------------------------------------|
-| Terminal to web     | Prefix message with `&` in interactive mode, or `claude --remote "prompt"` |
-| Web to terminal     | `/teleport` (or `/tp`), `claude --teleport`, `/tasks` then press `t`  |
-
-#### Terminal to Web Tips
-
-- **Plan locally, execute remotely:** Use `claude --permission-mode plan` to collaborate on strategy, then `& Execute the plan` to run in the cloud.
-- **Parallel tasks:** Each `&` creates an independent web session. Monitor all with `/tasks`.
-
-#### Teleport Requirements
-
-| Requirement        | Details                                                        |
-|:-------------------|:---------------------------------------------------------------|
-| Clean git state    | No uncommitted changes (prompted to stash if needed)           |
-| Correct repository | Must be same repo, not a fork                                  |
-| Branch available   | Web session branch must be pushed to remote                    |
-| Same account       | Same Claude.ai account as the web session                      |
-
-### Cloud Environment
-
-**Default image** includes: Python 3.x, Node.js LTS, Ruby 3.3.6, PHP 8.4, Java (OpenJDK), Go, Rust, C++ (GCC/Clang), PostgreSQL 16, Redis 7.0. Run `check-tools` to see versions.
+| Level     | Behavior                                          |
+|:----------|:--------------------------------------------------|
+| No internet | No outbound access (Anthropic API still reachable) |
+| Limited   | Default allowlist of common domains                |
+| Full      | Unrestricted internet access                       |
 
 #### Dependency Management
 
-Use SessionStart hooks since custom images are not yet supported:
+Use SessionStart hooks to install packages (no custom images yet):
 
 ```json
 {
@@ -145,41 +125,30 @@ Use SessionStart hooks since custom images are not yet supported:
 }
 ```
 
-Guard against local execution with `if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then exit 0; fi`.
+Guard with `if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then exit 0; fi` to skip local environments.
 
-Persist env vars by writing to `$CLAUDE_ENV_FILE`.
+#### Session Sharing
 
-### Network Access
+| Account type       | Visibility options  | Repo access verification |
+|:-------------------|:--------------------|:-------------------------|
+| Enterprise / Teams | Private, Team       | Enabled by default       |
+| Max / Pro          | Private, Public     | Opt-in via settings      |
 
-| Level    | Description                                              |
-|:---------|:---------------------------------------------------------|
-| Limited  | Default. Allowlisted domains only (package registries, GitHub, cloud platforms, etc.) |
-| Full     | Unrestricted internet access                             |
-| None     | No internet (Anthropic API still reachable)              |
+#### Security
 
-All traffic goes through a security proxy. GitHub operations use a dedicated proxy with scoped credentials; git push is restricted to the current branch.
-
-**Proxy limitations:** Some tools (e.g., Bun) do not work correctly through the proxy.
-
-### Security
-
-- Each session runs in an isolated VM
-- Git credentials and signing keys are never inside the sandbox
-- Authentication handled via scoped credentials through a secure proxy
-
-### Session Sharing
-
-| Account type        | Visibility options     | Repo access check     |
-|:--------------------|:-----------------------|:----------------------|
-| Enterprise / Teams  | Private, Team          | Enabled by default    |
-| Max / Pro           | Private, Public        | Opt-in via Settings   |
+- Isolated VMs per session
+- GitHub operations through scoped credential proxy (push restricted to current branch)
+- All outbound traffic through HTTP/HTTPS security proxy
+- Git credentials never inside sandbox
 
 ## Full Documentation
 
-- [CLI / Headless Reference](references/claude-code-headless.md) -- `claude -p` usage, output formats, streaming, tool approval, session continuation, system prompt customization
-- [Cloud / Web Reference](references/claude-code-on-the-web.md) -- web sessions, teleporting, cloud environments, network allowlists, security model, dependency management
+For the complete official documentation, see the reference files:
+
+- [Run Claude Code Programmatically](references/claude-code-headless.md) -- CLI `-p` mode, structured output, streaming, tool auto-approval, session continuation, system prompt customization
+- [Claude Code on the Web](references/claude-code-on-the-web.md) -- cloud sessions, teleport, diff review, environment configuration, network policies, allowed domains, security, sharing
 
 ## Sources
 
-- CLI / Headless: https://code.claude.com/docs/en/headless.md
-- Cloud / Web: https://code.claude.com/docs/en/cloud.md
+- Run Claude Code Programmatically: https://code.claude.com/docs/en/headless.md
+- Claude Code on the Web: https://code.claude.com/docs/en/claude-code-on-the-web.md

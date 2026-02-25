@@ -90,7 +90,8 @@
       {"url": "https://code.claude.com/docs/en/output-styles.md", "file": "claude-code-output-styles.md"},
       {"url": "https://code.claude.com/docs/en/statusline.md", "file": "claude-code-statusline.md"},
       {"url": "https://code.claude.com/docs/en/checkpointing.md", "file": "claude-code-checkpointing.md"},
-      {"url": "https://code.claude.com/docs/en/features-overview.md", "file": "claude-code-features-overview.md"}
+      {"url": "https://code.claude.com/docs/en/features-overview.md", "file": "claude-code-features-overview.md"},
+      {"url": "https://code.claude.com/docs/en/remote-control.md", "file": "claude-code-remote-control.md"}
     ],
     "headless": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},

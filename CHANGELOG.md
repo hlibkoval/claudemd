@@ -2,6 +2,37 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.2.25
+
+**19 references updated across 10 skills:** cli, getting-started, headless, ide, operations, plugins, security, settings, skills, sub-agents
+
+### New
+- **`claude auth login`, `claude auth logout`, `claude auth status` commands** — dedicated CLI commands for authentication with `--email`, `--sso`, and `--text` flags (cli)
+- **`claude remote-control` command** — starts a Remote Control session to control Claude Code from Claude.ai or the Claude app while running locally (cli)
+- **Remote Control execution environment** — new "Remote Control" row in environments table; runs on your machine but controlled from a browser (getting-started)
+- **npm package plugin source** — plugins can now be distributed as npm packages with `package`, `version`, and `registry` fields (plugins)
+- **`CLAUDE_CODE_PLUGIN_GIT_TIMEOUT_MS` env var** — configurable timeout for git operations during plugin installation, defaults to 120s (plugins)
+- **`allowManagedMcpServersOnly` managed setting** — restricts MCP servers to managed-only allowlist (settings)
+- **`blockedMarketplaces` managed setting** — blocklist of marketplace sources checked before download (settings)
+- **`sandbox.network.allowManagedDomainsOnly` managed setting** — restricts allowed network domains to managed settings only (settings)
+- **`allow_remote_sessions` managed setting** — controls whether users can start Remote Control and web sessions (settings)
+- **MDM/OS-level policy delivery for managed settings** — macOS plist domain `com.anthropic.claudecode` and Windows registry `HKLM\SOFTWARE\Policies\ClaudeCode` as new managed settings sources (settings)
+- **`/status` command for verifying active settings** — shows which settings sources are active and their origin (settings)
+- **Terminal guide link** — quickstart and setup pages now reference a terminal guide for beginners (getting-started)
+- **Windows Git for Windows requirement** — explicitly documented as required dependency for native Windows (getting-started)
+
+### Changed
+- **Authentication docs rewritten** — new "Log in to Claude Code" section with per-account-type instructions; "Microsoft Azure" renamed to "Microsoft Foundry" throughout (getting-started)
+- **Setup page restructured** — renamed to "Advanced setup"; reorganized into install, verify, authenticate, update, and uninstall sections; Windows setup split into Git Bash and WSL options; npm install moved under "Advanced installation options" (getting-started)
+- **Remote Control noted in data flow docs** — clarified that Remote Control sessions follow local data flow since execution stays on your machine (security)
+- **Remote Control security model documented** — describes local execution, TLS-encrypted API traffic, and short-lived narrowly scoped credentials (security)
+- **`/path` permission pattern meaning corrected** — changed from "relative to settings file" to "relative to project root" (settings)
+- **Managed settings scope description expanded** — now lists server-managed, plist/registry, and file-based delivery mechanisms with precedence order (settings)
+- **Background subagents MCP restriction removed** — dropped the note that MCP tools are not available in background subagents (sub-agents)
+- **Managed settings link targets updated** — multiple docs now link to `/en/settings#settings-files` instead of `/en/permissions#managed-settings` (plugins, skills, security, settings, ide)
+- **Android app link added** — Claude Code on the web docs now mention Android alongside iOS (headless)
+- Minor wording/formatting updates across operations docs
+
 ## 26.2.24
 
 **3 references updated across 3 skills:** agent-teams, cli, operations
