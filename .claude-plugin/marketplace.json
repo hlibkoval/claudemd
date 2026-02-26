@@ -10,7 +10,7 @@
       "name": "claudemd",
       "description": "Claude Code documentation as skills — covers skills, hooks, plugins, MCP, sub-agents, settings, CLI, IDE integrations, and more",
       "version": "26.2.26",
-      "source": { "source": "github", "repo": "hlibkoval/claudemd" }
+      "source": "."
     }
   ]
 }
