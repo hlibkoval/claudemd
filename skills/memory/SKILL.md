@@ -1,156 +1,138 @@
 ---
 name: memory
-description: Reference documentation for Claude Code memory — CLAUDE.md files, auto memory, project rules, imports, and the memory hierarchy. Use when configuring memory locations, writing CLAUDE.md files, organizing project rules, setting up auto memory, using imports, or understanding memory precedence.
+description: Reference documentation for Claude Code memory management -- CLAUDE.md files, auto memory, memory hierarchy, project rules (.claude/rules/), modular rules with path-specific scoping, CLAUDE.local.md, /memory command, /init command, imports with @path syntax, organization-level managed policy, and memory best practices.
 user-invocable: false
 ---
 
 # Memory Documentation
 
-This skill provides the complete official documentation for managing Claude Code's memory across sessions.
+This skill provides the complete official documentation for Claude Code memory management.
 
 ## Quick Reference
 
-Claude Code has two kinds of persistent memory:
+Claude Code has two kinds of persistent memory: **auto memory** (Claude writes for itself) and **CLAUDE.md files** (you write for Claude). Both load at session start.
 
-- **CLAUDE.md files** — markdown files you write and maintain with instructions, rules, and preferences.
-- **Auto memory** — notes Claude writes for itself based on what it discovers during sessions.
+### Memory Types (Priority Order)
 
-Both load into context at the start of every session.
+| Type                   | Location                                                                                     | Purpose                                       | Shared with                     |
+|:-----------------------|:---------------------------------------------------------------------------------------------|:----------------------------------------------|:--------------------------------|
+| **Managed policy**     | macOS: `/Library/Application Support/ClaudeCode/CLAUDE.md`; Linux: `/etc/claude-code/CLAUDE.md` | Organization-wide instructions from IT/DevOps | All org users                   |
+| **Project memory**     | `./CLAUDE.md` or `./.claude/CLAUDE.md`                                                       | Team-shared project instructions              | Team via source control         |
+| **Project rules**      | `./.claude/rules/*.md`                                                                       | Modular, topic-specific project instructions  | Team via source control         |
+| **User memory**        | `~/.claude/CLAUDE.md`                                                                        | Personal preferences for all projects         | Just you (all projects)         |
+| **Project local**      | `./CLAUDE.local.md`                                                                          | Personal project-specific preferences         | Just you (auto-gitignored)      |
+| **Auto memory**        | `~/.claude/projects/<project>/memory/`                                                       | Claude's automatic notes and learnings        | Just you (per project)          |
 
-### Memory Hierarchy
+More specific instructions take precedence over broader ones. CLAUDE.md files in parent directories load at launch; those in child directories load on demand.
 
-| Type                   | Location                                                          | Scope                       | Shared with               |
-|:-----------------------|:------------------------------------------------------------------|:----------------------------|:--------------------------|
-| **Managed policy**     | `/Library/Application Support/ClaudeCode/CLAUDE.md` (macOS)       | Organization-wide           | All users in organization |
-| **Project memory**     | `./CLAUDE.md` or `./.claude/CLAUDE.md`                            | Team-shared project         | Team via source control   |
-| **Project rules**      | `./.claude/rules/*.md`                                            | Modular project instructions| Team via source control   |
-| **User memory**        | `~/.claude/CLAUDE.md`                                             | Personal, all projects      | Just you                  |
-| **Project local**      | `./CLAUDE.local.md`                                               | Personal, current project   | Just you (gitignored)     |
-| **Auto memory**        | `~/.claude/projects/<project>/memory/`                            | Per-project auto notes      | Just you                  |
+### Auto Memory
 
-More specific instructions take precedence over broader ones.
+Auto memory is enabled by default. Claude saves project patterns, debugging insights, architecture notes, and user preferences.
 
-### Memory Loading Behavior
+| Setting                                 | Effect                                      |
+|:----------------------------------------|:--------------------------------------------|
+| `autoMemoryEnabled: false` in user settings (`~/.claude/settings.json`) | Disable for all projects   |
+| `autoMemoryEnabled: false` in project settings (`.claude/settings.json`) | Disable for one project   |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`     | Force off (overrides all other settings)    |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY=0`     | Force on (overrides all other settings)     |
 
-| Source                       | When loaded                                          |
-|:-----------------------------|:-----------------------------------------------------|
-| CLAUDE.md in parent dirs     | At launch (full contents)                            |
-| CLAUDE.md in child dirs      | On demand, when Claude reads files in that subtree   |
-| Auto memory (MEMORY.md)      | At launch (first 200 lines only)                     |
-| Auto memory topic files      | On demand, when Claude needs the information         |
-| `.claude/rules/*.md`         | At launch (same priority as `.claude/CLAUDE.md`)     |
-
-### CLAUDE.md Imports
-
-CLAUDE.md files can import other files using `@path/to/file` syntax:
-
-```markdown
-See @README for project overview and @package.json for available npm commands.
-
-# Additional Instructions
-- git workflow @docs/git-instructions.md
-- @~/.claude/my-project-instructions.md
-```
-
-- Relative paths resolve relative to the file containing the import
-- Absolute paths and `~` home-directory paths are supported
-- Imports can be recursive, max depth of 5 hops
-- Imports inside code spans and code blocks are ignored
-- First encounter triggers an approval dialog (one-time per project)
-
-## Auto Memory
-
-Claude automatically saves project patterns, debugging insights, architecture notes, and preferences.
-
-### Directory Structure
+Auto memory structure:
 
 ```
 ~/.claude/projects/<project>/memory/
-├── MEMORY.md          # Index loaded into every session (first 200 lines)
-├── debugging.md       # Topic file (loaded on demand)
-├── api-conventions.md # Topic file (loaded on demand)
-└── ...
+  MEMORY.md          # Index file, first 200 lines loaded at startup
+  debugging.md       # Topic files, loaded on demand
+  api-conventions.md
+  ...
 ```
 
-The `<project>` path derives from the git repo root. All subdirectories in the same repo share one auto memory directory. Git worktrees get separate directories.
+Toggle auto memory or open files for editing with the `/memory` command.
 
-### Control Auto Memory
+### CLAUDE.md Imports
 
-```bash
-export CLAUDE_CODE_DISABLE_AUTO_MEMORY=1  # Force off
-export CLAUDE_CODE_DISABLE_AUTO_MEMORY=0  # Force on
+Use `@path/to/file` syntax to import additional files into any CLAUDE.md:
+
+```
+See @README for project overview.
+@docs/git-instructions.md
+@~/.claude/my-project-instructions.md
 ```
 
-To save something specific, tell Claude directly: "remember that we use pnpm, not npm".
+- Relative paths resolve relative to the importing file
+- Absolute and home-directory (`~`) paths supported
+- Recursive imports up to 5 levels deep
+- Not evaluated inside code spans or code blocks
+- First-time imports require user approval per project
 
-Use `/memory` to open auto memory files in your editor.
+### Project Rules (`.claude/rules/`)
 
-## Project Rules (`.claude/rules/`)
+Organize modular project instructions as separate markdown files:
 
-Organize instructions into modular files instead of one large CLAUDE.md.
+```
+.claude/rules/
+  frontend/
+    react.md
+    styles.md
+  backend/
+    api.md
+    database.md
+  general.md
+```
 
-### Path-Specific Rules
+All `.md` files discovered recursively. Same priority as `.claude/CLAUDE.md`.
 
-Scope rules to specific files using YAML frontmatter:
+**Path-specific rules** use `paths` frontmatter to scope to matching files:
 
-```markdown
+```yaml
 ---
 paths:
   - "src/api/**/*.ts"
 ---
-
-# API Rules
-- All endpoints must include input validation
 ```
 
-Rules without `paths` load unconditionally.
-
-### Glob Patterns
-
-| Pattern                | Matches                                |
+| Glob pattern           | Matches                                |
 |:-----------------------|:---------------------------------------|
 | `**/*.ts`              | All TypeScript files in any directory  |
 | `src/**/*`             | All files under `src/`                 |
 | `*.md`                 | Markdown files in project root         |
-| `src/**/*.{ts,tsx}`    | Both `.ts` and `.tsx` files under src  |
-| `{src,lib}/**/*.ts`    | `.ts` files under `src/` or `lib/`     |
+| `src/**/*.{ts,tsx}`    | Both `.ts` and `.tsx` under `src/`     |
+| `{src,lib}/**/*.ts`    | `.ts` files under `src/` or `lib/`    |
 
-### Rules Organization
+Rules without `paths` apply unconditionally.
 
-- Subdirectories are supported (discovered recursively)
-- Symlinks are supported (shared rules across projects)
-- User-level rules go in `~/.claude/rules/` (lower priority than project rules)
+**User-level rules** at `~/.claude/rules/` apply to all projects (lower priority than project rules).
 
-## Additional Directories
+Symlinks in `.claude/rules/` are supported for sharing rules across projects.
 
-Load memory from directories outside your working directory:
+### Useful Commands
+
+| Command    | Description                                      |
+|:-----------|:-------------------------------------------------|
+| `/memory`  | Open memory files in editor; toggle auto memory  |
+| `/init`    | Bootstrap a CLAUDE.md for the current project    |
+
+### Additional Directories
+
+Load memory from extra directories with `--add-dir`:
 
 ```bash
 CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 claude --add-dir ../shared-config
 ```
 
-### Key Commands
+### Best Practices
 
-| Command    | Purpose                                      |
-|:-----------|:---------------------------------------------|
-| `/init`    | Bootstrap a CLAUDE.md for the current project |
-| `/memory`  | Open memory files in your system editor       |
-
-## Best Practices
-
-- **Be specific**: "Use 2-space indentation" over "Format code properly"
-- **Use structure**: Bullet points grouped under descriptive markdown headings
-- **Review periodically**: Update memories as the project evolves
-- **Keep rules focused**: One topic per file in `.claude/rules/`
-- **Use descriptive filenames**: Filename should indicate what the rules cover
-- **Use conditional rules sparingly**: Only add `paths` when rules truly apply to specific file types
+- Be specific: "Use 2-space indentation" beats "Format code properly"
+- Structure with bullet points under descriptive headings
+- Review and update periodically as the project evolves
+- Use `CLAUDE.local.md` for private per-project preferences
+- Keep rules files focused on one topic each
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Claude Code Memory](references/claude-code-memory.md) -- memory hierarchy, auto memory, CLAUDE.md imports, project rules, and organization-level memory management
+- [Manage Claude's Memory](references/claude-code-memory.md) -- memory types hierarchy, auto memory, CLAUDE.md imports, project rules, path-specific rules, organization-level memory, /memory and /init commands, best practices
 
 ## Sources
 
-- Claude Code Memory: https://code.claude.com/docs/en/memory.md
+- Manage Claude's Memory: https://code.claude.com/docs/en/memory.md
