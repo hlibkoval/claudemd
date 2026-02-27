@@ -1,6 +1,6 @@
 ---
 name: skills
-description: Reference documentation for Claude Code skills — creating SKILL.md files, frontmatter fields, invocation control, argument passing, string substitutions, dynamic context injection, subagent execution, supporting files, sharing skills, and the Agent Skills open standard specification.
+description: Reference documentation for Claude Code skills and the Agent Skills open standard -- creating SKILL.md files, frontmatter fields (name, description, user-invocable, disable-model-invocation, allowed-tools, context, agent, hooks), skill locations (personal/project/plugin/enterprise), string substitutions ($ARGUMENTS, $N, ${CLAUDE_SESSION_ID}), dynamic context injection, subagent execution with context:fork, invocation control, and sharing skills.
 user-invocable: false
 ---
 
@@ -57,7 +57,7 @@ Higher-priority locations win: enterprise > personal > project. Plugin skills us
 | Variable               | Description                                         |
 |:-----------------------|:----------------------------------------------------|
 | `$ARGUMENTS`           | All arguments passed when invoking the skill        |
-| `$ARGUMENTS[N]` / `$N`| Specific argument by 0-based index                  |
+| `$ARGUMENTS[N]` / `$N` | Specific argument by 0-based index                  |
 | `${CLAUDE_SESSION_ID}` | Current session ID                                  |
 | `!` + `` `command` ``  | Dynamic context injection (shell command output)    |
 

@@ -1,44 +1,50 @@
 ---
 name: ide
-description: Reference documentation for Claude Code IDE integrations — Desktop app (visual diffs, live preview, PR monitoring, parallel sessions, connectors, remote/SSH environments), VS Code extension (inline diffs, @-mentions, keyboard shortcuts, plugins, Chrome automation), JetBrains plugin (IntelliJ, PyCharm, WebStorm, etc.), and Chrome browser extension for web app testing and automation.
+description: Reference documentation for Claude Code IDE and desktop integrations -- the Claude Desktop app (Code tab, permission modes, parallel sessions, diff view, preview servers, connectors, SSH/remote sessions, enterprise config), VS Code extension (installation, prompt box, @-mentions, plugin management, settings, CLI vs extension feature comparison), JetBrains plugin (supported IDEs, diff viewing, selection context, /ide command), and Chrome browser integration (automation, debugging, form filling, data extraction).
 user-invocable: false
 ---
 
-# IDE Integrations Documentation
+# IDE and Desktop Integration Documentation
 
-This skill provides the complete official documentation for using Claude Code in Desktop, VS Code, JetBrains IDEs, and Chrome.
+This skill provides the complete official documentation for Claude Code IDE and desktop integrations.
 
 ## Quick Reference
 
-### Platforms Overview
+Claude Code is available as a Desktop app, VS Code extension, JetBrains plugin, and with Chrome browser integration.
 
-| Platform    | Interface    | Install                                            | Third-party providers | Linux |
-|:------------|:-------------|:---------------------------------------------------|:----------------------|:------|
-| Desktop app | GUI (Code tab) | Download from claude.ai                          | No                    | No    |
-| VS Code     | Extension panel | Marketplace: `anthropic.claude-code`            | Yes (Bedrock, Vertex, Foundry) | Yes |
-| JetBrains   | Terminal plugin | JetBrains Marketplace                           | Yes (via CLI)         | Yes   |
-| Chrome      | Browser ext  | Chrome Web Store: `Claude in Chrome` (v1.0.36+)   | No                    | Yes   |
+### Surface Comparison
+
+| Surface       | Platform         | Key Differentiators                                                     |
+|:--------------|:-----------------|:------------------------------------------------------------------------|
+| Desktop app   | macOS, Windows   | Visual diff, live preview, parallel sessions, connectors UI, remote sessions |
+| VS Code extension | Any VS Code  | Inline diffs, @-mentions with line ranges, checkpoints, plugin manager UI |
+| JetBrains plugin | IntelliJ, PyCharm, WebStorm, Android Studio, PhpStorm, GoLand | IDE diff viewer, diagnostic sharing, selection context |
+| Chrome integration | Chrome, Edge | Browser automation, console log access, form filling, data extraction |
 
 ### Desktop Permission Modes
 
-| Mode               | Settings key          | Behavior                                                  |
-|:-------------------|:----------------------|:----------------------------------------------------------|
-| Ask permissions    | `default`             | Asks before edits and commands                            |
-| Auto accept edits  | `acceptEdits`         | Auto-accepts file edits, asks before terminal commands    |
-| Plan mode          | `plan`                | Analyzes and plans without modifying files                |
-| Bypass permissions | `bypassPermissions`   | No permission prompts (enable in Settings)                |
+| Mode | Settings key | Behavior |
+|:-----|:-------------|:---------|
+| Ask permissions | `default` | Asks before editing files or running commands |
+| Auto accept edits | `acceptEdits` | Auto-accepts file edits, asks before commands |
+| Plan mode | `plan` | Maps plan without touching files or running commands |
+| Bypass permissions | `bypassPermissions` | No prompts; requires opt-in in Settings |
 
-Remote sessions support Auto accept edits and Plan mode only. `dontAsk` is CLI-only.
+The `dontAsk` mode is CLI-only.
 
-### Desktop Environments
+### Desktop Session Environments
 
-| Environment | Runs on                | Continues offline | Multi-repo |
-|:------------|:-----------------------|:------------------|:-----------|
-| Local       | Your machine           | No                | No         |
-| Remote      | Anthropic cloud        | Yes               | Yes        |
-| SSH         | Your remote machine    | No                | No         |
+| Environment | Description |
+|:------------|:------------|
+| Local | Runs on your machine, inherits shell environment |
+| Remote | Anthropic-hosted cloud, continues without the app open |
+| SSH | Remote machine you control (`user@host` or SSH config alias) |
 
-### launch.json (Preview Server Config)
+Remote sessions support Auto accept edits and Plan mode. Ask permissions and Bypass permissions are not available for remote sessions.
+
+### Desktop `launch.json` (Preview Servers)
+
+Stored at `.claude/launch.json` in the project root:
 
 ```json
 {
@@ -46,7 +52,7 @@ Remote sessions support Auto accept edits and Plan mode only. `dontAsk` is CLI-o
   "autoVerify": true,
   "configurations": [
     {
-      "name": "my-app",
+      "name": "web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
@@ -55,88 +61,71 @@ Remote sessions support Auto accept edits and Plan mode only. `dontAsk` is CLI-o
 }
 ```
 
-| Field               | Type     | Description                                          |
-|:--------------------|:---------|:-----------------------------------------------------|
-| `name`              | string   | Unique identifier for this server                    |
-| `runtimeExecutable` | string   | Command to run (`npm`, `yarn`, `node`)               |
-| `runtimeArgs`       | string[] | Arguments (e.g. `["run", "dev"]`)                    |
-| `port`              | number   | Server port (default 3000)                           |
-| `cwd`               | string   | Working directory relative to project root            |
-| `env`               | object   | Additional environment variables                     |
-| `autoPort`          | boolean  | `true` = auto-find free port; `false` = fail on conflict |
-| `program`           | string   | Script to run with `node` (alternative to runtimeExecutable) |
-| `args`              | string[] | Arguments passed to `program`                        |
+Key `configurations` fields: `name`, `runtimeExecutable`, `runtimeArgs`, `port` (default 3000), `cwd`, `env`, `autoPort`, `program`, `args`.
+
+Use `runtimeExecutable` + `runtimeArgs` for package managers; use `program` to run a Node.js script directly with `node`.
+
+`autoPort`: `true` = find free port, `false` = fail if port taken, unset = ask once and save answer.
 
 ### VS Code Extension Settings
 
-| Setting                           | Default   | Description                                    |
-|:----------------------------------|:----------|:-----------------------------------------------|
-| `selectedModel`                   | `default` | Model for new conversations                    |
-| `useTerminal`                     | `false`   | Launch in terminal mode instead of GUI panel   |
-| `initialPermissionMode`           | `default` | `default`, `plan`, `acceptEdits`, `bypassPermissions` |
-| `autosave`                        | `true`    | Auto-save files before Claude reads/writes     |
-| `useCtrlEnterToSend`              | `false`   | Use Ctrl/Cmd+Enter instead of Enter to send    |
-| `respectGitIgnore`                | `true`    | Exclude .gitignore patterns from searches      |
-| `allowDangerouslySkipPermissions` | `false`   | Bypass all permission prompts                  |
+| Setting | Default | Description |
+|:--------|:--------|:------------|
+| `selectedModel` | `default` | Model for new conversations |
+| `useTerminal` | `false` | Launch in terminal mode instead of graphical panel |
+| `initialPermissionMode` | `default` | `default`, `plan`, `acceptEdits`, or `bypassPermissions` |
+| `preferredLocation` | `panel` | `sidebar` (right) or `panel` (new tab) |
+| `autosave` | `true` | Auto-save files before Claude reads/writes |
+| `useCtrlEnterToSend` | `false` | Use Ctrl/Cmd+Enter instead of Enter |
+| `allowDangerouslySkipPermissions` | `false` | Bypass all permission prompts |
 
 ### VS Code Keyboard Shortcuts
 
-| Command                    | Mac                    | Windows/Linux            |
-|:---------------------------|:-----------------------|:-------------------------|
-| Focus Input (toggle)       | `Cmd+Esc`             | `Ctrl+Esc`               |
-| Open in New Tab            | `Cmd+Shift+Esc`       | `Ctrl+Shift+Esc`         |
-| New Conversation           | `Cmd+N`               | `Ctrl+N`                 |
-| Insert @-Mention Reference | `Option+K`            | `Alt+K`                  |
+| Command | Shortcut (Mac / Win-Linux) |
+|:--------|:--------------------------|
+| Toggle focus editor/Claude | `Cmd+Esc` / `Ctrl+Esc` |
+| Open in new tab | `Cmd+Shift+Esc` / `Ctrl+Shift+Esc` |
+| New conversation | `Cmd+N` / `Ctrl+N` (Claude focused) |
+| Insert @-mention reference | `Option+K` / `Alt+K` (editor focused) |
 
-### JetBrains Keyboard Shortcuts
+### VS Code vs CLI Feature Gaps
 
-| Action                  | Mac              | Windows/Linux      |
-|:------------------------|:-----------------|:-------------------|
-| Open Claude Code        | `Cmd+Esc`       | `Ctrl+Esc`         |
-| Insert file reference   | `Cmd+Option+K`  | `Alt+Ctrl+K`       |
+| Feature | CLI | VS Code Extension |
+|:--------|:----|:-----------------|
+| All built-in commands | Yes | Subset (type `/` to see) |
+| MCP server config | Yes | Via CLI only |
+| Checkpoints (rewind) | Yes | Yes |
+| `!` bash shortcut | Yes | No |
+| Tab completion | Yes | No |
 
-### JetBrains Supported IDEs
+### JetBrains Plugin Shortcuts
 
-IntelliJ IDEA, PyCharm, Android Studio, WebStorm, PhpStorm, GoLand.
+| Action | Mac | Windows/Linux |
+|:-------|:----|:--------------|
+| Open Claude Code | `Cmd+Esc` | `Ctrl+Esc` |
+| Insert file reference | `Cmd+Option+K` | `Alt+Ctrl+K` |
 
-### Chrome CLI Usage
+Connect an external terminal to JetBrains with `/ide` inside Claude Code.
 
-```bash
-claude --chrome           # Start with Chrome integration
-/chrome                   # In-session: status, reconnect, permissions
-```
+For Remote Development, install the plugin on the remote host via Settings → Plugin (Host).
 
-Enable by default: run `/chrome` and select "Enabled by default". In VS Code, use `@browser` in the prompt box.
+### Chrome Integration
 
-### CLI-to-Desktop Flag Equivalents
+Start with `claude --chrome` or run `/chrome` in an existing session. Use `@browser` in VS Code prompt box.
 
-| CLI flag                          | Desktop equivalent                          |
-|:----------------------------------|:--------------------------------------------|
-| `--model sonnet`                  | Model dropdown (before session starts)      |
-| `--resume`, `--continue`          | Click session in sidebar                    |
-| `--permission-mode`               | Mode selector next to send button           |
-| `--dangerously-skip-permissions`  | Bypass permissions mode (enable in Settings)|
-| `--add-dir`                       | **+** button in remote sessions             |
+Capabilities: live debugging, console log access, form filling, data extraction, authenticated web app interaction (shares browser login state), multi-site workflows, session GIF recording.
 
-### Desktop vs CLI Feature Comparison
-
-| Feature              | CLI                     | Desktop                              |
-|:---------------------|:------------------------|:-------------------------------------|
-| Third-party providers| Bedrock, Vertex, Foundry| Not available                        |
-| File attachments     | Not available           | Images, PDFs                         |
-| Session isolation    | `--worktree` flag       | Automatic worktrees                  |
-| Multiple sessions    | Separate terminals      | Sidebar tabs                         |
-| Scripting            | `--print`, Agent SDK    | Not available                        |
+Supported: Google Chrome and Microsoft Edge only. Not supported: Brave, Arc, WSL.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Use Claude Code Desktop](references/claude-code-desktop.md) — visual diffs, live preview, PR monitoring, parallel sessions, connectors, SSH, remote environments, enterprise configuration
-- [Desktop Quickstart](references/claude-code-desktop-quickstart.md) — installing the app and starting your first coding session
-- [VS Code Extension](references/claude-code-vs-code.md) — installation, @-mentions, keyboard shortcuts, settings, plugins, Chrome automation, checkpoints, third-party providers
-- [JetBrains Plugin](references/claude-code-jetbrains.md) — installation, configuration, diff viewing, selection context, remote development, WSL
-- [Chrome Integration](references/claude-code-chrome.md) — browser automation, live debugging, form filling, data extraction, session recording, troubleshooting
+- [Use Claude Code Desktop](references/claude-code-desktop.md) -- permission modes, diff view, PR monitoring, parallel sessions, preview servers, connectors, SSH/remote sessions, enterprise configuration, CLI comparison
+- [Desktop Quickstart](references/claude-code-desktop-quickstart.md) -- installation, first session, key features overview
+- [VS Code Extension](references/claude-code-vs-code.md) -- installation, prompt box, @-mentions, plugin management, CLI integration, third-party providers, settings reference
+- [JetBrains Plugin](references/claude-code-jetbrains.md) -- supported IDEs, features, installation, configuration, WSL and remote development
+- [Chrome Integration](references/claude-code-chrome.md) -- capabilities, prerequisites, CLI and VS Code usage, example workflows, troubleshooting
 
 ## Sources
 
