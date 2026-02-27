@@ -2,6 +2,12 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.2.27.1
+
+Renamed all 18 plugin skills with `-doc` suffix (e.g. `memory` → `memory-doc`) to avoid shadowing Claude Code built-in commands like `/memory`, `/skills`, etc. No documentation content changes.
+
+Workaround for: https://github.com/anthropics/claude-code/issues/29282
+
 ## 26.2.27
 
 **29 references updated across 15 skills:** agent-teams, best-practices, ci-cd, cli, features, getting-started, headless, hooks, ide, operations, plugins, security, settings, skills, sub-agents
