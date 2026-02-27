@@ -14,7 +14,7 @@ skills/<topic>/SKILL.md        → Quick-reference summary (< 200 lines, auto-ge
 skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-edited)
 .claude/skills/crawl/          → Maintenance skill: downloads docs, detects changes
 .claude/skills/generate-skill-md/ → Forked skill: regenerates SKILL.md from references
-.claude/skills/skills          → Symlink to skills/skills/ (so /skills works locally)
+.claude/skills/skills-doc      → Symlink to skills/skills-doc/ (so /skills-doc works locally)
 .claude/skills/crawl/skill-map.json → Source of truth: maps skill names → doc URLs
 ```
 

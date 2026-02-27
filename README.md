@@ -8,24 +8,24 @@
 
 | Skill | Covers |
 |-------|--------|
-| `getting-started` | Installation, authentication, agentic loop, built-in tools |
-| `cli` | CLI flags, commands, keyboard shortcuts, terminal config |
-| `settings` | Configuration scopes, permissions, sandbox, environment variables |
-| `memory` | CLAUDE.md files, auto memory, project rules, imports |
-| `skills` | Creating skills, SKILL.md format, Agent Skills standard |
-| `hooks` | Event-driven shell commands, lifecycle hooks, matchers |
-| `plugins` | Creating, distributing, discovering, and installing plugins |
-| `mcp` | MCP server integration, stdio/SSE/HTTP, tool search |
-| `sub-agents` | Custom subagent markdown files, tool restrictions, models |
-| `agent-teams` | Multi-agent teams, shared task lists, inter-agent messaging |
-| `ide` | VS Code, JetBrains, Desktop app, Chrome extension |
-| `headless` | Programmatic CLI, streaming, CI/CD, cloud environments |
-| `ci-cd` | GitHub Actions, GitLab CI/CD, Slack workflows |
-| `features` | Model config, fast mode, output styles, checkpointing |
-| `best-practices` | Context management, prompting, parallel execution |
-| `operations` | Cost management, OpenTelemetry, analytics, troubleshooting |
-| `security` | Sandboxing, devcontainers, network config, data policies |
-| `cloud-providers` | Bedrock, Vertex AI, Foundry, LLM gateways |
+| `getting-started-doc` | Installation, authentication, agentic loop, built-in tools |
+| `cli-doc` | CLI flags, commands, keyboard shortcuts, terminal config |
+| `settings-doc` | Configuration scopes, permissions, sandbox, environment variables |
+| `memory-doc` | CLAUDE.md files, auto memory, project rules, imports |
+| `skills-doc` | Creating skills, SKILL.md format, Agent Skills standard |
+| `hooks-doc` | Event-driven shell commands, lifecycle hooks, matchers |
+| `plugins-doc` | Creating, distributing, discovering, and installing plugins |
+| `mcp-doc` | MCP server integration, stdio/SSE/HTTP, tool search |
+| `sub-agents-doc` | Custom subagent markdown files, tool restrictions, models |
+| `agent-teams-doc` | Multi-agent teams, shared task lists, inter-agent messaging |
+| `ide-doc` | VS Code, JetBrains, Desktop app, Chrome extension |
+| `headless-doc` | Programmatic CLI, streaming, CI/CD, cloud environments |
+| `ci-cd-doc` | GitHub Actions, GitLab CI/CD, Slack workflows |
+| `features-doc` | Model config, fast mode, output styles, checkpointing |
+| `best-practices-doc` | Context management, prompting, parallel execution |
+| `operations-doc` | Cost management, OpenTelemetry, analytics, troubleshooting |
+| `security-doc` | Sandboxing, devcontainers, network config, data policies |
+| `cloud-providers-doc` | Bedrock, Vertex AI, Foundry, LLM gateways |
 
 Each skill includes a concise `SKILL.md` summary and `references/` with 57 word-for-word copies of the official docs, sourced from [code.claude.com/docs](https://code.claude.com/docs).
 

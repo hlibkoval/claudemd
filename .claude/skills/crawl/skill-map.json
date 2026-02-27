@@ -2,74 +2,74 @@
   "doc_base": "https://code.claude.com/docs/en",
   "plugin_root": "skills",
   "skills": {
-    "skills": [
+    "skills-doc": [
       {"url": "https://code.claude.com/docs/en/skills.md", "file": "claude-code-skills.md"},
       {"url": "https://agentskills.io/specification.md", "file": "agent-skills-specification.md"}
     ],
-    "sub-agents": [
+    "sub-agents-doc": [
       {"url": "https://code.claude.com/docs/en/sub-agents.md", "file": "claude-code-sub-agents.md"}
     ],
-    "hooks": [
+    "hooks-doc": [
       {"url": "https://code.claude.com/docs/en/hooks.md", "file": "claude-code-hooks-reference.md"},
       {"url": "https://code.claude.com/docs/en/hooks-guide.md", "file": "claude-code-hooks-guide.md"}
     ],
-    "plugins": [
+    "plugins-doc": [
       {"url": "https://code.claude.com/docs/en/plugins.md", "file": "claude-code-plugins.md"},
       {"url": "https://code.claude.com/docs/en/plugins-reference.md", "file": "claude-code-plugins-reference.md"},
       {"url": "https://code.claude.com/docs/en/discover-plugins.md", "file": "claude-code-discover-plugins.md"},
       {"url": "https://code.claude.com/docs/en/plugin-marketplaces.md", "file": "claude-code-plugin-marketplaces.md"}
     ],
-    "mcp": [
+    "mcp-doc": [
       {"url": "https://code.claude.com/docs/en/mcp.md", "file": "claude-code-mcp.md"}
     ],
-    "memory": [
+    "memory-doc": [
       {"url": "https://code.claude.com/docs/en/memory.md", "file": "claude-code-memory.md"}
     ],
-    "agent-teams": [
+    "agent-teams-doc": [
       {"url": "https://code.claude.com/docs/en/agent-teams.md", "file": "claude-code-agent-teams.md"}
     ],
-    "settings": [
+    "settings-doc": [
       {"url": "https://code.claude.com/docs/en/settings.md", "file": "claude-code-settings.md"},
       {"url": "https://code.claude.com/docs/en/permissions.md", "file": "claude-code-permissions.md"},
       {"url": "https://code.claude.com/docs/en/server-managed-settings.md", "file": "claude-code-server-managed-settings.md"}
     ],
-    "cli": [
+    "cli-doc": [
       {"url": "https://code.claude.com/docs/en/cli-reference.md", "file": "claude-code-cli-reference.md"},
       {"url": "https://code.claude.com/docs/en/interactive-mode.md", "file": "claude-code-interactive-mode.md"},
       {"url": "https://code.claude.com/docs/en/keybindings.md", "file": "claude-code-keybindings.md"},
       {"url": "https://code.claude.com/docs/en/terminal-config.md", "file": "claude-code-terminal-config.md"}
     ],
-    "getting-started": [
+    "getting-started-doc": [
       {"url": "https://code.claude.com/docs/en/overview.md", "file": "claude-code-overview.md"},
       {"url": "https://code.claude.com/docs/en/quickstart.md", "file": "claude-code-quickstart.md"},
       {"url": "https://code.claude.com/docs/en/setup.md", "file": "claude-code-setup.md"},
       {"url": "https://code.claude.com/docs/en/authentication.md", "file": "claude-code-authentication.md"},
       {"url": "https://code.claude.com/docs/en/how-claude-code-works.md", "file": "claude-code-how-it-works.md"}
     ],
-    "best-practices": [
+    "best-practices-doc": [
       {"url": "https://code.claude.com/docs/en/best-practices.md", "file": "claude-code-best-practices.md"},
       {"url": "https://code.claude.com/docs/en/common-workflows.md", "file": "claude-code-common-workflows.md"}
     ],
-    "ide": [
+    "ide-doc": [
       {"url": "https://code.claude.com/docs/en/desktop.md", "file": "claude-code-desktop.md"},
       {"url": "https://code.claude.com/docs/en/desktop-quickstart.md", "file": "claude-code-desktop-quickstart.md"},
       {"url": "https://code.claude.com/docs/en/vs-code.md", "file": "claude-code-vs-code.md"},
       {"url": "https://code.claude.com/docs/en/jetbrains.md", "file": "claude-code-jetbrains.md"},
       {"url": "https://code.claude.com/docs/en/chrome.md", "file": "claude-code-chrome.md"}
     ],
-    "cloud-providers": [
+    "cloud-providers-doc": [
       {"url": "https://code.claude.com/docs/en/amazon-bedrock.md", "file": "claude-code-amazon-bedrock.md"},
       {"url": "https://code.claude.com/docs/en/google-vertex-ai.md", "file": "claude-code-google-vertex-ai.md"},
       {"url": "https://code.claude.com/docs/en/microsoft-foundry.md", "file": "claude-code-microsoft-foundry.md"},
       {"url": "https://code.claude.com/docs/en/third-party-integrations.md", "file": "claude-code-third-party-integrations.md"},
       {"url": "https://code.claude.com/docs/en/llm-gateway.md", "file": "claude-code-llm-gateway.md"}
     ],
-    "ci-cd": [
+    "ci-cd-doc": [
       {"url": "https://code.claude.com/docs/en/github-actions.md", "file": "claude-code-github-actions.md"},
       {"url": "https://code.claude.com/docs/en/gitlab-ci-cd.md", "file": "claude-code-gitlab-ci-cd.md"},
       {"url": "https://code.claude.com/docs/en/slack.md", "file": "claude-code-slack.md"}
     ],
-    "security": [
+    "security-doc": [
       {"url": "https://code.claude.com/docs/en/security.md", "file": "claude-code-security.md"},
       {"url": "https://code.claude.com/docs/en/sandboxing.md", "file": "claude-code-sandboxing.md"},
       {"url": "https://code.claude.com/docs/en/devcontainer.md", "file": "claude-code-devcontainer.md"},
@@ -77,14 +77,14 @@
       {"url": "https://code.claude.com/docs/en/data-usage.md", "file": "claude-code-data-usage.md"},
       {"url": "https://code.claude.com/docs/en/legal-and-compliance.md", "file": "claude-code-legal-and-compliance.md"}
     ],
-    "operations": [
+    "operations-doc": [
       {"url": "https://code.claude.com/docs/en/analytics.md", "file": "claude-code-analytics.md"},
       {"url": "https://code.claude.com/docs/en/costs.md", "file": "claude-code-costs.md"},
       {"url": "https://code.claude.com/docs/en/monitoring-usage.md", "file": "claude-code-monitoring-usage.md"},
       {"url": "https://code.claude.com/docs/en/troubleshooting.md", "file": "claude-code-troubleshooting.md"},
       {"url": "https://code.claude.com/docs/en/changelog.md", "file": "claude-code-changelog.md"}
     ],
-    "features": [
+    "features-doc": [
       {"url": "https://code.claude.com/docs/en/fast-mode.md", "file": "claude-code-fast-mode.md"},
       {"url": "https://code.claude.com/docs/en/model-config.md", "file": "claude-code-model-config.md"},
       {"url": "https://code.claude.com/docs/en/output-styles.md", "file": "claude-code-output-styles.md"},
@@ -93,7 +93,7 @@
       {"url": "https://code.claude.com/docs/en/features-overview.md", "file": "claude-code-features-overview.md"},
       {"url": "https://code.claude.com/docs/en/remote-control.md", "file": "claude-code-remote-control.md"}
     ],
-    "headless": [
+    "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},
       {"url": "https://code.claude.com/docs/en/claude-code-on-the-web.md", "file": "claude-code-on-the-web.md"}
     ]

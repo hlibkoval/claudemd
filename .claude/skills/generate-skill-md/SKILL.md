@@ -12,7 +12,7 @@ You are generating a `SKILL.md` file for the `$ARGUMENTS` skill in the claudemd 
 
 ## Context
 
-First, invoke `/skills` to load the skills documentation — this tells you the SKILL.md format, frontmatter fields, and best practices.
+First, invoke `/skills-doc` to load the skills documentation — this tells you the SKILL.md format, frontmatter fields, and best practices.
 
 ## Locate the skill
 
@@ -26,10 +26,10 @@ Read all files in `skills/$ARGUMENTS/references/` — these are the source docum
 Read 2-3 existing SKILL.md files from sibling skills to understand the established pattern:
 
 ```
-skills/hooks/SKILL.md
-skills/sub-agents/SKILL.md
-skills/plugins/SKILL.md
-skills/skills/SKILL.md
+skills/hooks-doc/SKILL.md
+skills/sub-agents-doc/SKILL.md
+skills/plugins-doc/SKILL.md
+skills/skills-doc/SKILL.md
 ```
 
 ## Generate the SKILL.md
