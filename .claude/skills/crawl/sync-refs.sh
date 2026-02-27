@@ -121,14 +121,14 @@ for skill in $(jq -r '.skills | keys[]' "$SKILL_MAP"); do
 
     if curl -sL --fail "$url" -o "$dest" 2>/dev/null; then
       if [[ -s "$dest" ]]; then
-        ((downloaded++))
+        ((downloaded++)) || true
       else
         echo "WARNING: Empty file from $url" >&2
-        ((failed++))
+        ((failed++)) || true
       fi
     else
       echo "FAILED: curl $url" >&2
-      ((failed++))
+      ((failed++)) || true
     fi
   done
 done

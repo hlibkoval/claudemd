@@ -75,7 +75,8 @@
       {"url": "https://code.claude.com/docs/en/devcontainer.md", "file": "claude-code-devcontainer.md"},
       {"url": "https://code.claude.com/docs/en/network-config.md", "file": "claude-code-network-config.md"},
       {"url": "https://code.claude.com/docs/en/data-usage.md", "file": "claude-code-data-usage.md"},
-      {"url": "https://code.claude.com/docs/en/legal-and-compliance.md", "file": "claude-code-legal-and-compliance.md"}
+      {"url": "https://code.claude.com/docs/en/legal-and-compliance.md", "file": "claude-code-legal-and-compliance.md"},
+      {"url": "https://code.claude.com/docs/en/zero-data-retention.md", "file": "claude-code-zero-data-retention.md"}
     ],
     "operations-doc": [
       {"url": "https://code.claude.com/docs/en/analytics.md", "file": "claude-code-analytics.md"},
