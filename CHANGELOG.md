@@ -2,6 +2,23 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.3.3
+
+**7 references updated across 6 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, operations-doc, skills-doc
+
+### New
+- **Built-in commands table expanded to ~50 commands** — interactive mode docs now list all available `/` commands including `/add-dir`, `/agents`, `/chrome`, `/diff`, `/extra-usage`, `/fast`, `/feedback`, `/fork`, `/hooks`, `/ide`, `/insights`, `/install-github-app`, `/install-slack-app`, `/keybindings`, `/login`, `/logout`, `/mobile`, `/output-style`, `/passes`, `/plugin`, `/pr-comments`, `/privacy-settings`, `/release-notes`, `/remote-control`, `/remote-env`, `/review`, `/sandbox`, `/security-review`, `/skills`, `/stickers`, `/terminal-setup`, `/upgrade`, `/vim`, and others with aliases and expanded descriptions (cli-doc)
+- **Bundled `/debug` skill** — troubleshoots the current session by reading the debug log; optionally accepts a description to focus analysis (skills-doc)
+- **Bundled developer platform skill** — auto-activates when code imports the Anthropic SDK; no manual invocation needed (skills-doc)
+
+### Changed
+- **`/debug` moved from built-in commands to bundled skills** — `/debug` is now a prompt-based bundled skill rather than a fixed built-in command (cli-doc, skills-doc)
+- **Bundled skills section rewritten** — now explains that bundled skills are prompt-based playbooks (not fixed logic), can spawn parallel agents, and adapt to the codebase; expanded from two to four entries (skills-doc)
+- **"Slash commands" renamed to "commands" throughout** — terminology changed from "slash command" to "command" in CLI reference, features overview, getting-started, hooks guide, and skills docs (cli-doc, features-doc, getting-started-doc, hooks-doc, skills-doc)
+- **Built-in commands intro text rewritten** — now notes that command visibility depends on platform, plan, and environment; documents `<arg>` / `[arg]` notation for required/optional arguments (cli-doc)
+- **Bundled skills referenced in features overview** — skills tab now mentions `/simplify`, `/batch`, and `/debug` as bundled skills that ship with Claude Code (features-doc)
+- Minor wording/formatting updates across operations-doc docs
+
 ## 26.2.28
 
 **19 references updated across 13 skills:** cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, security-doc, settings-doc, skills-doc, sub-agents-doc

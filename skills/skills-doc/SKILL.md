@@ -1,6 +1,6 @@
 ---
 name: skills-doc
-description: Complete documentation for Claude Code skills and the Agent Skills open standard — creating SKILL.md files, frontmatter fields (name, description, allowed-tools, context, agent, hooks), skill locations (enterprise/personal/project/plugin), invocation control, string substitutions, subagent execution, progressive disclosure, supporting files, permission control, and sharing skills.
+description: Complete documentation for Claude Code skills and the Agent Skills open standard — creating skills, SKILL.md format, frontmatter fields (name, description, allowed-tools, context, agent, model, hooks), invocation control (user-invocable, disable-model-invocation), string substitutions ($ARGUMENTS, $N), dynamic context injection, subagent execution (context fork), supporting files, progressive disclosure, skill locations, permission control, bundled skills (/simplify, /batch, /debug), sharing and distribution. Load when discussing skill creation, slash commands, skill configuration, or Agent Skills spec.
 user-invocable: false
 ---
 
@@ -66,6 +66,14 @@ If `$ARGUMENTS` is not present in skill content, arguments are appended as `ARGU
 ### Subagent Execution (`context: fork`)
 
 Add `context: fork` to run a skill in an isolated subagent. The skill content becomes the subagent's task prompt. Use `agent` to pick the agent type (`Explore`, `Plan`, `general-purpose`, or custom from `.claude/agents/`). Defaults to `general-purpose`. The subagent does not have access to conversation history. Only makes sense for skills with explicit task instructions, not passive guidelines.
+
+### Bundled Skills
+
+| Skill | Purpose |
+|:------|:--------|
+| `/simplify` | Reviews recently changed files for code reuse, quality, efficiency; spawns 3 parallel review agents |
+| `/batch <instruction>` | Orchestrates large-scale parallel changes across a codebase using git worktrees |
+| `/debug [description]` | Troubleshoots the current session by reading the debug log |
 
 ### Directory Structure
 
