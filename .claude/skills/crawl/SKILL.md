@@ -1,6 +1,6 @@
 ---
 name: crawl
-description: Crawl Claude Code documentation, download reference pages, detect changes, and regenerate SKILL.md files for the claudemd plugin.
+description: Crawl Claude Code documentation, download reference pages, and detect changes for the claudemd plugin.
 allowed-tools: Bash, Read, Glob, Grep, Skill
 ---
 
@@ -56,40 +56,6 @@ Print a summary table:
 | hooks | 2 files | exists | regenerate |
 | mcp | 1 file | missing | generate |
 | skills | 0 files | exists | skip |
-
-### 4. Regenerate changed skills
-
-For each skill that needs (re)generation:
-
-1. Delete the existing SKILL.md if present:
-   ```bash
-   rm "skills/<skill-name>/SKILL.md"
-   ```
-
-2. Invoke the generate-skill-md skill with the skill name:
-   ```
-   /generate-skill-md <skill-name>
-   ```
-
-Process skills in parallel.
-
-### 5. Update CHANGELOG.md
-
-Invoke the generate-changelog skill to analyze reference diffs and add an entry:
-
-```
-/generate-changelog
-```
-
-### 6. Final summary
-
-After all regenerations complete, run:
-
-```bash
-git diff --stat
-```
-
-Report what changed overall.
 
 ## Notes
 

@@ -2,6 +2,16 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.3.4.1
+
+**1 reference updated across 1 skill:** operations-doc
+
+### Changed
+- **Opus 4.6 default effort lowered to medium** — Max and Team subscribers now start at medium effort instead of high; adjustable via `/model` (operations-doc)
+- **"ultrathink" keyword re-introduced** — typing "ultrathink" enables high effort for the next turn (operations-doc)
+- **Opus 4 and 4.1 removed from first-party API** — users with those models pinned are automatically migrated to Opus 4.6 (operations-doc)
+- Minor wording/formatting updates across operations-doc docs
+
 ## 26.3.4
 
 **4 references updated across 4 skills:** best-practices-doc, features-doc, operations-doc, settings-doc

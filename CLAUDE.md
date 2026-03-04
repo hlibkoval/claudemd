@@ -10,10 +10,10 @@ A Claude Code plugin (`claudemd`) that packages official Claude Code documentati
 
 ```
 .claude-plugin/plugin.json     → Plugin manifest (name: "claudemd")
-skills/<topic>/SKILL.md        → Quick-reference summary (< 200 lines, auto-generated)
+skills/<topic>/SKILL.md        → Quick-reference summary (auto-generated)
 skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-edited)
 .claude/skills/crawl/          → Maintenance skill: downloads docs, detects changes
-.claude/skills/generate-skill-md/ → Forked skill: regenerates SKILL.md from references
+.claude/skills/crawl/skill-md-conventions.md → Project conventions for SKILL.md generation
 .claude/skills/skills-doc      → Symlink to skills/skills-doc/ (so /skills-doc works locally)
 .claude/skills/crawl/skill-map.json → Source of truth: maps skill names → doc URLs
 ```
@@ -21,7 +21,7 @@ skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-ed
 ## Key Conventions
 
 - **Reference files are curl'd, never hand-written.** They must be exact copies of the source URLs.
-- **SKILL.md files are generated summaries.** They contain quick-reference tables + links to the reference files. Kept under 200 lines.
+- **SKILL.md files are generated summaries.** They contain quick-reference tables + links to the reference files.
 - **All plugin skills use `user-invocable: false`** — they're background knowledge Claude loads automatically, not user commands.
 - **skill-map.json is the canonical mapping** of which doc URLs belong to which skill. Adding a new skill means adding an entry here.
 
@@ -36,7 +36,7 @@ Run `/crawl` to update all docs. It:
 2. Curls all doc URLs into `skills/<name>/references/`
 3. Detects orphaned references not in the map
 4. Uses `git diff` to find changed references
-5. Regenerates SKILL.md for changed skills via `/generate-skill-md <name>`
+5. Regenerates SKILL.md for changed skills via `/skill-creator`
 
 To add a new skill: add entries to `skill-map.json`, then run `/crawl <skill-name>`.
 
