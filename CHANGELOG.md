@@ -2,6 +2,14 @@
 
 All notable upstream documentation changes detected by `/crawl` are documented here.
 
+## 26.3.4
+
+**4 references updated across 4 skills:** best-practices-doc, features-doc, operations-doc, settings-doc
+
+### Changed
+- **Effort levels now supported on Sonnet 4.6** — `CLAUDE_CODE_EFFORT_LEVEL` and the `/model` effort slider now apply to both Opus 4.6 and Sonnet 4.6; "high" is no longer labeled as the default (best-practices-doc, features-doc, settings-doc)
+- Minor wording/formatting updates across operations-doc docs
+
 ## 26.3.3
 
 **7 references updated across 6 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, operations-doc, skills-doc
