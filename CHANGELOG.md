@@ -1,6 +1,42 @@
 # Changelog
 
-All notable upstream documentation changes detected by `/crawl` are documented here.
+All notable upstream documentation changes detected by `/update` are documented here.
+
+## 26.3.5
+
+**18 references updated across 11 skills:** best-practices-doc, cli-doc, features-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
+
+### New
+- **`InstructionsLoaded` hook event** — fires when `CLAUDE.md` or `.claude/rules/*.md` files are loaded (eagerly or lazily); async-only for observability, no blocking support (hooks-doc)
+- **`/reload-plugins` command** — reloads all active plugins mid-session without restarting; reports what was loaded and which changes require a restart (cli-doc, plugins-doc)
+- **`/claude-api` bundled skill** — loads Claude API and Agent SDK reference for the project's language; auto-activates on `anthropic`/`@anthropic-ai/sdk`/`claude_agent_sdk` imports, replacing the unnamed developer platform skill (skills-doc)
+- **`git-subdir` plugin source** — new marketplace plugin source type that sparse-clones a subdirectory from a git repo, reducing bandwidth for monorepos (plugins-doc)
+- **`--callback-port` for MCP OAuth** — fixes the OAuth callback port so it matches a pre-registered redirect URI; works with or without `--client-id` (mcp-doc)
+- **`authServerMetadataUrl` MCP OAuth override** — bypasses standard OAuth metadata discovery by pointing to a custom OIDC endpoint URL (mcp-doc)
+- **`pathPattern` managed marketplace restriction** — allows filesystem-based marketplaces from specific directories via regex matching on the path (plugins-doc)
+- **`${CLAUDE_SKILL_DIR}` substitution variable** — resolves to the directory containing a skill's `SKILL.md`; useful for referencing bundled scripts in bash injection commands (skills-doc)
+- **`includeGitInstructions` setting and `CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS` env var** — removes built-in commit/PR workflow instructions from the system prompt when disabled (settings-doc)
+- **`pluginTrustMessage` managed setting** — appends a custom organization message to the plugin trust warning shown before installation (settings-doc)
+- **`enableWeakerNetworkIsolation` sandbox setting** — allows macOS TLS trust service access for Go-based tools (`gh`, `gcloud`, `terraform`) when using a MITM proxy with custom CA (settings-doc)
+- **Worktree fields in status line JSON** — `worktree.name`, `worktree.path`, `worktree.branch`, `worktree.original_cwd`, and `worktree.original_branch` are now available during `--worktree` sessions (features-doc)
+- **Windows status line configuration** — added PowerShell and Git Bash examples for configuring the status line on Windows (features-doc)
+- **Remote Control `--name` flag** — set a custom session title visible in the claude.ai session list; also available as a positional argument to `/remote-control` (features-doc)
+
+### Changed
+- **`ultrathink` keyword documented as dedicated config row** — "ultrathink" now has its own entry in the thinking configuration table; it sets effort to high for that turn on Opus 4.6 and Sonnet 4.6 (best-practices-doc)
+- **Opus 4.6 default effort is medium** — documented that Opus 4.6 defaults to medium effort for Max and Team subscribers (features-doc)
+- **Effort level shown next to logo/spinner** — the current effort level is now displayed in the UI so you can confirm the active setting without opening `/model` (features-doc)
+- **System prompt flags work in all modes** — `--system-prompt-file` and `--append-system-prompt-file` no longer limited to print mode; all four flags now work in both interactive and non-interactive modes (cli-doc)
+- **`TeammateIdle` and `TaskCompleted` hooks support JSON `{"continue": false}` decision control** — allows stopping a teammate entirely instead of re-running, matching `Stop` hook behavior (hooks-doc)
+- **Permission rule precedence clarified** — explicit numbered list showing managed > CLI args > local project > shared project > user; deny at any level cannot be overridden (settings-doc)
+- **Managed settings cannot be overridden by CLI arguments** — precedence docs updated to state this explicitly (settings-doc)
+- **`allowManagedDomainsOnly` blocks non-allowed domains automatically** — non-allowed domains are now blocked without prompting the user when this sandbox setting is enabled (security-doc, settings-doc)
+- **Plugins security warning added** — new section warning that plugins execute arbitrary code with user privileges; recommends only installing from trusted sources (plugins-doc)
+- **`InstructionsLoaded` hook mentioned in memory debugging tip** — memory docs now suggest using the hook to trace which instruction files are loaded and why (memory-doc)
+- **Bash mode exit methods documented** — exit `!` bash mode with Escape, Backspace, or Ctrl+U on an empty prompt (cli-doc)
+- **`/commit-push-pr` skill reference removed** — PR creation workflow simplified to just "ask Claude directly" or step-by-step guidance (best-practices-doc)
+- **`--debug` flag for status line troubleshooting** — logs exit code and stderr from the first status line invocation in a session (features-doc)
+- Minor wording/formatting updates across operations-doc docs
 
 ## 26.3.4.1
 
