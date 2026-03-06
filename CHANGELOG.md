@@ -2,6 +2,22 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.6
+
+**9 references updated across 7 skills:** best-practices-doc, features-doc, getting-started-doc, ide-doc, mcp-doc, operations-doc, security-doc
+
+### New
+- **VS Code Activity Bar sessions list** — spark icon in the Activity Bar always shows all Claude Code sessions; clicking opens a session as a full editor tab (ide-doc)
+- **VS Code plan markdown document view** — Plan mode now opens the plan as a full markdown document where you can add inline comments to provide feedback before Claude begins (ide-doc)
+- **VS Code `/mcp` management dialog** — native MCP server management in the chat panel to enable/disable servers, reconnect, and manage OAuth authentication without switching to the terminal (ide-doc)
+
+### Changed
+- **Remote Control available on all plans** — expanded from Max/Pro research preview to all plans including Team and Enterprise; admins must enable Claude Code in admin settings first (features-doc)
+- **VS Code MCP server config upgraded to "Partial"** — feature comparison table updated: servers are added via CLI but can now be managed with `/mcp` in the chat panel (ide-doc)
+- **Activity Bar icon vs Claude panel clarified** — the sessions list icon is always visible in the Activity Bar, while the Claude panel icon only appears there when docked to the left sidebar (ide-doc)
+- **Upstream changelog updated** — new release with 18 bug fixes (API 400 errors with proxy endpoints, effort parameter on custom Bedrock profiles, clipboard corruption on Windows/WSL, voice mode on Windows, and more), performance improvements (~74% fewer prompt re-renders, ~426KB startup memory reduction, 300x reduction in Remote Control poll rate), and the three new VS Code features above (operations-doc)
+- Minor wording/formatting updates across best-practices-doc, getting-started-doc, mcp-doc, security-doc docs
+
 ## 26.3.5
 
 **18 references updated across 11 skills:** best-practices-doc, cli-doc, features-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
