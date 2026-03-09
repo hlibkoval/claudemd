@@ -2,6 +2,22 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.9
+
+**7 references updated across 6 skills:** getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc, skills-doc
+
+### New
+- **Scheduled tasks in Desktop** — full documentation for recurring local sessions: create via sidebar or natural language, configure frequency (manual/hourly/daily/weekdays/weekly), missed-run catch-up behavior, per-task permission mode, and on-disk editing via `~/.claude/scheduled-tasks/<name>/SKILL.md` (ide-doc)
+- **`/loop` bundled skill** — runs a prompt repeatedly on an interval within a session (e.g. `/loop 5m check the deploy`); schedules a recurring cron task and confirms cadence (skills-doc)
+- **Setup scripts for cloud environments** — Bash scripts that run before Claude Code launches in new cloud sessions; configured in the environment settings dialog; replaces SessionStart hooks as the primary dependency installation method for cloud-only tooling (headless-doc)
+- **`CLAUDE_CODE_DISABLE_CRON` env var** — set to `1` to disable scheduled tasks; the `/loop` skill and cron tools become unavailable and already-scheduled tasks stop firing (settings-doc)
+
+### Changed
+- **Cloud environment setup references updated to setup scripts** — "How it works" steps, environment dialog descriptions, dependency management section, and best practices all now reference setup scripts instead of or alongside SessionStart hooks (headless-doc)
+- **Setup scripts vs. SessionStart hooks comparison table** — documents when to use each: setup scripts for cloud-only tooling (runs before launch, new sessions only), SessionStart hooks for cross-environment setup (runs after launch, every session) (headless-doc)
+- **Upstream changelog updated** — new v2.1.71 release with `/loop` command, cron scheduling tools, `voice:pushToTalk` rebindable keybinding, expanded bash auto-approval allowlist, and 20+ bug fixes including stdin freeze in long sessions, startup freezes from CoreAudio/OAuth, forked conversation plan conflicts, and plugin installation loss across instances (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, ide-doc docs
+
 ## 26.3.6
 
 **9 references updated across 7 skills:** best-practices-doc, features-doc, getting-started-doc, ide-doc, mcp-doc, operations-doc, security-doc
