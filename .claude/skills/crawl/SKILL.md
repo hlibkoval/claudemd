@@ -16,7 +16,7 @@ Output from sync script:
 
 !`bash .claude/skills/crawl/sync-refs.sh`
 
-Review the output above. If there are **NEW unmapped URLs**, ask the user which skill to assign each to (show existing skill names as options, or let them create a new skill name). Auto-generate the `file` field as `claude-code-{slug}.md` where `{slug}` comes from the URL filename without extension. Add entries to `.claude/skills/crawl/skill-map.json`, then re-run the script to download the newly mapped references:
+Review the output above. If there are **NEW unmapped URLs**, ask the user which skill to assign each to (show existing skill names as options, or let them create a new skill name). Auto-generate the `file` field as `claude-code-{slug}.md` where `{slug}` comes from the URL filename without extension. Add entries to `skill-map.json`, then re-run the script to download the newly mapped references:
 
 ```bash
 bash .claude/skills/crawl/sync-refs.sh

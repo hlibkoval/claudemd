@@ -8,7 +8,7 @@ set -euo pipefail
 
 PROJECT_ROOT="${1:-$PWD}"
 PLUGIN_ROOT="${2:-skills}"
-SKILL_MAP="$PROJECT_ROOT/.claude/skills/crawl/skill-map.json"
+SKILL_MAP="$PROJECT_ROOT/skill-map.json"
 BASE_DIR="$PROJECT_ROOT/$PLUGIN_ROOT"
 
 if [[ ! -f "$SKILL_MAP" ]]; then

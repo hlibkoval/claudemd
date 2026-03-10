@@ -1,7 +1,6 @@
 ---
 name: update
 description: Run a full update cycle — crawl docs, bump version, commit and push.
-disable-model-invocation: true
 allowed-tools: Bash, Read, Edit, Glob, Grep, Skill, Agent, AskUserQuestion
 ---
 

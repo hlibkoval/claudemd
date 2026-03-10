@@ -15,7 +15,7 @@ skills/<topic>/references/*.md → Curl'd copies of official docs (never hand-ed
 .claude/skills/crawl/          → Maintenance skill: downloads docs, detects changes
 .claude/skills/crawl/skill-md-conventions.md → Project conventions for SKILL.md generation
 .claude/skills/skills-doc      → Symlink to skills/skills-doc/ (so /skills-doc works locally)
-.claude/skills/crawl/skill-map.json → Source of truth: maps skill names → doc URLs
+skill-map.json                     → Source of truth: maps skill names → doc URLs
 ```
 
 ## Key Conventions

@@ -39,6 +39,6 @@ For the complete official documentation, see the reference files:
 ## Project-specific rules
 
 1. Reference files in `references/` are curl'd word-for-word copies of upstream docs. Never modify them.
-2. Include source URLs for every reference doc. Read `.claude/skills/crawl/skill-map.json` for the canonical URLs.
+2. Include source URLs for every reference doc. Read `skill-map.json` (in the project root) for the canonical URLs.
 3. **Never write `!` immediately followed by a backtick.** Claude Code's permission system interprets `!\`` as a bash command pattern and blocks the skill from loading.
 4. Study 2-3 existing sibling SKILL.md files (e.g., `skills/hooks-doc/SKILL.md`, `skills/plugins-doc/SKILL.md`) to match the established pattern.
