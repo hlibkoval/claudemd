@@ -252,3 +252,6 @@ skills-ref validate ./my-skill
 ```
 
 This checks that your `SKILL.md` frontmatter is valid and follows all naming conventions.
+
+
+Built with [Mintlify](https://mintlify.com).

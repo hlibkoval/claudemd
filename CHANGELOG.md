@@ -2,6 +2,33 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.10
+
+**13 references updated across 11 skills:** best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, ide-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc
+
+### New
+- **GitHub Code Review integration** — new "Get automatic code review on every PR" row in the overview table linking to `/en/code-review` (getting-started-doc)
+- **`CronCreate`, `CronDelete`, `CronList` tools** — session-scoped scheduled/one-shot prompts; documented in the tools table with links to `/en/scheduled-tasks` (settings-doc)
+- **`EnterWorktree` / `ExitWorktree` tools** — create and leave isolated git worktrees from within a session (settings-doc)
+- **`EnterPlanMode` tool** — switches to plan mode to design an approach before coding (settings-doc)
+- **`ListMcpResourcesTool` / `ReadMcpResourceTool` tools** — list and read MCP server resources (settings-doc)
+- **`TaskStop` tool** — kills a running background task by ID (settings-doc)
+- **`TodoWrite` tool** — manages the session task checklist in non-interactive mode and the Agent SDK (settings-doc)
+- **`ToolSearch` tool** — renamed from `MCPSearch`; searches for and loads deferred tools (settings-doc)
+- **VS Code `vscode://anthropic.claude-code/open` URI handler** — opens a new Claude Code tab programmatically with optional `prompt` and `session` query parameters (operations-doc)
+
+### Changed
+- **`/review` command deprecated** — replaced with install instructions for the `code-review` plugin from the marketplace (cli-doc)
+- **`CLAUDE.local.md` removed from docs** — local instructions scope dropped from the memory, settings, best-practices, and IDE reference pages; personal per-project preferences now use a home-directory import instead (memory-doc, settings-doc, best-practices-doc, ide-doc)
+- **Tools table rewritten and expanded** — alphabetically sorted, added 10 new tools (`CronCreate/Delete/List`, `EnterPlanMode`, `EnterWorktree`, `ExitWorktree`, `ListMcpResourcesTool`, `ReadMcpResourceTool`, `TaskStop`, `TodoWrite`), renamed `MCPSearch` to `ToolSearch` and `KillShell` to `TaskStop`, updated descriptions for `Agent`, `Bash`, `ExitPlanMode`, `TaskOutput`, `WebSearch` (settings-doc)
+- **GitHub Actions `/review` command replaced with plain prompt** — the auto-review workflow example now uses an explicit review instruction instead of `/review`; "Commands" feature renamed to "Skills" with link to `/en/skills`; `prompt` parameter description updated (ci-cd-doc)
+- **Marketplace walkthrough example renamed** — `/review` skill renamed to `/quality-review` throughout the marketplace creation tutorial (plugins-doc)
+- **Skill examples updated** — `/review` references changed to `/deploy` or `/audit` in features overview, plugins, and skills docs (features-doc, plugins-doc, skills-doc)
+- **Effort levels simplified** — low/medium/high only (removed max); new symbols and `/effort auto` to reset (operations-doc)
+- **CLAUDE.md HTML comments hidden from auto-injection** — `<!-- ... -->` comments no longer visible to Claude when CLAUDE.md is auto-injected; still visible via Read tool (operations-doc)
+- **Upstream changelog updated** — new release with `ExitWorktree` tool, `/plan` description argument, `/copy` file-write shortcut, effort level simplification, CLAUDE.md HTML comment hiding, bash parser rewrite, ~510 KB bundle reduction, prompt cache fix reducing input costs up to 12x, and 30+ bug fixes including sandbox permission issues, voice mode stability, worktree isolation, and parallel tool call error handling (operations-doc)
+- Minor wording/formatting updates across skills-doc docs
+
 ## 26.3.9
 
 **7 references updated across 6 skills:** getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc, skills-doc

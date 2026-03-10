@@ -1,234 +1,182 @@
 ---
 name: operations-doc
-description: Complete documentation for Claude Code operations — analytics dashboards (Teams/Enterprise and API Console), contribution metrics with GitHub integration, PR attribution, cost management (tracking, team spend limits, rate limit recommendations, token reduction strategies), OpenTelemetry monitoring (metrics, events, configuration, exporters, cardinality control, dynamic headers), troubleshooting (installation issues, PATH fixes, TLS/SSL errors, permission errors, authentication, IDE integration, performance, WSL), and the changelog. Load when discussing usage analytics, cost optimization, token usage, OpenTelemetry setup, monitoring, troubleshooting installation or runtime issues, or the /cost and /doctor commands.
+description: Complete documentation for Claude Code operations -- analytics dashboards (Teams/Enterprise contribution metrics, API Console usage), cost management (token tracking, team spend limits, rate limits, agent team costs, token reduction strategies), OpenTelemetry monitoring (metrics, events, configuration, exporters, cardinality control, dynamic headers, multi-team support, backend options), troubleshooting (installation, PATH, permissions, authentication, IDE integration, performance, WSL, Windows, sandboxing), and changelog. Load when discussing Claude Code costs, billing, token usage, analytics, monitoring, telemetry, OpenTelemetry, OTEL, troubleshooting installation or authentication problems, rate limits, or usage tracking.
 user-invocable: false
 ---
 
 # Operations Documentation
 
-This skill provides the complete official documentation for Claude Code operations: analytics, cost management, monitoring, troubleshooting, and the changelog.
+This skill provides the complete official documentation for Claude Code analytics, cost management, OpenTelemetry monitoring, troubleshooting, and changelog.
 
 ## Quick Reference
 
 ### Analytics Dashboards
 
-| Plan | Dashboard URL | Includes |
+| Plan | Dashboard URL | Features |
 |:-----|:-------------|:---------|
-| Claude for Teams / Enterprise | claude.ai/analytics/claude-code | Usage metrics, contribution metrics (GitHub), leaderboard, CSV export |
-| API (Claude Console) | platform.claude.com/claude-code | Usage metrics, spend tracking, team insights |
+| Teams / Enterprise | [claude.ai/analytics/claude-code](https://claude.ai/analytics/claude-code) | Usage metrics, contribution metrics (GitHub), leaderboard, CSV export |
+| API (Console) | [platform.claude.com/claude-code](https://platform.claude.com/claude-code) | Usage metrics, spend tracking, team insights |
 
-**Teams/Enterprise summary metrics:** PRs with CC, Lines of code with CC, PRs with Claude Code (%), Suggestion accept rate, Lines of code accepted
+**Teams/Enterprise summary metrics:** PRs with CC, lines of code with CC, PRs with CC (%), suggestion accept rate, lines of code accepted.
 
-**Console metrics:** Lines of code accepted, Suggestion accept rate, Activity (DAU/sessions), Spend (daily API costs)
+**Contribution metrics setup (Teams/Enterprise):** Requires GitHub app install at [github.com/apps/claude](https://github.com/apps/claude), Owner role to configure, and GitHub analytics toggle enabled at [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code). Data appears within 24 hours. Not available with Zero Data Retention enabled.
 
-#### Contribution Metrics Setup (Teams/Enterprise)
+**PR attribution:** PRs tagged as "with Claude Code" when they contain at least one AI-assisted line. Uses a 21-day lookback window. Code rewritten >20% by the developer is not attributed. Excluded files: lock files, generated code, build directories, test fixtures, lines >1000 chars.
 
-Requires Owner role. Not available with Zero Data Retention enabled.
-
-1. GitHub admin installs Claude GitHub app at github.com/apps/claude
-2. Claude Owner enables Claude Code analytics at claude.ai/admin-settings/claude-code
-3. Enable "GitHub analytics" toggle
-4. Complete GitHub authentication flow and select organizations
-
-Data appears within 24 hours with daily updates. Supports GitHub Cloud and GitHub Enterprise Server.
-
-#### PR Attribution
-
-PRs tagged as "with Claude Code" if they contain at least one AI-assisted line. Sessions from 21 days before to 2 days after the PR merge date are considered. Code with >20% developer rewrite is not attributed. Merged PRs are labeled `claude-code-assisted` in GitHub.
-
-**Excluded from analysis:** lock files, generated code, build directories, test fixtures, lines over 1,000 characters.
+**Console dashboard (API):** Shows lines accepted, accept rate, activity chart (DAU/sessions), spend chart, and per-user team insights table. Requires UsageView permission.
 
 ### Cost Management
 
-Average cost: ~$6/developer/day (90th percentile under $12/day). API usage: ~$100-200/developer/month with Sonnet 4.6.
+**Average costs:** ~$6/dev/day (90th percentile < $12/day). ~$100-200/dev/month with Sonnet.
 
-#### /cost Command
+**Track costs:** `/cost` shows session token usage (API users). `/stats` for subscribers.
 
-Shows API token usage for the current session (intended for API users; Claude Max/Pro subscribers use /stats instead).
+**Team spend management:** Set workspace limits in [Console](https://platform.claude.com). "Claude Code" workspace auto-created on first auth. For Bedrock/Vertex/Foundry, consider [LiteLLM](https://docs.litellm.ai/docs/proxy/virtual_keys#tracking-spend) for spend tracking.
 
-#### Team Spend Limits
-
-Set workspace spend limits at platform.claude.com. A "Claude Code" workspace is auto-created on first authentication. For Bedrock/Vertex/Foundry, consider LiteLLM for spend tracking.
-
-#### Rate Limit Recommendations (TPM/RPM per user)
+**Rate limit recommendations (TPM/RPM per user):**
 
 | Team size | TPM per user | RPM per user |
 |:----------|:-------------|:-------------|
-| 1-5 users | 200k-300k | 5-7 |
-| 5-20 users | 100k-150k | 2.5-3.5 |
-| 20-50 users | 50k-75k | 1.25-1.75 |
-| 50-100 users | 25k-35k | 0.62-0.87 |
-| 100-500 users | 15k-20k | 0.37-0.47 |
-| 500+ users | 10k-15k | 0.25-0.35 |
+| 1-5 | 200k-300k | 5-7 |
+| 5-20 | 100k-150k | 2.5-3.5 |
+| 20-50 | 50k-75k | 1.25-1.75 |
+| 50-100 | 25k-35k | 0.62-0.87 |
+| 100-500 | 15k-20k | 0.37-0.47 |
+| 500+ | 10k-15k | 0.25-0.35 |
 
-Rate limits apply at the organization level. TPM per user decreases at scale because fewer users are concurrent.
+**Reduce token usage strategies:**
 
-#### Token Reduction Strategies
+| Strategy | How |
+|:---------|:----|
+| Clear between tasks | `/clear` to reset context; `/rename` + `/resume` to revisit |
+| Choose cheaper model | Sonnet for most tasks; `/model` to switch; `model: haiku` for subagents |
+| Reduce MCP overhead | Prefer CLI tools; disable unused servers; lower tool search threshold |
+| Install code intelligence plugins | Precise symbol navigation reduces file reads |
+| Hooks/skills for preprocessing | Filter verbose output before Claude sees it |
+| Move instructions to skills | Keep CLAUDE.md < ~500 lines; use on-demand skills for specialized workflows |
+| Adjust extended thinking | Lower budget or disable for simple tasks (`MAX_THINKING_TOKENS=8000`) |
+| Delegate to subagents | Isolate verbose operations (tests, logs, docs) |
+| Write specific prompts | Avoid vague requests that trigger broad scanning |
+| Use plan mode | Shift+Tab before implementation to prevent rework |
 
-| Strategy | Details |
-|:---------|:--------|
-| Manage context | Use `/clear` between tasks, `/compact` with custom instructions, `/cost` to check usage |
-| Choose the right model | Sonnet for most tasks, Opus for complex reasoning, `model: haiku` for simple subagents |
-| Reduce MCP overhead | Prefer CLI tools (`gh`, `aws`), disable unused servers, lower tool search threshold (`ENABLE_TOOL_SEARCH=auto:<N>`) |
-| Code intelligence plugins | Install LSP plugins for precise symbol navigation instead of grep-based search |
-| Hooks and skills | Preprocess data in hooks to reduce context; use skills for domain knowledge |
-| Move instructions to skills | Keep CLAUDE.md under ~500 lines; move specialized instructions into on-demand skills |
-| Adjust extended thinking | Lower effort level, disable thinking, or set `MAX_THINKING_TOKENS=8000` for simpler tasks |
-| Delegate to subagents | Isolate verbose operations (tests, logs, docs) in subagents; only summary returns |
-| Agent team costs | ~7x more tokens than standard sessions; keep teams small and tasks self-contained |
-| Write specific prompts | Avoid vague requests; target specific files/functions |
+**Agent team costs:** ~7x standard tokens (each teammate has own context window). Use Sonnet for teammates, keep teams small, keep spawn prompts focused, clean up idle teammates.
 
-**Background token usage:** ~$0.04/session for conversation summarization and command processing.
+**Background token usage:** Conversation summarization and command processing consume ~$0.04/session even when idle.
 
 ### OpenTelemetry Monitoring
 
-Enable with `CLAUDE_CODE_ENABLE_TELEMETRY=1`. Exports metrics via OTel metrics protocol and events via logs/events protocol.
+**Quick start env vars:**
 
-#### Quick Start Environment Variables
-
-| Variable | Description | Values |
-|:---------|:------------|:-------|
+| Variable | Purpose | Values |
+|:---------|:--------|:-------|
 | `CLAUDE_CODE_ENABLE_TELEMETRY` | Enable telemetry (required) | `1` |
 | `OTEL_METRICS_EXPORTER` | Metrics exporter | `otlp`, `prometheus`, `console` |
 | `OTEL_LOGS_EXPORTER` | Logs/events exporter | `otlp`, `console` |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | OTLP protocol | `grpc`, `http/json`, `http/protobuf` |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector endpoint | `http://localhost:4317` |
 | `OTEL_EXPORTER_OTLP_HEADERS` | Auth headers | `Authorization=Bearer token` |
-| `OTEL_METRIC_EXPORT_INTERVAL` | Metrics interval (ms) | Default: `60000` |
-| `OTEL_LOGS_EXPORT_INTERVAL` | Logs interval (ms) | Default: `5000` |
-| `OTEL_LOG_USER_PROMPTS` | Log prompt content | `1` to enable |
-| `OTEL_LOG_TOOL_DETAILS` | Log MCP/skill names | `1` to enable |
+| `OTEL_METRIC_EXPORT_INTERVAL` | Metrics interval (ms) | `60000` (default) |
+| `OTEL_LOGS_EXPORT_INTERVAL` | Logs interval (ms) | `5000` (default) |
 
-#### Signal-Specific Endpoint Overrides
+**Admin configuration:** Set in managed settings file for org-wide control. Distributed via MDM. Cannot be overridden by users.
 
-| Variable | Description |
-|:---------|:------------|
-| `OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` | Protocol for metrics only |
-| `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` | Endpoint for metrics only |
-| `OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` | Protocol for logs only |
-| `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` | Endpoint for logs only |
+**Exported metrics:**
 
-#### Metrics Cardinality Control
+| Metric | Unit | Extra attributes |
+|:-------|:-----|:-----------------|
+| `claude_code.session.count` | count | -- |
+| `claude_code.lines_of_code.count` | count | `type` (added/removed) |
+| `claude_code.pull_request.count` | count | -- |
+| `claude_code.commit.count` | count | -- |
+| `claude_code.cost.usage` | USD | `model` |
+| `claude_code.token.usage` | tokens | `type` (input/output/cacheRead/cacheCreation), `model` |
+| `claude_code.code_edit_tool.decision` | count | `tool_name`, `decision`, `source`, `language` |
+| `claude_code.active_time.total` | seconds | `type` (user/cli) |
 
-| Variable | Default | Description |
-|:---------|:--------|:------------|
-| `OTEL_METRICS_INCLUDE_SESSION_ID` | `true` | Include session.id |
-| `OTEL_METRICS_INCLUDE_VERSION` | `false` | Include app.version |
-| `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` | `true` | Include user.account_uuid |
+**Standard attributes (all metrics/events):** `session.id`, `app.version`, `organization.id`, `user.account_uuid`, `user.id`, `user.email`, `terminal.type`
 
-#### Dynamic Headers
+**Cardinality control:**
 
-Set `otelHeadersHelper` in settings.json to a script that outputs JSON headers. Refreshes every 29 minutes by default (configure via `CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS`).
+| Variable | Description | Default |
+|:---------|:------------|:--------|
+| `OTEL_METRICS_INCLUDE_SESSION_ID` | Include session.id | `true` |
+| `OTEL_METRICS_INCLUDE_VERSION` | Include app.version | `false` |
+| `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` | Include user.account_uuid | `true` |
 
-#### Multi-Team Support
+**Exported events:**
 
-Use `OTEL_RESOURCE_ATTRIBUTES` for team identification: `department=engineering,team.id=platform,cost_center=eng-123`. No spaces allowed in values (use underscores or percent-encoding).
+| Event name | Trigger | Key attributes |
+|:-----------|:--------|:---------------|
+| `claude_code.user_prompt` | User submits prompt | `prompt_length`, `prompt` (opt-in via `OTEL_LOG_USER_PROMPTS=1`) |
+| `claude_code.tool_result` | Tool completes | `tool_name`, `success`, `duration_ms`, `decision_type`, `tool_parameters` |
+| `claude_code.api_request` | API call made | `model`, `cost_usd`, `duration_ms`, `input_tokens`, `output_tokens`, `speed` |
+| `claude_code.api_error` | API call fails | `model`, `error`, `status_code`, `attempt`, `speed` |
+| `claude_code.tool_decision` | Permission decision | `tool_name`, `decision`, `source` |
 
-#### Exported Metrics
+Events share `prompt.id` for correlation across a single user prompt. `OTEL_LOG_TOOL_DETAILS=1` enables MCP server/tool names and skill names in events.
 
-| Metric | Description | Extra Attributes |
-|:-------|:------------|:-----------------|
-| `claude_code.session.count` | Sessions started | -- |
-| `claude_code.lines_of_code.count` | Lines modified | `type` (added/removed) |
-| `claude_code.pull_request.count` | PRs created | -- |
-| `claude_code.commit.count` | Commits created | -- |
-| `claude_code.cost.usage` | Session cost (USD) | `model` |
-| `claude_code.token.usage` | Tokens used | `type` (input/output/cacheRead/cacheCreation), `model` |
-| `claude_code.code_edit_tool.decision` | Edit tool decisions | `tool_name`, `decision`, `source`, `language` |
-| `claude_code.active_time.total` | Active time (seconds) | `type` (user/cli) |
+**Dynamic headers:** Configure `otelHeadersHelper` in settings.json pointing to a script that outputs JSON headers. Refreshes every 29 minutes by default (`CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS`).
 
-#### Standard Attributes (all metrics/events)
+**Multi-team support:** Use `OTEL_RESOURCE_ATTRIBUTES` for custom attributes (e.g., `department=engineering,team.id=platform`). No spaces allowed in values; use percent-encoding for special characters.
 
-| Attribute | Description |
-|:----------|:------------|
-| `session.id` | Unique session identifier |
-| `app.version` | Claude Code version |
-| `organization.id` | Organization UUID |
-| `user.account_uuid` | Account UUID |
-| `user.id` | Anonymous device/installation identifier |
-| `user.email` | User email (OAuth only) |
-| `terminal.type` | Terminal type (iTerm, vscode, cursor, tmux) |
+**Service info:** `service.name: claude-code`, includes `os.type`, `os.version`, `host.arch`, `wsl.version` (WSL only).
 
-#### Exported Events
-
-| Event | Name | Key Attributes |
-|:------|:-----|:---------------|
-| User prompt | `claude_code.user_prompt` | `prompt_length`, `prompt` (if enabled) |
-| Tool result | `claude_code.tool_result` | `tool_name`, `success`, `duration_ms`, `decision_type`, `decision_source`, `tool_parameters` |
-| API request | `claude_code.api_request` | `model`, `cost_usd`, `duration_ms`, `input_tokens`, `output_tokens`, `cache_read_tokens`, `speed` |
-| API error | `claude_code.api_error` | `model`, `error`, `status_code`, `duration_ms`, `attempt`, `speed` |
-| Tool decision | `claude_code.tool_decision` | `tool_name`, `decision`, `source` |
-
-All events include `prompt.id` (UUID v4) for correlating events from the same user prompt. Use `event.sequence` for ordering within a session.
-
-#### Service Resource Attributes
-
-`service.name`: `claude-code`, `service.version`, `os.type`, `os.version`, `host.arch`, `wsl.version` (WSL only). Meter name: `com.anthropic.claude_code`.
+**Security:** Telemetry is opt-in. No raw file contents exported. User prompts redacted by default. MCP/tool names redacted by default.
 
 ### Troubleshooting
 
-#### Installation Quick Reference
+**Installation diagnostic lookup:**
 
-| Symptom | Fix |
-|:--------|:----|
-| `command not found: claude` | Add `~/.local/bin` to PATH |
-| `syntax error near unexpected token '<'` | Install script returned HTML; retry or use Homebrew/WinGet |
-| `curl: (56) Failure writing output` | Network interruption; retry or use alternative install |
-| `Killed` during install on Linux | Add swap space (min 4 GB RAM required) |
-| TLS/SSL connection errors | Update CA certs; set `NODE_EXTRA_CA_CERTS` for corporate proxies |
+| Symptom | Solution |
+|:--------|:---------|
+| `command not found: claude` | Fix PATH -- add `~/.local/bin` |
+| `syntax error near unexpected token '<'` | Install script returned HTML; use `brew install --cask claude-code` |
+| `curl: (56) Failure writing output` | Download script first, then run |
+| `Killed` on Linux | Add swap space (4 GB RAM required) |
+| TLS/SSL errors | Update CA certs; set `NODE_EXTRA_CA_CERTS` for corporate proxies |
 | `Failed to fetch version` | Check network; set `HTTPS_PROXY` if behind proxy |
-| `irm`/`&&` not recognized (Windows) | Use correct shell (PowerShell vs CMD) |
-| `Claude Code on Windows requires git-bash` | Install Git for Windows; set `CLAUDE_CODE_GIT_BASH_PATH` if needed |
+| `irm is not recognized` | Use correct shell (PowerShell vs CMD) |
+| `requires git-bash` | Install Git for Windows; set `CLAUDE_CODE_GIT_BASH_PATH` |
 | `Error loading shared library` | musl/glibc mismatch; check with `ldd /bin/ls` |
-| `Illegal instruction` on Linux | Architecture mismatch; check `uname -m` |
+| `Illegal instruction` | Architecture mismatch; check with `uname -m` |
 | `dyld: cannot load` on macOS | Requires macOS 13.0+; try Homebrew |
 
-#### Install Methods
+**Authentication fixes:**
 
-| Platform | Primary | Alternative |
-|:---------|:--------|:-----------|
-| macOS/Linux | `curl -fsSL https://claude.ai/install.sh \| bash` | `brew install --cask claude-code` |
-| Windows (PowerShell) | `irm https://claude.ai/install.ps1 \| iex` | `winget install Anthropic.ClaudeCode` |
-| Windows (CMD) | `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd` | WinGet |
+| Issue | Fix |
+|:------|:----|
+| OAuth errors | Run `/logout`, restart, re-authenticate |
+| 403 Forbidden | Verify subscription/role; check proxy |
+| Browser won't open (WSL2) | Set `BROWSER` env var or press `c` to copy URL |
+| Token expired | Run `/login`; check system clock |
 
-#### Authentication Issues
-
-- Run `/logout`, close Claude Code, restart and re-authenticate
-- Press `c` to copy OAuth URL if browser does not open
-- 403 Forbidden: verify subscription at claude.ai/settings or confirm Console role
-- WSL2: set `BROWSER` env var to Windows browser path
-
-#### Configuration File Locations
+**Configuration file locations:**
 
 | File | Purpose |
 |:-----|:--------|
 | `~/.claude/settings.json` | User settings |
 | `.claude/settings.json` | Project settings (committed) |
-| `.claude/settings.local.json` | Local project settings (gitignored) |
+| `.claude/settings.local.json` | Local project settings (not committed) |
 | `~/.claude.json` | Global state (theme, OAuth, MCP) |
 | `.mcp.json` | Project MCP servers |
 
-#### Performance Fixes
+**Reset all settings:** `rm ~/.claude.json && rm -rf ~/.claude/ && rm -rf .claude/ && rm .mcp.json`
 
-- Use `/compact` regularly to reduce context
-- Restart between major tasks
-- Add build directories to `.gitignore`
-- Install system `ripgrep` and set `USE_BUILTIN_RIPGREP=0` if search is broken
-- WSL: keep projects on Linux filesystem (`/home/`) for better performance
+**Performance:** Use `/compact` regularly, close between tasks, add build dirs to `.gitignore`. Install system `ripgrep` and set `USE_BUILTIN_RIPGREP=0` if search is broken.
 
-#### /doctor Command
+**IDE issues (JetBrains):** WSL2 detection may need firewall rule or mirrored networking. Escape key conflict: disable "Move focus to the editor with Escape" in Settings > Tools > Terminal.
 
-Checks installation type/version, search functionality, auto-update status, settings file validity, MCP server config, keybinding config, context usage warnings, and plugin/agent loading errors.
+**Diagnostics:** Run `/doctor` to check installation, settings, MCP servers, keybindings, context usage, and plugin loading. Use `/bug` to report issues.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Track team usage with analytics](references/claude-code-analytics.md) -- analytics dashboards for Teams/Enterprise and API Console, contribution metrics with GitHub integration, PR attribution, leaderboard, CSV export, summary metrics, ROI measurement
-- [Manage costs effectively](references/claude-code-costs.md) -- cost tracking (/cost command), team spend limits, rate limit recommendations, token reduction strategies, context management, model selection, MCP overhead, extended thinking, subagents, agent team costs
-- [Monitoring with OpenTelemetry](references/claude-code-monitoring-usage.md) -- telemetry configuration, environment variables, exporters (OTLP/Prometheus/console), metrics catalog, events catalog, standard attributes, cardinality control, dynamic headers, multi-team support, backend considerations, security/privacy
-- [Troubleshooting](references/claude-code-troubleshooting.md) -- installation issues (PATH, TLS, permissions, Docker, WSL, Windows), authentication, IDE integration, performance, search issues, markdown formatting, /doctor command
-- [Changelog](references/claude-code-changelog.md) -- release notes and version history
+- [Track team usage with analytics](references/claude-code-analytics.md) -- analytics dashboards for Teams/Enterprise and API Console, contribution metrics setup (GitHub integration), PR attribution, summary metrics, charts, leaderboard, data export
+- [Manage costs effectively](references/claude-code-costs.md) -- token tracking with /cost, team spend limits, rate limit recommendations, agent team costs, token reduction strategies (context management, model selection, MCP overhead, hooks, skills, extended thinking, subagents), background token usage
+- [Monitoring with OpenTelemetry](references/claude-code-monitoring-usage.md) -- quick start, admin configuration, environment variables, metrics (session, LOC, PR, commit, cost, token, edit decisions, active time), events (user prompt, tool result, API request/error, tool decision), cardinality control, dynamic headers, multi-team support, backend options, security/privacy
+- [Troubleshooting](references/claude-code-troubleshooting.md) -- installation issues (PATH, HTML scripts, TLS, low memory, Docker, WSL, Windows), authentication, config file locations, performance, IDE integration, markdown formatting
+- [Changelog](references/claude-code-changelog.md) -- release history and version changes
 
 ## Sources
 
