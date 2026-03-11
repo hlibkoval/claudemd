@@ -2,6 +2,20 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.11
+
+**15 references updated across 12 skills:** agent-teams-doc, best-practices-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, skills-doc, sub-agents-doc
+
+### New
+- **`/btw` side question command** — ask a quick question without adding to conversation history; answer appears in a dismissible overlay, runs while Claude is working, reuses prompt cache, has no tool access (cli-doc)
+- **`/btw` referenced in context management tips** — recommended for quick questions that don't need to stay in context (best-practices-doc)
+- **`/btw` as alternative to subagents for context questions** — sees full conversation but has no tools; inverse of a subagent (sub-agents-doc)
+
+### Changed
+- **Plugin reload replaces restart** — auto-update notification, quickstart tutorial, skill loading instructions, and development workflow all now say `/reload-plugins` instead of "restart Claude Code"; LSP server config changes still require a full restart (plugins-doc)
+- **Agent Skills specification reformatted** — directory structure example now shows optional directories inline, frontmatter field examples wrapped in Card components, directory names use backtick formatting, code block language hints added (skills-doc)
+- Minor wording/formatting updates across agent-teams-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, security-doc docs
+
 ## 26.3.10
 
 **13 references updated across 11 skills:** best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, ide-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc

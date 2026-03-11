@@ -1,248 +1,242 @@
 ---
 name: cli-doc
-description: Complete documentation for the Claude Code CLI and interactive terminal experience -- CLI commands (claude, claude -p, claude -c, claude -r, claude update, claude auth, claude mcp, claude agents, claude remote-control), all CLI flags (--model, --print, --continue, --resume, --system-prompt, --append-system-prompt, --allowedTools, --disallowedTools, --tools, --agents, --json-schema, --output-format, --max-turns, --max-budget-usd, --permission-mode, --dangerously-skip-permissions, --mcp-config, --worktree, --add-dir, --plugin-dir, --chrome, --remote, --teleport, --debug, --verbose, --fallback-model, --agent), system prompt flags, --agents JSON format, interactive mode keyboard shortcuts, multiline input methods, built-in slash commands (/clear, /compact, /config, /cost, /diff, /model, /permissions, /resume, /vim, /theme, /tasks, /rewind, /fork, /export, /skills, /plan, etc.), vim editor mode, command history, reverse search (Ctrl+R), background bash commands, bash mode (! prefix), prompt suggestions, task list (Ctrl+T), PR review status, customizable keybindings (contexts, actions, keystroke syntax, chords, vim mode interaction, reserved shortcuts), terminal configuration (line breaks, Shift+Enter setup, notifications, themes, vim mode, large input handling). Load when discussing CLI usage, command-line flags, interactive shortcuts, slash commands, terminal setup, keybindings configuration, or vim mode in Claude Code.
+description: Complete documentation for Claude Code CLI and interactive mode -- CLI commands (claude, claude -p, claude -c, claude -r, claude update, claude auth, claude agents, claude mcp, claude remote-control), CLI flags (--model, --print, --continue, --resume, --system-prompt, --append-system-prompt, --allowedTools, --disallowedTools, --tools, --permission-mode, --dangerously-skip-permissions, --output-format, --json-schema, --max-turns, --max-budget-usd, --mcp-config, --agents, --agent, --worktree, --add-dir, --debug, --verbose, --chrome, --remote, --teleport, --plugin-dir, --settings, --fallback-model, --fork-session, --from-pr, --ide, --init, --session-id), system prompt flags (--system-prompt, --system-prompt-file, --append-system-prompt, --append-system-prompt-file), interactive mode features (keyboard shortcuts, multiline input, vim mode, command history, reverse search, background bash commands, bash mode, prompt suggestions, side questions with /btw, task list, PR review status), built-in slash commands (/clear, /compact, /config, /cost, /diff, /doctor, /export, /fork, /help, /hooks, /init, /keybindings, /memory, /model, /permissions, /plan, /pr-comments, /resume, /rewind, /skills, /status, /theme, /vim, and more), customizable keybindings (contexts, actions, keystroke syntax, chords, vim mode interaction, reserved shortcuts, terminal conflicts), terminal configuration (line breaks, Shift+Enter setup, notifications, large inputs). Load when discussing Claude Code CLI usage, command-line flags, interactive shortcuts, slash commands, keybindings, vim mode, terminal setup, bash mode, background tasks, multiline input, system prompt customization, or the /terminal-setup command.
 user-invocable: false
 ---
 
 # CLI & Interactive Mode Documentation
 
-This skill provides the complete official documentation for the Claude Code command-line interface, interactive terminal features, keybindings, and terminal configuration.
+This skill provides the complete official documentation for the Claude Code command-line interface, interactive session features, keybindings, and terminal configuration.
 
 ## Quick Reference
 
 ### CLI Commands
 
-| Command | Description | Example |
-|:--------|:------------|:--------|
-| `claude` | Start interactive session | `claude` |
-| `claude "query"` | Start with initial prompt | `claude "explain this project"` |
-| `claude -p "query"` | Non-interactive (SDK/scripting) | `claude -p "explain this function"` |
-| `cat file \| claude -p "query"` | Process piped content | `cat logs.txt \| claude -p "explain"` |
-| `claude -c` | Continue most recent conversation | `claude -c` |
-| `claude -c -p "query"` | Continue via SDK | `claude -c -p "Check for type errors"` |
-| `claude -r "<session>" "query"` | Resume session by ID or name | `claude -r "auth-refactor" "Finish this PR"` |
-| `claude update` | Update to latest version | `claude update` |
-| `claude auth login` | Sign in (`--email`, `--sso`) | `claude auth login --email user@example.com --sso` |
-| `claude auth logout` | Sign out | `claude auth logout` |
-| `claude auth status` | Auth status JSON (`--text` for human) | `claude auth status` |
-| `claude agents` | List configured subagents | `claude agents` |
-| `claude mcp` | Configure MCP servers | See mcp-doc skill |
-| `claude remote-control` | Start remote control session | `claude remote-control` |
+| Command | Description |
+|:--------|:------------|
+| `claude` | Start interactive session |
+| `claude "query"` | Start session with initial prompt |
+| `claude -p "query"` | Non-interactive (print) mode, then exit |
+| `cat file \| claude -p "query"` | Process piped content |
+| `claude -c` | Continue most recent conversation in current directory |
+| `claude -c -p "query"` | Continue via SDK |
+| `claude -r "<session>" "query"` | Resume session by ID or name |
+| `claude update` | Update to latest version |
+| `claude auth login` | Sign in (supports `--email` and `--sso`) |
+| `claude auth logout` | Log out |
+| `claude auth status` | Show auth status as JSON (`--text` for human-readable) |
+| `claude agents` | List all configured subagents |
+| `claude mcp` | Configure MCP servers |
+| `claude remote-control` | Start a Remote Control session |
 
 ### Key CLI Flags
 
 | Flag | Description |
 |:-----|:------------|
-| `--print`, `-p` | Non-interactive mode (exit after response) |
-| `--continue`, `-c` | Continue most recent conversation |
-| `--resume`, `-r` | Resume session by ID/name or show picker |
+| `--print`, `-p` | Non-interactive mode |
+| `--continue`, `-c` | Resume most recent conversation |
+| `--resume`, `-r` | Resume specific session by ID or name |
 | `--model` | Set model (`sonnet`, `opus`, or full name) |
 | `--output-format` | Output format: `text`, `json`, `stream-json` |
-| `--input-format` | Input format: `text`, `stream-json` |
 | `--json-schema` | Get validated JSON output matching a schema (print mode) |
 | `--max-turns` | Limit agentic turns (print mode) |
-| `--max-budget-usd` | Spending cap (print mode) |
-| `--fallback-model` | Auto-fallback when default model is overloaded (print mode) |
+| `--max-budget-usd` | Maximum dollar spend (print mode) |
+| `--fallback-model` | Fallback model when default is overloaded (print mode) |
 | `--system-prompt` | Replace entire system prompt |
 | `--system-prompt-file` | Replace system prompt from file |
 | `--append-system-prompt` | Append to default system prompt |
-| `--append-system-prompt-file` | Append from file to default prompt |
-| `--allowedTools` | Tools that skip permission prompts |
-| `--disallowedTools` | Tools removed from model context |
-| `--tools` | Restrict available built-in tools (`""`, `"default"`, `"Bash,Edit,Read"`) |
-| `--agents` | Define subagents via JSON |
-| `--agent` | Specify agent for session |
-| `--permission-mode` | Start in a permission mode (`plan`, etc.) |
+| `--append-system-prompt-file` | Append file contents to default prompt |
+| `--allowedTools` | Tools that execute without permission prompts |
+| `--disallowedTools` | Tools removed from context entirely |
+| `--tools` | Restrict available built-in tools (`""` for none, `"default"` for all) |
+| `--permission-mode` | Start in a specific permission mode |
 | `--dangerously-skip-permissions` | Skip all permission prompts |
-| `--allow-dangerously-skip-permissions` | Enable bypass without activating |
-| `--mcp-config` | Load MCP servers from JSON files |
+| `--mcp-config` | Load MCP servers from JSON file or string |
 | `--strict-mcp-config` | Only use MCP servers from `--mcp-config` |
+| `--agents` | Define custom subagents via JSON |
+| `--agent` | Specify an agent for the session |
+| `--worktree`, `-w` | Start in an isolated git worktree |
 | `--add-dir` | Add additional working directories |
 | `--plugin-dir` | Load plugins from directories |
-| `--worktree`, `-w` | Start in isolated git worktree |
-| `--chrome` / `--no-chrome` | Enable/disable Chrome integration |
-| `--remote` | Create web session on claude.ai |
-| `--teleport` | Resume web session locally |
+| `--settings` | Load additional settings from file or JSON string |
+| `--setting-sources` | Comma-separated setting sources to load |
+| `--chrome` / `--no-chrome` | Enable/disable Chrome browser integration |
+| `--remote` | Create a web session on claude.ai |
+| `--teleport` | Resume a web session locally |
 | `--ide` | Auto-connect to IDE on startup |
-| `--debug` | Debug mode with category filtering |
-| `--verbose` | Verbose logging |
-| `--version`, `-v` | Show version |
-| `--init` / `--init-only` | Run init hooks (with or without session) |
+| `--init` / `--init-only` | Run initialization hooks (with or without session) |
 | `--maintenance` | Run maintenance hooks and exit |
-| `--fork-session` | Fork when resuming (new session ID) |
-| `--from-pr` | Resume sessions linked to a PR |
-| `--session-id` | Use specific UUID for conversation |
-| `--no-session-persistence` | Disable session saving (print mode) |
-| `--setting-sources` | Comma-separated setting sources: `user`, `project`, `local` |
-| `--settings` | Load settings from JSON file or string |
-| `--betas` | Beta headers for API requests |
+| `--session-id` | Use a specific UUID for the conversation |
+| `--fork-session` | Fork instead of reuse when resuming |
+| `--from-pr` | Resume sessions linked to a GitHub PR |
+| `--debug` | Debug mode with optional category filtering |
+| `--verbose` | Full turn-by-turn output |
+| `--no-session-persistence` | Don't save session to disk (print mode) |
+| `--input-format` | Input format for print mode (`text`, `stream-json`) |
+| `--include-partial-messages` | Include partial streaming events (print mode) |
 | `--teammate-mode` | Agent team display: `auto`, `in-process`, `tmux` |
-| `--disable-slash-commands` | Disable all skills and commands |
-| `--include-partial-messages` | Include partial streaming events |
+| `--betas` | Beta headers for API requests (API key users) |
+| `--disable-slash-commands` | Disable all skills and commands for the session |
 
 ### System Prompt Flags
 
-| Flag | Behavior | Recommended for |
-|:-----|:---------|:----------------|
-| `--system-prompt` | Replaces entire default prompt | Complete control |
-| `--system-prompt-file` | Replaces with file contents | Team consistency |
-| `--append-system-prompt` | Appends to default prompt | Most use cases (safest) |
-| `--append-system-prompt-file` | Appends file to default prompt | Version-controlled additions |
+| Flag | Behavior |
+|:-----|:---------|
+| `--system-prompt` | **Replaces** entire default prompt |
+| `--system-prompt-file` | **Replaces** with file contents |
+| `--append-system-prompt` | **Appends** to default prompt |
+| `--append-system-prompt-file` | **Appends** file contents to default prompt |
 
-`--system-prompt` and `--system-prompt-file` are mutually exclusive. Append flags can combine with either.
+`--system-prompt` and `--system-prompt-file` are mutually exclusive. The append flags can combine with either replacement flag. For most use cases, the append variants are recommended since they preserve built-in capabilities.
 
-### --agents JSON Format
+### --agents Flag Format
 
-```json
-{
-  "agent-name": {
-    "description": "When to invoke (required)",
-    "prompt": "System prompt (required)",
-    "tools": ["Read", "Edit", "Bash"],
-    "disallowedTools": ["Write"],
-    "model": "sonnet",
-    "skills": ["my-skill"],
-    "mcpServers": ["server-name"],
-    "maxTurns": 10
-  }
-}
-```
+Each subagent definition accepts:
 
-### Interactive Mode Keyboard Shortcuts
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `description` | Yes | When the subagent should be invoked |
+| `prompt` | Yes | System prompt for the subagent |
+| `tools` | No | Array of allowed tools (inherits all if omitted) |
+| `disallowedTools` | No | Array of denied tools |
+| `model` | No | `sonnet`, `opus`, `haiku`, or `inherit` (default) |
+| `skills` | No | Array of skill names to preload |
+| `mcpServers` | No | Array of MCP servers for this subagent |
+| `maxTurns` | No | Maximum agentic turns |
 
-**General controls:**
+### Interactive Keyboard Shortcuts
+
+#### General Controls
 
 | Shortcut | Description |
 |:---------|:------------|
-| `Ctrl+C` | Cancel current input/generation |
-| `Ctrl+D` | Exit Claude Code |
-| `Ctrl+F` | Kill all background agents (press twice to confirm) |
-| `Ctrl+G` | Open in external text editor |
-| `Ctrl+L` | Clear terminal screen (keeps history) |
+| `Ctrl+C` | Cancel current input or generation |
+| `Ctrl+D` | Exit session |
+| `Ctrl+G` | Open in default text editor |
+| `Ctrl+L` | Clear terminal screen |
 | `Ctrl+O` | Toggle verbose output |
 | `Ctrl+R` | Reverse search command history |
+| `Ctrl+V` | Paste image from clipboard |
 | `Ctrl+B` | Background running tasks (tmux: press twice) |
 | `Ctrl+T` | Toggle task list |
-| `Ctrl+V` / `Cmd+V` / `Alt+V` | Paste image from clipboard |
+| `Ctrl+F` | Kill all background agents (press twice to confirm) |
 | `Esc Esc` | Rewind or summarize |
-| `Shift+Tab` / `Alt+M` | Toggle permission modes |
-| `Alt+P` / `Option+P` | Switch model |
-| `Alt+T` / `Option+T` | Toggle extended thinking |
+| `Shift+Tab` | Toggle permission modes |
+| `Alt+P` | Switch model |
+| `Alt+T` | Toggle extended thinking |
 
-**Text editing:** `Ctrl+K` (delete to EOL), `Ctrl+U` (delete line), `Ctrl+Y` (paste deleted), `Alt+Y` (cycle paste history), `Alt+B`/`Alt+F` (word nav)
+#### Quick Input Prefixes
 
-**Multiline input:** `\` + Enter (all terminals), `Option+Enter` (macOS), `Shift+Enter` (iTerm2/WezTerm/Ghostty/Kitty natively; run `/terminal-setup` for VS Code/Alacritty/Zed/Warp), `Ctrl+J` (line feed)
+| Prefix | Description |
+|:-------|:------------|
+| `/` | Slash command or skill |
+| ` ` (exclamation) | Bash mode -- run shell commands directly |
+| `@` | File path autocomplete |
 
-**Quick input prefixes:** `/` (slash command or skill), `!` (bash mode), `@` (file path mention)
+#### Multiline Input
+
+| Method | Shortcut |
+|:-------|:---------|
+| Quick escape | `\` + `Enter` |
+| macOS default | `Option+Enter` |
+| iTerm2/WezTerm/Ghostty/Kitty | `Shift+Enter` (native) |
+| Other terminals | Run `/terminal-setup` for `Shift+Enter` |
+| Control sequence | `Ctrl+J` |
 
 ### Built-in Slash Commands (Selected)
 
 | Command | Purpose |
 |:--------|:--------|
 | `/clear` | Clear conversation (aliases: `/reset`, `/new`) |
-| `/compact [instructions]` | Compact conversation with optional focus |
-| `/config` | Open settings (alias: `/settings`) |
-| `/context` | Visualize context usage |
+| `/compact [focus]` | Compact conversation with optional focus |
+| `/config` | Open settings interface (alias: `/settings`) |
+| `/context` | Visualize current context usage |
 | `/copy` | Copy last response to clipboard |
-| `/cost` | Show token usage stats |
+| `/cost` | Show token usage statistics |
 | `/diff` | Interactive diff viewer for uncommitted changes |
 | `/doctor` | Diagnose installation and settings |
-| `/export [filename]` | Export conversation as text |
-| `/fork [name]` | Fork conversation at this point |
-| `/model [model]` | Select/change model (left/right for effort) |
+| `/export [file]` | Export conversation as text |
+| `/fork [name]` | Fork conversation at current point |
+| `/help` | Show help and commands |
+| `/init` | Initialize project with CLAUDE.md |
+| `/keybindings` | Open keybindings config file |
+| `/memory` | Edit CLAUDE.md files and auto memory |
+| `/model [model]` | Change AI model (arrows adjust effort level) |
+| `/output-style [style]` | Switch output styles (Default, Explanatory, Learning) |
 | `/permissions` | View/update permissions (alias: `/allowed-tools`) |
 | `/plan` | Enter plan mode |
 | `/pr-comments [PR]` | Fetch GitHub PR comments |
-| `/rename [name]` | Rename session |
-| `/resume [session]` | Resume conversation (alias: `/continue`) |
+| `/resume [session]` | Resume a conversation (alias: `/continue`) |
 | `/rewind` | Rewind conversation/code (alias: `/checkpoint`) |
 | `/skills` | List available skills |
-| `/tasks` | List/manage background tasks |
+| `/status` | Show version, model, account info |
 | `/theme` | Change color theme |
-| `/vim` | Toggle vim/normal editing |
-| `/terminal-setup` | Configure terminal keybindings |
-| `/keybindings` | Open keybindings config file |
-| `/memory` | Edit CLAUDE.md and auto-memory |
-| `/fast [on\|off]` | Toggle fast mode |
-| `/output-style [style]` | Switch output style (Default/Explanatory/Learning) |
-| `/statusline` | Configure status line |
-| `/sandbox` | Toggle sandbox mode |
+| `/vim` | Toggle vim editing mode |
+| `/btw <question>` | Side question without adding to history |
 
-Full list: 50+ commands. Type `/` in Claude Code to see all available for your environment.
+### Vim Mode Summary
 
-### Vim Editor Mode
+Enable with `/vim` or `/config`. Supports mode switching (`Esc`/`i`/`I`/`a`/`A`/`o`/`O`), navigation (`h`/`j`/`k`/`l`, `w`/`e`/`b`, `0`/`$`/`^`, `gg`/`G`, `f`/`F`/`t`/`T`), editing (`x`, `dd`/`D`, `dw`/`de`/`db`, `cc`/`C`/`cw`/`ce`/`cb`, `yy`/`Y`/`yw`/`ye`/`yb`, `p`/`P`, `>>`/`<<`, `J`, `.`), and text objects (`iw`/`aw`, `i"`/`a"`, `i(`/`a(`, `i[`/`a[`, `i{`/`a{`).
 
-Enable with `/vim` or `/config`. Supports mode switching (`i`/`I`/`a`/`A`/`o`/`O`/`Esc`), navigation (`h`/`j`/`k`/`l`, `w`/`e`/`b`, `0`/`$`/`^`, `gg`/`G`, `f`/`F`/`t`/`T` with `;`/`,`), editing (`x`, `dd`/`D`, `dw`/`de`/`db`, `cc`/`C`, `cw`/`ce`/`cb`, `.`), yank/paste (`yy`/`Y`, `yw`/`ye`/`yb`, `p`/`P`), text objects (`iw`/`aw`, `iW`/`aW`, `i"`/`a"`, `i'`/`a'`, `i(`/`a(`, `i[`/`a[`, `i{`/`a{`), indentation (`>>`/`<<`), and join (`J`).
+### Customizable Keybindings
 
-### Command History and Reverse Search
+Configuration file: `~/.claude/keybindings.json` (open with `/keybindings`). Changes auto-reload.
 
-- Input history stored per working directory; resets on `/clear`
-- Up/Down arrows to navigate history
-- `Ctrl+R` for interactive reverse search: type to filter, `Ctrl+R` again to cycle, `Tab`/`Esc` to accept and edit, `Enter` to accept and execute, `Ctrl+C` to cancel
+#### Keybinding Contexts
 
-### Background Tasks and Bash Mode
+| Context | Description |
+|:--------|:------------|
+| `Global` | Everywhere in the app |
+| `Chat` | Main chat input |
+| `Autocomplete` | Autocomplete menu open |
+| `Confirmation` | Permission/confirmation dialogs |
+| `Tabs` | Tab navigation |
+| `HistorySearch` | History search mode |
+| `Task` | Background task running |
+| `ThemePicker` | Theme picker dialog |
+| `Attachments` | Image/attachment bar |
+| `Footer` | Footer indicator navigation |
+| `MessageSelector` | Rewind/summarize dialog |
+| `DiffDialog` | Diff viewer |
+| `ModelPicker` | Model picker effort level |
+| `Select` | Generic select/list |
+| `Plugin` | Plugin dialog |
+| `Settings` | Settings menu |
+| `Help` | Help menu |
+| `Transcript` | Transcript viewer |
 
-- Prompt Claude to run commands in the background, or press `Ctrl+B` to background a running command
-- `!` prefix runs bash commands directly without Claude interpretation; output added to context
-- Bash mode supports `Tab` autocomplete from previous `!` commands
-- Disable background tasks: `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
+#### Keystroke Syntax
 
-### Prompt Suggestions
+- **Modifiers**: `ctrl`, `alt`/`opt`/`option`, `shift`, `meta`/`cmd`/`command` joined with `+`
+- **Uppercase letters**: standalone `K` implies `shift+k`; with modifiers (`ctrl+K`) does not imply shift
+- **Chords**: space-separated sequences (`ctrl+k ctrl+s`)
+- **Special keys**: `escape`/`esc`, `enter`/`return`, `tab`, `space`, `up`/`down`/`left`/`right`, `backspace`, `delete`
+- **Unbind**: set action to `null`
+- **Reserved** (cannot rebind): `Ctrl+C`, `Ctrl+D`
 
-Auto-generated follow-up suggestions appear after Claude responds. Press `Tab` to accept, `Enter` to accept and submit. Disable: `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false` or toggle in `/config`.
+#### Terminal Conflicts
 
-### Task List
-
-`Ctrl+T` toggles the task list for multi-step work. Tasks persist across compactions. Share across sessions: `CLAUDE_CODE_TASK_LIST_ID=my-project claude`. Revert to old TODO list: `CLAUDE_CODE_ENABLE_TASKS=false`.
-
-### PR Review Status
-
-Clickable PR link in footer with colored underline: green (approved), yellow (pending), red (changes requested), gray (draft), purple (merged). Requires `gh` CLI.
-
-### Custom Keybindings
-
-Configure at `~/.claude/keybindings.json` (open with `/keybindings`). Changes auto-apply without restart.
-
-**Contexts:** `Global`, `Chat`, `Autocomplete`, `Settings`, `Confirmation`, `Tabs`, `Help`, `Transcript`, `HistorySearch`, `Task`, `ThemePicker`, `Attachments`, `Footer`, `MessageSelector`, `DiffDialog`, `ModelPicker`, `Select`, `Plugin`
-
-**Key actions:**
-
-| Context | Action | Default |
-|:--------|:-------|:--------|
-| Global | `app:interrupt` | Ctrl+C |
-| Global | `app:exit` | Ctrl+D |
-| Global | `app:toggleTodos` | Ctrl+T |
-| Global | `app:toggleTranscript` | Ctrl+O |
-| Chat | `chat:submit` | Enter |
-| Chat | `chat:cycleMode` | Shift+Tab |
-| Chat | `chat:modelPicker` | Cmd+P / Meta+P |
-| Chat | `chat:thinkingToggle` | Cmd+T / Meta+T |
-| Chat | `chat:externalEditor` | Ctrl+G |
-| Chat | `chat:imagePaste` | Ctrl+V |
-| Chat | `chat:stash` | Ctrl+S |
-| Task | `task:background` | Ctrl+B |
-
-**Keystroke syntax:** Modifiers with `+` (`ctrl+k`, `shift+tab`, `meta+p`, `ctrl+shift+c`). Uppercase letter implies Shift (`K` = `shift+k`). Chords separated by spaces (`ctrl+k ctrl+s`). Special keys: `escape`, `enter`, `tab`, `space`, `up`/`down`/`left`/`right`, `backspace`, `delete`.
-
-**Unbind:** Set action to `null`. **Reserved (cannot rebind):** `Ctrl+C`, `Ctrl+D`. **Terminal conflicts:** `Ctrl+B` (tmux), `Ctrl+A` (screen), `Ctrl+Z` (suspend).
+| Shortcut | Conflict |
+|:---------|:---------|
+| `Ctrl+B` | tmux prefix (press twice) |
+| `Ctrl+A` | GNU screen prefix |
+| `Ctrl+Z` | Unix process suspend (SIGTSTP) |
 
 ### Terminal Configuration
 
-- **Theme matching:** Use `/config` to match Claude Code theme to your terminal
-- **Status line:** Configure with `/statusline`
-- **Shift+Enter setup:** Run `/terminal-setup` for VS Code, Alacritty, Zed, Warp (native in iTerm2/WezTerm/Ghostty/Kitty)
-- **Option as Meta (macOS):** iTerm2: Profiles > Keys > "Esc+"; Terminal.app: Profiles > Keyboard > "Use Option as Meta Key"
-- **Notifications:** Native in Kitty/Ghostty; iTerm2 needs Terminal > "Notification Center Alerts" + "Send escape sequence-generated alerts"; other terminals use notification hooks
-- **Large inputs:** Use file-based workflows; avoid pasting very long content (especially in VS Code terminal)
+- **Line breaks**: `\` + Enter (all terminals), `Shift+Enter` (native in iTerm2/WezTerm/Ghostty/Kitty, `/terminal-setup` for others), `Option+Enter` (macOS with Option-as-Meta)
+- **Notifications**: Native in Kitty/Ghostty; iTerm2 requires enabling Notification Center Alerts; other terminals use notification hooks
+- **Option as Meta (macOS)**: iTerm2: Profiles > Keys > "Esc+"; Terminal.app: Profiles > Keyboard > "Use Option as Meta Key"
+- **Large inputs**: Prefer file-based workflows over direct pasting; VS Code terminal is prone to truncating long pastes
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [CLI reference](references/claude-code-cli-reference.md) -- all CLI commands, flags, --agents JSON format, system prompt flags
-- [Interactive mode](references/claude-code-interactive-mode.md) -- keyboard shortcuts, built-in slash commands, vim editor mode, command history, reverse search, background tasks, bash mode, prompt suggestions, task list, PR review status
-- [Customize keyboard shortcuts](references/claude-code-keybindings.md) -- keybindings.json configuration, contexts, available actions, keystroke syntax, chords, unbinding, reserved shortcuts, vim mode interaction, validation
-- [Optimize your terminal setup](references/claude-code-terminal-config.md) -- themes, line breaks, Shift+Enter setup, Option as Meta, notifications, large inputs, vim mode
+- [CLI reference](references/claude-code-cli-reference.md) -- CLI commands, all CLI flags with descriptions and examples, --agents flag format, system prompt flags (replace vs append)
+- [Interactive mode](references/claude-code-interactive-mode.md) -- keyboard shortcuts, built-in slash commands, vim editor mode, command history, reverse search, background bash commands, bash mode, prompt suggestions, side questions with /btw, task list, PR review status
+- [Customize keyboard shortcuts](references/claude-code-keybindings.md) -- keybindings.json configuration, contexts, all available actions by namespace, keystroke syntax (modifiers, chords, special keys), unbinding defaults, reserved shortcuts, terminal conflicts, vim mode interaction
+- [Terminal configuration](references/claude-code-terminal-config.md) -- terminal themes, line break setup, Shift+Enter configuration, notification setup, Option as Meta on macOS, handling large inputs, vim mode overview
 
 ## Sources
 
