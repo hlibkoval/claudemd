@@ -2,6 +2,20 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.12
+
+**6 references updated across 5 skills:** cli-doc, cloud-providers-doc, features-doc, operations-doc, settings-doc
+
+### New
+- **`modelOverrides` setting** — maps individual Anthropic model IDs to provider-specific strings (e.g. Bedrock inference profile ARNs) so each model picker entry routes to a distinct deployment; documented in model config, Bedrock setup, and settings table (features-doc, cloud-providers-doc, settings-doc)
+- **`autoMemoryDirectory` setting** — configure a custom directory for auto-memory storage (operations-doc)
+
+### Changed
+- **`/output-style` deprecated in favor of `/config`** — output style selection moved into the `/config` menu; style is now fixed at session start so prompt caching can reduce latency and cost; frontmatter `description` field references the `/config` picker (features-doc)
+- **`/config` command description expanded** — now mentions theme, model, output style, and other preferences instead of just "Config tab" (cli-doc)
+- **Upstream changelog updated** — two new releases (v2.1.73, v2.1.74) with `modelOverrides` setting, `/context` actionable suggestions, `autoMemoryDirectory`, `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` timeout config, default Opus model on Bedrock/Vertex/Foundry changed to Opus 4.6, `/output-style` deprecated, and 30+ bug fixes including memory leaks, permission bypass, OAuth hangs, RTL rendering, CPU freezes, and Linux sandbox issues (operations-doc)
+- Minor wording/formatting updates across cli-doc, operations-doc docs
+
 ## 26.3.11
 
 **15 references updated across 12 skills:** agent-teams-doc, best-practices-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, skills-doc, sub-agents-doc
