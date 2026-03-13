@@ -2,6 +2,34 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.13
+
+**21 references updated across 15 skills:** agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **Manual Code Review trigger (`@claude review`)** — comment `@claude review` on a PR to start a review and opt that PR into push-triggered reviews; new "Manual" trigger mode added alongside the renamed "Once after PR creation" and "After every push" modes (ci-cd-doc)
+- **`autoMemoryDirectory` setting** — configure a custom directory for auto-memory storage; accepted from policy, local, and user settings but blocked from project settings to prevent redirecting writes to sensitive paths (memory-doc, settings-doc)
+- **`CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` env var** — configure how long SessionEnd hooks may run (default 1.5 s); applies to both session exit and `/clear`; per-hook `timeout` is capped by this budget (hooks-doc, settings-doc)
+- **Subagent `mcpServers` field** — scope MCP servers to individual subagents via inline definitions or named references; inline servers connect on start and disconnect on finish, keeping tools out of the parent context (sub-agents-doc)
+- **`strictKnownMarketplaces` + `extraKnownMarketplaces` usage guide** — new "Using both together" section explains that `strictKnownMarketplaces` is a policy gate only and must be paired with `extraKnownMarketplaces` to auto-register marketplaces (settings-doc, plugins-doc)
+- **Full model ID support for subagents** — the `model` field in subagent YAML frontmatter and `--agents` JSON now accepts full model IDs like `claude-opus-4-6` in addition to short aliases (sub-agents-doc, cli-doc)
+- **Version requirements added** — docs now state minimum CLI versions: agent teams (v2.1.32), keybindings (v2.1.18), fast mode (v2.1.36), remote control (v2.1.51), scheduled tasks (v2.1.72), auto memory (v2.1.59) (agent-teams-doc, cli-doc, features-doc, memory-doc)
+
+### Changed
+- **Tool search default behavior changed** — tool search is now enabled by default instead of `auto`; disabled automatically when `ANTHROPIC_BASE_URL` points to a non-first-party host; `ENABLE_TOOL_SEARCH=true` forces it on for proxies (mcp-doc, settings-doc)
+- **Code Review pricing clarification** — usage is billed separately through extra usage and does not count against plan's included usage (ci-cd-doc)
+- **`/context` command description expanded** — now mentions optimization suggestions for context-heavy tools, memory bloat, and capacity warnings (cli-doc)
+- **MessageSelector keybindings expanded** — `Ctrl+P` / `Ctrl+N` added as defaults for up/down navigation in message selector (cli-doc)
+- **`--plugin-dir` override behavior documented** — local plugin with the same name as an installed marketplace plugin takes precedence for that session, except for force-enabled managed plugins (plugins-doc)
+- **Relative path resolution for marketplace plugins clarified** — paths resolve relative to the marketplace root (the directory containing `.claude-plugin/`), not to `marketplace.json`; `../` is disallowed (plugins-doc)
+- **Git URL field no longer requires `.git` suffix** — supports `https://` and `git@` URLs; Azure DevOps and AWS CodeCommit URLs without `.git` now work (plugins-doc)
+- **Settings table expanded** — 30+ keys newly documented in the reference table including `cleanupPeriodDays`, `companyAnnouncements`, `availableModels`, `allowManagedHooksOnly`, `allowedHttpHookUrls`, `httpHookAllowedEnvVars`, `allowManagedPermissionRulesOnly`, `allowManagedMcpServersOnly`, `blockedMarketplaces`, `pluginTrustMessage`, `alwaysThinkingEnabled`, `plansDirectory`, `showTurnDuration`, `spinnerVerbs`, `language`, `autoUpdatesChannel`, `spinnerTipsEnabled`, `spinnerTipsOverride`, `terminalProgressBarEnabled`, `prefersReducedMotion`, `fastModePerSessionOptIn`, `teammateMode`, and others (settings-doc)
+- **Upstream changelog replaced with proper markdown** — previously stored as raw GitHub HTML, now correct markdown content (operations-doc)
+
+### Removed
+- **`--dangerously-skip-permissions` section removed from best practices** — the "Safe autonomous mode" section recommending `--dangerously-skip-permissions` with sandboxing has been dropped (best-practices-doc)
+- **`CLAUDE_CODE_ENABLE_TASKS=false` fallback removed** — the tip about reverting to the previous TODO list is no longer documented (cli-doc)
+
 ## 26.3.12
 
 **6 references updated across 5 skills:** cli-doc, cloud-providers-doc, features-doc, operations-doc, settings-doc
