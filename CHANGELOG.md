@@ -2,6 +2,45 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.14
+
+**33 references updated across 15 skills:** best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **MCP elicitation support** — MCP servers can now request structured input mid-task via interactive dialogs (form fields or browser URL); new `Elicitation` and `ElicitationResult` hooks to intercept and auto-respond programmatically (mcp-doc, hooks-doc)
+- **`PostCompact` hook** — fires after context compaction completes; receives the generated summary in `compact_summary`; supports `manual` and `auto` matchers (hooks-doc)
+- **`/effort` slash command** — set model effort level directly with `/effort low`, `/effort medium`, `/effort high`, `/effort max`, or `/effort auto` (features-doc, operations-doc)
+- **`max` effort level** — new fourth effort level providing deepest reasoning with no token constraint; available on Opus 4.6 only and applies to the current session without persisting (features-doc)
+- **`--effort` CLI flag** — pass `low`, `medium`, `high`, or `max` to set effort level for a single session at launch (features-doc)
+- **`opus[1m]` model alias** — Opus 4.6 now supports the 1M token context window alongside Sonnet; use `/model opus[1m]` or append `[1m]` to pinned model IDs (features-doc, cloud-providers-doc)
+- **`-n` / `--name` CLI flag** — set a display name for the session at startup (operations-doc, best-practices-doc)
+- **`worktree.sparsePaths` setting** — configure git sparse-checkout paths for `--worktree` in large monorepos to check out only the directories you need (settings-doc, operations-doc)
+- **Remote Control server mode with `--spawn` and `--capacity`** — `claude remote-control` now supports concurrent sessions; `--spawn same-dir|worktree` controls isolation and `--capacity N` sets the max (features-doc)
+- **Remote Control `--remote-control` / `--rc` flag for interactive sessions** — start a normal interactive session that is also controllable remotely from claude.ai (features-doc)
+- **`[1m]` suffix for pinned third-party models** — append `[1m]` to `ANTHROPIC_DEFAULT_OPUS_MODEL` or `ANTHROPIC_DEFAULT_SONNET_MODEL` to enable extended context for pinned deployments (features-doc)
+- **GitHub Enterprise IP allow list guidance** — new section on configuring IP allow lists for Claude Code on the web and Code Review when using GitHub Enterprise Cloud (security-doc)
+- **Hook source labels in permission prompts** — when a `PreToolUse` hook returns `"ask"`, the permission prompt now shows a label identifying the hook's origin (e.g. `[User]`, `[Project]`, `[Plugin]`) (hooks-doc)
+- **Multiple CLI-defined subagents** — `--agents` JSON now accepts multiple subagent definitions in a single call (sub-agents-doc)
+
+### Changed
+- **Environment variables extracted to dedicated page** — the full env vars table moved from the settings page to a standalone `/en/env-vars` reference; all cross-references updated (settings-doc, and links across 12+ skills)
+- **Tools reference moved** — `Tools available to Claude` moved from settings page to `/en/tools-reference`; links updated in how-it-works, sub-agents, and common-workflows docs (settings-doc, getting-started-doc, sub-agents-doc)
+- **Built-in commands moved** — references to built-in commands changed from `/en/interactive-mode#built-in-commands` to `/en/commands` across docs (cli-doc, headless-doc, ide-doc, skills-doc, features-doc)
+- **1M context window pricing simplified** — no longer billed at long-context premium; standard model pricing applies; Opus 1M included for Max/Team/Enterprise plans without extra usage (features-doc, cloud-providers-doc)
+- **Opus 4.6 1M context on Vertex AI** — now GA (no longer beta); Opus 4.6 added alongside Sonnet models; beta header no longer required (cloud-providers-doc)
+- **Adaptive reasoning expanded to Sonnet 4.6** — docs now state Opus 4.6 "and Sonnet 4.6" support adaptive reasoning (best-practices-doc)
+- **`MAX_THINKING_TOKENS` behavior updated** — now ignored on both Opus 4.6 and Sonnet 4.6 (previously only Opus); setting to 0 still disables thinking on any model (best-practices-doc)
+- **`/hooks` menu is now read-only** — hooks can no longer be added or deleted through the interactive menu; use settings JSON or ask Claude to make changes (hooks-doc)
+- **Hook setup guide rewritten for JSON-first workflow** — the "Set up your first hook" walkthrough now starts by editing `settings.json` directly instead of using the `/hooks` menu (hooks-doc)
+- **Desktop notification hook examples rewritten** — common-workflows notification setup now shows full JSON configuration blocks per platform instead of just the shell command (best-practices-doc)
+- **CLI reference tables restructured** — commands, flags, and system prompt flags split into separate tables with clearer grouping; interactive-mode content trimmed (cli-doc)
+- **CLAUDE.md compliance explanation clarified** — now states content is delivered as a user message after the system prompt, not as part of it; recommends `--append-system-prompt` for system-prompt-level instructions (memory-doc)
+- **Bundled skills table reformatted** — changed from bullet list to a table with `<arg>` / `[arg]` notation for required vs optional arguments (skills-doc)
+- **Async hook completion messages suppressed by default** — now only visible in verbose mode or transcript mode (hooks-doc)
+- **Deprecated Windows managed settings path removed** — `C:\ProgramData\ClaudeCode\managed-settings.json` no longer supported; must use `C:\Program Files\ClaudeCode\` (settings-doc, operations-doc)
+- **Upstream changelog updated** — two new releases (v2.1.75, v2.1.76) covering MCP elicitation, `/effort`, `/color`, session naming, `PostCompact` hook, `worktree.sparsePaths`, Remote Control server mode, and 30+ bug fixes (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, security-doc, ide-doc, cloud-providers-doc docs (UTM parameter additions to pricing/contact-sales links, table alignment fixes)
+
 ## 26.3.13
 
 **21 references updated across 15 skills:** agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc

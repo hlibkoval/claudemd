@@ -1,181 +1,193 @@
 ---
 name: headless-doc
-description: Complete documentation for running Claude Code programmatically (Agent SDK CLI) and Claude Code on the web — the `-p` flag, structured output formats (text/json/stream-json), `--json-schema` for typed responses, `--allowedTools` with permission rule syntax, `--continue`/`--resume` for multi-turn sessions, `--append-system-prompt`/`--system-prompt` for prompt customization, `--remote` for cloud sessions, `--teleport` for pulling web sessions to terminal, cloud environment setup (default image, setup scripts, network policies, allowed domains), session sharing, diff view, and security isolation. Load when discussing headless mode, `-p` flag, programmatic CLI usage, Agent SDK CLI, `--remote`, cloud sessions, web sessions, teleporting sessions, setup scripts, cloud environments, or non-interactive Claude Code execution.
+description: Complete documentation for running Claude Code programmatically and on the web -- the Agent SDK CLI (`claude -p` headless mode, non-interactive execution, structured JSON output, stream-json, --json-schema, --output-format, --allowedTools permission rules, --append-system-prompt, --continue/--resume session continuation), Claude Code on the web (cloud sessions on claude.ai/code, GitHub integration, repository cloning, diff view, setup scripts, environment configuration, network access levels, default allowed domains, security proxy, session management, archiving/deleting sessions, session sharing visibility, --remote flag for terminal-to-web, --teleport/teleport for web-to-terminal, /tasks, /remote-env, plan mode, parallel remote tasks, cloud VM default image with pre-installed languages/runtimes/databases, SessionStart hooks vs setup scripts, dependency management, isolated VMs, credential protection, pricing and rate limits). Load when discussing running Claude Code non-interactively, headless mode, programmatic usage, `claude -p`, --print flag, structured output, JSON schema output, streaming responses, auto-approving tools, CI/CD scripting with Claude, system prompt customization, Agent SDK CLI, continuing conversations programmatically, session IDs, Claude Code on the web, cloud sessions, remote sessions, --remote, --teleport, /teleport, /tp, session handoff, web-to-terminal, terminal-to-web, setup scripts for cloud environments, cloud environment configuration, network access policies, allowed domains, security proxy, session sharing, diff view, creating PRs from web, cloud VM image, check-tools, or running parallel tasks on the web.
 user-invocable: false
 ---
 
 # Headless & Web Documentation
 
-This skill provides the complete official documentation for running Claude Code programmatically via the CLI (`-p` flag / Agent SDK) and for Claude Code on the web (cloud sessions).
+This skill provides the complete official documentation for running Claude Code programmatically via the CLI (headless mode / Agent SDK) and using Claude Code on the web (cloud sessions).
 
 ## Quick Reference
 
-### Programmatic CLI (`-p` flag)
+### Agent SDK CLI (`claude -p`)
 
-The `-p` (or `--print`) flag runs Claude Code non-interactively. All CLI options work with `-p`. The Agent SDK also offers Python and TypeScript packages for full programmatic control with structured outputs, tool approval callbacks, and native message objects.
-
-#### Output Formats
-
-| Format | Flag | Description |
-|:-------|:-----|:------------|
-| `text` | `--output-format text` (default) | Plain text output |
-| `json` | `--output-format json` | Structured JSON with `result`, `session_id`, and metadata |
-| `stream-json` | `--output-format stream-json` | Newline-delimited JSON for real-time streaming |
-
-Use `--json-schema` with `--output-format json` to get typed structured output in the `structured_output` field.
-
-#### Key Flags for `-p` Mode
+Run Claude Code non-interactively by passing `-p` (or `--print`) with a prompt. All CLI options work with `-p`. Previously called "headless mode."
 
 | Flag | Purpose |
 |:-----|:--------|
-| `--allowedTools "Bash,Read,Edit"` | Auto-approve specific tools without prompting |
+| `-p "prompt"` / `--print "prompt"` | Run non-interactively, print response |
+| `--output-format text\|json\|stream-json` | Control response format (default: `text`) |
+| `--json-schema '{...}'` | Constrain output to JSON Schema (use with `--output-format json`) |
+| `--allowedTools "Tool1,Tool2"` | Auto-approve specific tools without prompting |
+| `--append-system-prompt "..."` | Add instructions while keeping defaults |
+| `--system-prompt "..."` | Fully replace the default system prompt |
 | `--continue` | Continue the most recent conversation |
-| `--resume <session_id>` | Continue a specific conversation by session ID |
-| `--append-system-prompt <text>` | Add instructions while keeping default behavior |
-| `--system-prompt <text>` | Fully replace the default system prompt |
-| `--json-schema '<schema>'` | Enforce structured output conforming to a JSON Schema |
-| `--verbose` | Include extra metadata in streaming output |
-| `--include-partial-messages` | Stream tokens as they are generated (with `stream-json`) |
+| `--resume <session-id>` | Continue a specific conversation by session ID |
+| `--verbose` | Include verbose event data (useful with `stream-json`) |
+| `--include-partial-messages` | Stream tokens as they generate (with `stream-json`) |
 
-#### Allowed Tools Syntax
+#### Output Formats
 
-Uses permission rule syntax. Trailing ` *` enables prefix matching (the space before `*` is important):
+| Format | Description |
+|:-------|:------------|
+| `text` | Plain text output (default) |
+| `json` | Structured JSON with `result`, `session_id`, metadata; schema output in `structured_output` field |
+| `stream-json` | Newline-delimited JSON events for real-time streaming |
 
+#### Tool Auto-Approval Patterns
+
+`--allowedTools` uses permission rule syntax. The trailing ` *` enables prefix matching (space before `*` is important).
+
+| Pattern | Matches |
+|:--------|:--------|
+| `Bash` | All Bash commands |
+| `Bash(git diff *)` | Any command starting with `git diff ` |
+| `Read,Edit` | Read and Edit tools |
+
+#### Common CLI Patterns
+
+**Structured JSON output with schema:**
 ```
-Bash(git diff *)   -- allows any command starting with "git diff "
-Bash(git diff*)    -- would also match "git diff-index" (usually not intended)
-```
-
-#### Common Patterns
-
-**Structured output with schema:**
-```bash
-claude -p "Extract function names from auth.py" \
-  --output-format json \
-  --json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}},"required":["functions"]}'
-```
-
-**Multi-turn conversation:**
-```bash
-session_id=$(claude -p "Start a review" --output-format json | jq -r '.session_id')
-claude -p "Continue that review" --resume "$session_id"
+claude -p "Extract function names" --output-format json --json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}}}'
 ```
 
-**Streaming text deltas with jq:**
-```bash
-claude -p "Write a poem" --output-format stream-json --verbose --include-partial-messages | \
-  jq -rj 'select(.type == "stream_event" and .event.delta.type? == "text_delta") | .event.delta.text'
+**Streaming text deltas (with jq):**
+```
+claude -p "Write a poem" --output-format stream-json --verbose --include-partial-messages | jq -rj 'select(.type == "stream_event" and .event.delta.type? == "text_delta") | .event.delta.text'
 ```
 
-**Custom system prompt for code review:**
-```bash
-gh pr diff "$1" | claude -p \
-  --append-system-prompt "You are a security engineer. Review for vulnerabilities." \
-  --output-format json
+**Capture session ID for multi-turn:**
+```
+session_id=$(claude -p "Start review" --output-format json | jq -r '.session_id')
+claude -p "Continue review" --resume "$session_id"
 ```
 
-User-invoked skills (e.g. `/commit`) and built-in commands are only available in interactive mode. In `-p` mode, describe the task directly instead.
+**Create a commit with scoped permissions:**
+```
+claude -p "Create a commit from staged changes" --allowedTools "Bash(git diff *),Bash(git log *),Bash(git status *),Bash(git commit *)"
+```
+
+**PR review pipeline:**
+```
+gh pr diff "$1" | claude -p --append-system-prompt "You are a security engineer. Review for vulnerabilities." --output-format json
+```
+
+User-invoked skills (like `/commit`) and built-in commands are only available in interactive mode. In `-p` mode, describe the task instead.
 
 ### Claude Code on the Web
 
-Claude Code on the web runs tasks asynchronously on Anthropic-managed cloud VMs. Available in research preview to Pro, Max, Team, and Enterprise users.
+Cloud sessions run on Anthropic-managed VMs. Available to Pro, Max, Team, and Enterprise users. Currently in research preview.
 
 #### Session Lifecycle
 
-1. Repository cloned to an isolated VM
+1. Repository cloned to an Anthropic-managed VM (default branch; specify a different branch in the prompt)
 2. Setup script runs (if configured)
 3. Network access configured per environment settings
-4. Claude executes the task (can be steered via the web interface)
-5. Changes pushed to a branch; PR can be created from the diff view
+4. Claude executes the task, writing code, running tests, checking work
+5. Changes pushed to a branch for PR creation
 
-#### Terminal-Web Handoff
+#### Terminal-to-Web (`--remote`)
 
-| Direction | Command | Notes |
-|:----------|:--------|:------|
-| Terminal to web | `claude --remote "Fix the bug"` | Creates a new cloud session; monitor via `/tasks` |
-| Web to terminal | `claude --teleport` or `/teleport` | Interactive picker of web sessions |
-| Web to terminal (specific) | `claude --teleport <session-id>` | Resume a specific session |
-| From `/tasks` | Press `t` on a session | Teleport into that session |
+```
+claude --remote "Fix the auth bug in src/auth/login.ts"
+```
 
-Session handoff is one-way: you can pull web sessions into your terminal, but not push existing terminal sessions to the web. `--remote` always creates a new session.
+Creates a new web session on claude.ai. Monitor with `/tasks`. Each `--remote` creates an independent session -- run multiple in parallel.
+
+**Plan-then-execute pattern:**
+```
+claude --permission-mode plan        # Collaborate on approach (read-only)
+claude --remote "Execute the plan"   # Send work to cloud
+```
+
+Use `/remote-env` to select which environment to use when starting web sessions (if you have multiple configured).
+
+#### Web-to-Terminal (Teleport)
+
+| Method | Usage |
+|:-------|:------|
+| `/teleport` or `/tp` | Interactive picker from within Claude Code |
+| `claude --teleport` | Interactive picker from command line |
+| `claude --teleport <session-id>` | Resume specific session directly |
+| `/tasks` then press `t` | Teleport from task list |
+| Web UI "Open in CLI" | Copy command to paste in terminal |
 
 **Teleport requirements:** clean git state (no uncommitted changes), correct repository (not a fork), branch pushed to remote, same Claude.ai account.
 
-#### Plan Locally, Execute Remotely
+#### Session Sharing
 
-```bash
-claude --permission-mode plan           # read-only exploration
-claude --remote "Execute the plan in docs/migration-plan.md"
-```
+| Account type | Visibility options | Notes |
+|:-------------|:-------------------|:------|
+| Enterprise / Teams | Private, Team | Team = visible to org members; repo access verification on by default |
+| Max / Pro | Private, Public | Public = visible to any logged-in claude.ai user; check for sensitive content before sharing |
 
-#### Parallel Remote Tasks
+#### Diff View
 
-Each `--remote` creates an independent cloud session:
-
-```bash
-claude --remote "Fix the flaky test in auth.spec.ts"
-claude --remote "Update the API documentation"
-claude --remote "Refactor the logger to use structured output"
-```
-
-#### Environment Selection
-
-Use `/remote-env` to choose which configured environment `--remote` uses.
+When Claude modifies files, a diff stats indicator (e.g., `+12 -1`) appears. Select it to review changes file-by-file, comment on changes, and iterate before creating a PR.
 
 #### Cloud Environment
 
-**Default image includes:** Python 3.x (pip, poetry), Node.js LTS (npm, yarn, pnpm, bun), Ruby 3.1/3.2/3.3, PHP 8.4, Java (Maven, Gradle), Go, Rust (cargo), C++ (GCC, Clang), PostgreSQL 16, Redis 7.0.
+**Default image includes:**
 
-Run `check-tools` inside a cloud session to see all pre-installed tools and versions.
+| Category | Included |
+|:---------|:---------|
+| Languages | Python 3.x, Node.js (LTS), Ruby 3.1/3.2/3.3, PHP 8.4, Java (OpenJDK), Go, Rust, C++ (GCC/Clang) |
+| Package managers | pip, poetry, npm, yarn, pnpm, bun, gem, bundler, Maven, Gradle, cargo |
+| Databases | PostgreSQL 16, Redis 7.0 |
+| Discovery | Run `check-tools` to see all pre-installed tools |
+
+**Environment configuration:** Add/update environments from the environment selector UI. Each environment has: name, network access level, environment variables (`.env` format), and a setup script.
 
 #### Setup Scripts
 
-Bash scripts that run before Claude Code launches on new sessions only. Configured in the environment settings UI. Run as root on Ubuntu 24.04.
+Bash scripts that run before Claude Code launches on new sessions only. Run as root on Ubuntu 24.04.
 
-| Property | Setup scripts | SessionStart hooks |
-|:---------|:-------------|:-------------------|
+| | Setup Scripts | SessionStart Hooks |
+|:--|:-------------|:-------------------|
 | Attached to | Cloud environment | Repository (`.claude/settings.json`) |
 | Runs | Before Claude Code, new sessions only | After Claude Code, every session (including resumed) |
 | Scope | Cloud only | Both local and cloud |
 
-Setup scripts that install packages need network access (at least "Limited").
+If a setup script exits non-zero, the session fails to start. Append `|| true` to non-critical commands.
 
-#### Network Access Levels
+#### Network Access
 
 | Level | Behavior |
 |:------|:---------|
-| Limited (default) | Connections allowed to an allowlist of common domains |
+| Limited (default) | Allowlisted domains only (package registries, cloud platforms, dev tools) |
 | Full | Unrestricted internet access |
-| No internet | All outbound blocked (Anthropic API still reachable) |
+| None | No internet (Anthropic API still reachable) |
 
-The default allowlist covers: Anthropic services, GitHub/GitLab/Bitbucket, Docker registries, major cloud platforms (AWS, GCP, Azure), package managers for JS/Python/Ruby/Rust/Go/JVM/PHP/.NET/Dart/Elixir/Perl/Swift/Haskell, Ubuntu repos, Kubernetes, HashiCorp, Conda, Apache, and common CDNs.
+All outbound traffic passes through a security proxy. Some package managers (e.g., Bun) may not work correctly with the proxy.
 
-All outbound traffic passes through a security proxy. Some package managers (e.g. Bun) may not work correctly with this proxy.
+Default allowlisted domain categories: Anthropic services, version control (GitHub/GitLab/Bitbucket), container registries, cloud platforms (GCP/Azure/AWS/Oracle), package managers (npm/PyPI/RubyGems/crates.io/Go/Maven/Gradle/Packagist/NuGet/pub.dev/Hex/CPAN/CocoaPods/Haskell/Swift), Linux distros (Ubuntu), development tools (Kubernetes/HashiCorp/Anaconda/Apache/Eclipse/Node.js), monitoring (Statsig/Sentry/Datadog), CDNs, schema registries, and Model Context Protocol.
 
 #### Dependency Management
 
-Use setup scripts or SessionStart hooks. SessionStart hooks fire in both local and remote environments; check `$CLAUDE_CODE_REMOTE` to skip local execution. Persist environment variables by writing to `$CLAUDE_ENV_FILE` in SessionStart hooks.
+Use setup scripts for cloud-only dependencies. Use SessionStart hooks for dependencies that should also install locally. Check `CLAUDE_CODE_REMOTE` env var to scope hooks to remote-only.
 
-#### Session Sharing
-
-| Account type | Visibility options | Repo access verification |
-|:-------------|:-------------------|:------------------------|
-| Enterprise / Teams | Private, Team | Enabled by default |
-| Max / Pro | Private, Public | Off by default (configurable in Settings) |
+Persist environment variables for subsequent Bash commands by writing to `$CLAUDE_ENV_FILE` in SessionStart hooks.
 
 #### Security
 
-- Each session runs in an isolated VM
-- Git operations go through a dedicated proxy with scoped credentials
+- Isolated VMs per session
+- Git credentials handled through secure proxy with scoped credentials (never inside sandbox)
+- Network access controls (configurable per environment)
 - Push restricted to current working branch
-- Sensitive credentials are never inside the sandbox
+
+#### Limitations
+
+- Repository auth: same account for web-to-local session transfer
+- GitHub only (no GitLab or other hosts for cloud sessions)
+- Rate limits shared with all Claude/Claude Code usage on the account
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Run Claude Code programmatically](references/claude-code-headless.md) -- `-p` flag basics, structured output (`json`, `stream-json`, `--json-schema`), streaming responses, `--allowedTools` with permission rule syntax, commit creation pattern, system prompt customization, multi-turn conversations (`--continue`, `--resume`), Agent SDK pointers
-- [Claude Code on the web](references/claude-code-on-the-web.md) -- cloud session lifecycle, diff view, `--remote` flag, `--teleport` / `/teleport`, parallel tasks, session sharing, cloud environment (default image, languages, databases), setup scripts vs SessionStart hooks, network access levels, default allowed domains, security proxy, dependency management, security and isolation, pricing, limitations
+- [Run Claude Code programmatically](references/claude-code-headless.md) -- Agent SDK CLI overview, basic `-p` usage, structured output (`--output-format json`, `--json-schema`), streaming responses (`stream-json` with `--verbose` and `--include-partial-messages`, jq filtering for text deltas), auto-approving tools (`--allowedTools` with permission rule syntax and prefix matching), creating commits with scoped tool permissions, customizing system prompts (`--append-system-prompt`, `--system-prompt`), continuing conversations (`--continue`, `--resume` with session ID capture), links to full Agent SDK (Python/TypeScript), CLI reference, GitHub Actions, GitLab CI/CD
+- [Claude Code on the web](references/claude-code-on-the-web.md) -- cloud session overview and use cases, availability (Pro/Max/Team/Enterprise), getting started with GitHub, session lifecycle (clone, setup, network, execute, PR), diff view for reviewing changes, terminal-to-web (`--remote`, plan-then-execute, parallel tasks), web-to-terminal (`--teleport`, `/teleport`, `/tp`, `/tasks`), teleport requirements, session sharing (visibility levels by account type, repo access verification), managing sessions (archiving, deleting), cloud environment (default image with languages/databases, `check-tools`, language-specific setups), environment configuration (add/update environments, env vars in `.env` format, `/remote-env`), setup scripts (vs SessionStart hooks comparison, root on Ubuntu 24.04), dependency management (setup scripts vs hooks, `CLAUDE_CODE_REMOTE` check, `CLAUDE_ENV_FILE`, known limitations including proxy compatibility), network access levels (limited/full/none), default allowed domains (full list by category), security proxy, GitHub proxy with scoped credentials, security and isolation (isolated VMs, credential protection), pricing and rate limits, platform limitations
 
 ## Sources
 

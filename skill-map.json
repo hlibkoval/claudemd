@@ -31,13 +31,16 @@
     "settings-doc": [
       {"url": "https://code.claude.com/docs/en/settings.md", "file": "claude-code-settings.md"},
       {"url": "https://code.claude.com/docs/en/permissions.md", "file": "claude-code-permissions.md"},
-      {"url": "https://code.claude.com/docs/en/server-managed-settings.md", "file": "claude-code-server-managed-settings.md"}
+      {"url": "https://code.claude.com/docs/en/server-managed-settings.md", "file": "claude-code-server-managed-settings.md"},
+      {"url": "https://code.claude.com/docs/en/env-vars.md", "file": "claude-code-env-vars.md"}
     ],
     "cli-doc": [
       {"url": "https://code.claude.com/docs/en/cli-reference.md", "file": "claude-code-cli-reference.md"},
+      {"url": "https://code.claude.com/docs/en/commands.md", "file": "claude-code-commands.md"},
       {"url": "https://code.claude.com/docs/en/interactive-mode.md", "file": "claude-code-interactive-mode.md"},
       {"url": "https://code.claude.com/docs/en/keybindings.md", "file": "claude-code-keybindings.md"},
-      {"url": "https://code.claude.com/docs/en/terminal-config.md", "file": "claude-code-terminal-config.md"}
+      {"url": "https://code.claude.com/docs/en/terminal-config.md", "file": "claude-code-terminal-config.md"},
+      {"url": "https://code.claude.com/docs/en/tools-reference.md", "file": "claude-code-tools-reference.md"}
     ],
     "getting-started-doc": [
       {"url": "https://code.claude.com/docs/en/overview.md", "file": "claude-code-overview.md"},
