@@ -2,6 +2,26 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.17
+
+**15 references updated across 9 skills:** cli-doc, features-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **Auto-approve permission prompts via hooks** — new `PermissionRequest` hook guide example showing how to auto-approve specific tool calls (e.g. `ExitPlanMode`) and optionally set a session permission mode with `updatedPermissions` (hooks-doc)
+- **Permission update entries reference** — new table documenting `addRules`, `replaceRules`, `removeRules`, `setMode`, `addDirectories`, and `removeDirectories` entry types with `destination` field for `PermissionRequest` hook output and `permission_suggestions` input (hooks-doc)
+- **`CLAUDECODE` env var** — set to `1` in shell environments Claude Code spawns (Bash tool, tmux sessions); use to detect when a script runs inside Claude Code (settings-doc)
+- **`CLAUDE_CODE_SKIP_FAST_MODE_NETWORK_ERRORS` env var** — allow fast mode when the organization status check fails due to a network error, useful behind corporate proxies (settings-doc)
+- **Plugin subagent security restriction** — `hooks`, `mcpServers`, and `permissionMode` frontmatter fields are now ignored for plugin subagents; copy the agent file to `.claude/agents/` if you need them (sub-agents-doc)
+
+### Changed
+- **Fast mode pricing simplified** — removed the >200K context tier; pricing is now flat at $30/$150 per MTok across the full 1M context window; 50% launch discount mention removed (features-doc)
+- **`/reload-plugins` now reloads all component types** — reloads commands, skills, agents, hooks, plugin MCP servers, and plugin LSP servers; LSP no longer requires a full restart (plugins-doc, mcp-doc, cli-doc)
+- **Hook settings file changes picked up automatically** — file watcher now detects hook edits without requiring a session restart or `/hooks` menu review (hooks-doc)
+- **`permission_suggestions` format changed** — `toolAlwaysAllow` replaced with structured `addRules` entries specifying `toolName`, `ruleContent`, `behavior`, and `destination` (hooks-doc)
+- **Session quality surveys enabled on all providers** — surveys now appear on Bedrock, Vertex, and Foundry by default (previously disabled); use `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY`, `DISABLE_TELEMETRY`, or `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` to suppress; `feedbackSurveyRate` setting now controls frequency (security-doc, settings-doc)
+- **Upstream changelog updated** — new release v2.1.77 covering 64k default output tokens for Opus 4.6, `allowRead` sandbox setting, `/copy N`, compound bash rule fix, auto-updater memory fix, and 30+ bug fixes (operations-doc)
+- Minor wording/formatting updates across plugins-doc, settings-doc, features-doc docs (table alignment, shell script style changes in statusline examples, managed settings JSON nesting fix)
+
 ## 26.3.14
 
 **33 references updated across 15 skills:** best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
