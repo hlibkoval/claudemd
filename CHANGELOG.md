@@ -2,6 +2,56 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.18
+
+**27 references updated across 15 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **`/voice` command and push-to-talk voice dictation** — new `/voice` command toggles voice dictation; hold Space in chat to dictate; rebindable via `voice:pushToTalk` keybinding; requires a Claude.ai account (cli-doc, settings-doc)
+- **`/branch` command** — `/fork` renamed to `/branch` (`/fork` kept as alias); forked sessions now grouped under `/branch` in docs (cli-doc, best-practices-doc)
+- **`--agent` flag and `agent` setting** — run an entire session as a named subagent with its system prompt, tool restrictions, and model; set per-project via `agent` in settings or per-session via `--agent <name>` (sub-agents-doc, settings-doc)
+- **@-mention subagents** — type `@` and pick a subagent from the typeahead to guarantee it runs for one task; plugin subagents appear as `<plugin>:<agent>` (sub-agents-doc)
+- **`${CLAUDE_PLUGIN_DATA}` persistent data directory** — new variable for plugin state that survives updates; resolves to `~/.claude/plugins/data/{id}/`; auto-created on first reference; deleted on uninstall (with `--keep-data` opt-out) (plugins-doc, mcp-doc, hooks-doc)
+- **`ANTHROPIC_BASE_URL` env var** — override the API endpoint for proxy/gateway routing; disables MCP tool search on non-first-party hosts by default (settings-doc)
+- **`CLAUDE_CODE_NEW_INIT` env var** — set to `true` for an interactive `/init` flow that walks through CLAUDE.md, skills, and hooks setup (cli-doc, memory-doc, settings-doc)
+- **`CLAUDE_CODE_PLUGIN_SEED_DIR` env var** — pre-populate a read-only plugins directory for container images and CI; seed marketplaces and caches are used at startup without re-cloning (plugins-doc, settings-doc)
+- **`ANTHROPIC_CUSTOM_MODEL_OPTION` env var** — add a custom entry to the `/model` picker, with optional `_NAME` and `_DESCRIPTION` suffixed vars (operations-doc)
+- **`sandbox.filesystem.allowRead` setting** — re-allow reading specific paths within `denyRead` regions; takes precedence over `denyRead`; arrays merge across scopes (security-doc, settings-doc)
+- **`sandbox.filesystem.allowManagedReadPathsOnly` managed setting** — when `true`, only managed `allowRead` entries are respected; user/project/local entries ignored (security-doc, settings-doc)
+- **`system/api_retry` streaming event** — new event emitted on retryable API errors with attempt number, delay, error status, and error category (headless-doc)
+- **`StopFailure` hook event** — fires when a turn ends due to an API error such as rate limit or auth failure (operations-doc)
+- **`PostCompact` matcher support** — `PostCompact` hook now supports `manual`/`auto` matchers alongside `PreCompact` (hooks-doc)
+- **`InstructionsLoaded` `load_reason: "compact"` value** — fires when instruction files are re-loaded after a compaction event (hooks-doc)
+- **Authentication precedence documentation** — new section documenting the full credential resolution order: cloud providers, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_API_KEY`, `apiKeyHelper`, then OAuth (getting-started-doc)
+- **Managed CLAUDE.md vs managed settings guidance** — new comparison table clarifying when to use settings (enforcement) vs CLAUDE.md (behavioral guidance) (memory-doc)
+- **Remote Control troubleshooting section** — documents `Remote credentials fetch failed` error, `--verbose` flag for debugging, and common causes (features-doc)
+- **"Disabled organization" troubleshooting** — new section explaining how a stale `ANTHROPIC_API_KEY` overrides an active subscription and how to fix it (operations-doc)
+- **Plugin `effort`, `maxTurns`, and `disallowedTools` agent frontmatter** — plugin-shipped agents now support these frontmatter fields (operations-doc)
+- **Plugin validator expanded** — now checks skill/agent/command YAML frontmatter and `hooks/hooks.json` in addition to `plugin.json`; new warnings for non-kebab-case plugin names (plugins-doc)
+- **Background task 5GB output limit** — background tasks are automatically terminated if output exceeds 5GB (cli-doc)
+- **Network allowlist additions** — `downloads.claude.ai` and `storage.googleapis.com` added to required URLs for native installer and updates (security-doc)
+
+### Changed
+- **`ANTHROPIC_SMALL_FAST_MODEL` renamed to `ANTHROPIC_DEFAULT_HAIKU_MODEL`** — env var renamed across Bedrock and Vertex AI docs (cloud-providers-doc)
+- **`/copy` now accepts an argument** — `/copy N` copies the Nth-latest response instead of only the last (cli-doc)
+- **PreToolUse hook `"allow"` semantics clarified** — `"allow"` skips the interactive prompt but deny and ask rules (including managed deny lists) still apply; documented in both guide and reference (hooks-doc, settings-doc)
+- **Compound command "don't ask again" saves per-subcommand rules** — approving `git status && npm test` saves a separate rule for each subcommand; up to 5 rules per compound command (settings-doc)
+- **Read/Edit deny rules scoped to built-in tools only** — new warning that deny rules do not block Bash subprocesses; sandbox recommended for OS-level enforcement (settings-doc)
+- **`MAX_THINKING_TOKENS` description updated** — ceiling is now model's max output minus one; on adaptive-reasoning models, budget is ignored unless adaptive reasoning is disabled (settings-doc, best-practices-doc, operations-doc)
+- **`CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS` expanded** — now also strips beta tool-schema fields (`defer_loading`, `eager_input_streaming`) in addition to `anthropic-beta` headers (settings-doc)
+- **`CLAUDE_CODE_MAX_OUTPUT_TOKENS` description updated** — defaults and caps now vary by model rather than fixed at 32k/64k (settings-doc)
+- **`showTurnDuration` and `terminalProgressBarEnabled` moved to global config** — these are now stored in `~/.claude.json` instead of `settings.json` (settings-doc)
+- **Credential storage on Linux/Windows documented** — credentials stored in `~/.claude/.credentials.json` (or `$CLAUDE_CONFIG_DIR`) with mode `0600` on Linux; macOS remains Keychain (getting-started-doc)
+- **Slow `apiKeyHelper` warning** — Claude Code now shows a notice if `apiKeyHelper` takes longer than 10 seconds (getting-started-doc)
+- **Session auto-naming from plans** — accepting a plan automatically names the session from the plan content unless already named (best-practices-doc)
+- **VS Code terminal option-as-meta instructions separated** — VS Code now has its own `terminal.integrated.macOptionIsMeta` setting note, separate from iTerm2 instructions (cli-doc)
+- **tmux passthrough for terminal notifications** — notifications now reach the outer terminal inside tmux with `set -g allow-passthrough on` (operations-doc)
+- **Subagent resumption via `SendMessage`** — stopped subagents auto-resume in background when they receive a `SendMessage`; no new `Agent` invocation needed (sub-agents-doc)
+- **`${CLAUDE_PLUGIN_ROOT}` description clarified** — now explicitly noted as changing on each plugin update (plugins-doc, hooks-doc)
+- **Windows path normalization for permissions** — paths normalized to POSIX form before matching; `C:\Users\alice` becomes `/c/Users/alice` (settings-doc)
+- **Upstream changelog updated** — new release v2.1.78 covering `StopFailure` hook, `${CLAUDE_PLUGIN_DATA}`, agent frontmatter fields, tmux passthrough, line-by-line streaming, and 20+ bug fixes (operations-doc)
+- Minor wording/formatting updates across ci-cd-doc, cloud-providers-doc, getting-started-doc, mcp-doc, operations-doc docs
+
 ## 26.3.17
 
 **15 references updated across 9 skills:** cli-doc, features-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc

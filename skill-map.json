@@ -97,7 +97,8 @@
       {"url": "https://code.claude.com/docs/en/checkpointing.md", "file": "claude-code-checkpointing.md"},
       {"url": "https://code.claude.com/docs/en/features-overview.md", "file": "claude-code-features-overview.md"},
       {"url": "https://code.claude.com/docs/en/remote-control.md", "file": "claude-code-remote-control.md"},
-      {"url": "https://code.claude.com/docs/en/scheduled-tasks.md", "file": "claude-code-scheduled-tasks.md"}
+      {"url": "https://code.claude.com/docs/en/scheduled-tasks.md", "file": "claude-code-scheduled-tasks.md"},
+      {"url": "https://code.claude.com/docs/en/voice-dictation.md", "file": "claude-code-voice-dictation.md"}
     ],
     "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},

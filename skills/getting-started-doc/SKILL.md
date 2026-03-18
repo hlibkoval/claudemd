@@ -1,106 +1,136 @@
 ---
 name: getting-started-doc
-description: Complete documentation for getting started with Claude Code -- overview (installation across Terminal/VS Code/Desktop/Web/JetBrains, capabilities summary, surface comparison table), quickstart (step-by-step first session walkthrough, first code change, git workflows, essential CLI commands, beginner tips), advanced setup (system requirements per OS, platform-specific installation with Native/Homebrew/WinGet, Windows setup with Git Bash/WSL, Alpine/musl dependencies, auto-updates and release channels latest/stable, specific version installation, npm-to-native migration, binary integrity and code signing, uninstallation per method, config file removal), authentication (login flow with browser prompt, account types Pro/Max/Teams/Enterprise/Console/cloud providers, team setup for Teams/Enterprise/Console/Bedrock/Vertex/Foundry, credential management with macOS Keychain, apiKeyHelper with refresh intervals), and how Claude Code works (agentic loop gather-context/take-action/verify-results, models Sonnet/Opus and /model switching, tool categories file-ops/search/execution/web/code-intelligence, what Claude can access project/terminal/git/CLAUDE.md/auto-memory/extensions, execution environments local/cloud/remote-control, sessions resume/fork/context-window, checkpoints and permissions, tips for effective use be-specific/verify/explore-first/delegate). Load when discussing Claude Code installation, getting started, quickstart, first session, setup, system requirements, authentication, login, credential management, how Claude Code works, the agentic loop, built-in tools, sessions, context window, checkpoints, permission modes, plan mode, working effectively with Claude Code, or beginner guidance.
+description: Complete documentation for getting started with Claude Code -- overview (install methods for Terminal/VS Code/Desktop/Web/JetBrains, capabilities summary, surface comparison table), quickstart (step-by-step first session walkthrough, install native/Homebrew/WinGet, login with Pro/Max/Teams/Enterprise/Console/cloud providers, first question, first code change, Git operations, bug fixing, refactoring, tests, essential CLI commands table, pro tips), advanced setup (system requirements by OS, Windows setup Git Bash/WSL, Alpine/musl dependencies, verify installation with claude doctor, release channels latest/stable, auto-update config, disable auto-updates, install specific version, npm migration, binary integrity/code signing, uninstall by method, remove config files), authentication (login flow, account types Pro/Max/Teams/Enterprise/Console/cloud, team setup for Teams/Enterprise/Console/Bedrock/Vertex/Foundry, credential management storage locations macOS Keychain/Linux/Windows, apiKeyHelper with TTL and slow helper notice, authentication precedence order cloud>ANTHROPIC_AUTH_TOKEN>ANTHROPIC_API_KEY>apiKeyHelper>OAuth, credential conflicts), how Claude Code works (agentic loop gather/act/verify, models Sonnet/Opus and /model switching, tool categories file-ops/search/execution/web/code-intelligence, extending with skills/MCP/hooks/subagents, what Claude can access project/terminal/git/CLAUDE.md/auto-memory/extensions, execution environments local/cloud/remote-control, interfaces terminal/desktop/IDE/web/slack/CI, sessions independence/branches/resume/fork/fork-session flag, context window management compaction/skills-on-demand/subagent-isolation, checkpoints undo/revert file edits, permission modes default/auto-accept/plan with Shift+Tab, working effectively ask-for-help//init//agents//doctor/be-conversational/interrupt-and-steer/be-specific/verify-against-tests/explore-before-implementing/delegate-dont-dictate). Load when discussing Claude Code installation, getting started, quickstart, first session, system requirements, login, authentication, account types, credential management, apiKeyHelper, auth precedence, team setup, how Claude Code works, agentic loop, built-in tools, tool categories, what Claude can access, execution environments, sessions, resume session, fork session, context window, compaction, checkpoints, undo changes, permission modes, Shift+Tab, plan mode, auto-accept, working effectively with Claude Code, /init, /doctor, /agents, release channels, auto-updates, update Claude Code, uninstall Claude Code, npm migration, Windows setup, Git Bash, WSL setup, Alpine Linux, or any introductory Claude Code topic.
 user-invocable: false
 ---
 
 # Getting Started Documentation
 
-This skill provides the complete official documentation for getting started with Claude Code: overview, quickstart, advanced setup, authentication, and how Claude Code works.
+This skill provides the complete official documentation for getting started with Claude Code -- overview, quickstart, advanced setup, authentication, and how Claude Code works.
 
 ## Quick Reference
 
-### Installation Methods
+### Installation
 
 | Method | Command | Auto-updates |
 |:-------|:--------|:-------------|
 | Native (recommended) | `curl -fsSL https://claude.ai/install.sh \| bash` | Yes |
+| Native (Windows PS) | `irm https://claude.ai/install.ps1 \| iex` | Yes |
 | Homebrew | `brew install --cask claude-code` | No (`brew upgrade claude-code`) |
 | WinGet | `winget install Anthropic.ClaudeCode` | No (`winget upgrade Anthropic.ClaudeCode`) |
-| Windows PowerShell | `irm https://claude.ai/install.ps1 \| iex` | Yes |
-| Windows CMD | `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd` | Yes |
 
-Windows requires [Git for Windows](https://git-scm.com/downloads/win).
+Windows requires [Git for Windows](https://git-scm.com/downloads/win). After install: `cd your-project && claude`.
 
 ### System Requirements
 
-| Component | Requirement |
-|:----------|:------------|
+| Requirement | Details |
+|:------------|:--------|
 | macOS | 13.0+ |
 | Windows | 10 1809+ or Server 2019+ |
 | Linux | Ubuntu 20.04+, Debian 10+, Alpine 3.19+ |
 | RAM | 4 GB+ |
-| Network | Internet connection required |
 | Shell | Bash, Zsh, PowerShell, or CMD |
+| Network | Internet required |
+
+Alpine/musl distributions need `libgcc`, `libstdc++`, `ripgrep` and `USE_BUILTIN_RIPGREP=0`.
 
 ### Available Surfaces
 
-| Surface | Description |
-|:--------|:------------|
-| Terminal CLI | Full-featured CLI, `claude` command |
-| VS Code | Extension with inline diffs, @-mentions, plan review |
-| JetBrains | Plugin for IntelliJ, PyCharm, WebStorm, etc. |
-| Desktop app | Standalone app for macOS and Windows |
-| Web | Browser-based at [claude.ai/code](https://claude.ai/code), no local setup |
-| Slack | Route coding requests from team chat |
-| CI/CD | GitHub Actions, GitLab CI/CD |
+| Surface | How to start |
+|:--------|:-------------|
+| Terminal CLI | `claude` in any project directory |
+| VS Code / Cursor | Install "Claude Code" extension, open via Command Palette |
+| Desktop app | Download from [claude.ai](https://claude.ai/api/desktop/darwin/universal/dmg/latest/redirect), open Code tab |
+| Web | [claude.ai/code](https://claude.ai/code) -- no local setup needed |
+| JetBrains | Install plugin from JetBrains Marketplace, restart IDE |
 
 ### Authentication
 
-| Account Type | How to Authenticate |
-|:-------------|:-------------------|
-| Claude Pro/Max | Log in with Claude.ai account via browser prompt |
-| Teams/Enterprise | Log in with team-admin-invited Claude.ai account |
+| Account type | How to log in |
+|:-------------|:-------------|
+| Claude Pro/Max | `claude` then follow browser prompts |
+| Claude Teams/Enterprise | Log in with team-invited Claude.ai account |
 | Claude Console | Log in with Console credentials (admin must invite first) |
-| Amazon Bedrock | Set environment variables, no browser login needed |
-| Google Vertex AI | Set environment variables, no browser login needed |
-| Microsoft Foundry | Set environment variables, no browser login needed |
+| Amazon Bedrock | Set env vars before running `claude` (no browser login) |
+| Google Vertex AI | Set env vars before running `claude` (no browser login) |
+| Microsoft Foundry | Set env vars before running `claude` (no browser login) |
 
-Login: run `claude`, follow browser prompt on first launch. Re-authenticate: `/logout` then `/login`.
+Switch accounts with `/login`. Log out with `/logout`. Check active method with `/status`.
 
-Credentials stored in macOS Keychain (on macOS). Custom credential scripts via `apiKeyHelper` setting with configurable refresh via `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`.
+#### Authentication Precedence
+
+When multiple credentials are present, Claude Code uses them in this order:
+
+1. Cloud provider credentials (`CLAUDE_CODE_USE_BEDROCK` / `CLAUDE_CODE_USE_VERTEX` / `CLAUDE_CODE_USE_FOUNDRY`)
+2. `ANTHROPIC_AUTH_TOKEN` env var (Bearer token, for LLM gateways/proxies)
+3. `ANTHROPIC_API_KEY` env var (X-Api-Key header, direct API access)
+4. `apiKeyHelper` script output (dynamic/rotating credentials)
+5. Subscription OAuth credentials from `/login` (default for Pro/Max/Teams/Enterprise)
+
+#### Credential Storage
+
+- **macOS**: encrypted macOS Keychain
+- **Linux**: `~/.claude/.credentials.json` (mode `0600`), or `$CLAUDE_CONFIG_DIR`
+- **Windows**: `~/.claude/.credentials.json` (inherits user profile ACLs)
+
+`apiKeyHelper` setting runs a shell script returning an API key. Default refresh: 5 minutes or on HTTP 401. Custom TTL via `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`.
+
+### Team Setup Options
+
+| Method | Best for |
+|:-------|:---------|
+| Claude for Teams | Smaller teams, self-service with admin tools |
+| Claude for Enterprise | SSO, domain capture, role-based permissions, compliance API, managed policies |
+| Claude Console | API-based billing; invite users with Claude Code or Developer role |
+| Cloud providers | Bedrock, Vertex AI, or Foundry for enterprise cloud deployments |
 
 ### Essential CLI Commands
 
-| Command | Purpose |
-|:--------|:--------|
-| `claude` | Start interactive session |
+| Command | What it does |
+|:--------|:-------------|
+| `claude` | Start interactive mode |
 | `claude "task"` | Run a one-time task |
 | `claude -p "query"` | Run one-off query, then exit |
 | `claude -c` | Continue most recent conversation |
 | `claude -r` | Resume a previous conversation |
 | `claude commit` | Create a Git commit |
 | `claude --version` | Check installed version |
-| `claude doctor` | Diagnose installation issues |
-| `claude update` | Manually apply updates |
+| `claude doctor` | Diagnose installation and configuration |
+| `claude update` | Apply update immediately |
+| `/clear` | Clear conversation history |
+| `/help` | Show available commands |
+| `/login` | Switch accounts |
+| `/status` | Check active auth method |
 
-### The Agentic Loop
+### How Claude Code Works
 
-Claude Code works through three blending phases: **gather context** (search files, read code), **take action** (edit files, run commands), and **verify results** (run tests, check output). The loop repeats until the task is complete. You can interrupt at any point to steer.
+Claude Code uses an **agentic loop**: gather context, take action, verify results -- repeating until the task is complete. You can interrupt at any point to steer.
 
-### Tool Categories
+#### Tool Categories
 
-| Category | Capabilities |
-|:---------|:-------------|
+| Category | What Claude can do |
+|:---------|:-------------------|
 | File operations | Read, edit, create, rename files |
-| Search | Find files by pattern, regex content search |
-| Execution | Shell commands, servers, tests, git |
-| Web | Web search, fetch documentation |
-| Code intelligence | Type errors, go-to-definition, find references (via plugins) |
+| Search | Find files by pattern, search content with regex |
+| Execution | Run shell commands, start servers, run tests, use git |
+| Web | Search the web, fetch documentation, look up errors |
+| Code intelligence | Type errors/warnings, jump to definitions, find references (requires plugins) |
 
-### What Claude Can Access
+#### What Claude Can Access
 
-When you run `claude` in a directory, Claude has access to: your project files, your terminal (any command you could run), git state, CLAUDE.md instructions, auto memory (first 200 lines of MEMORY.md), and configured extensions (MCP servers, skills, subagents).
+When you run `claude` in a directory, it has access to: your project files, your terminal (any command you could run), your git state, CLAUDE.md instructions, auto memory, and configured extensions (MCP servers, skills, subagents, Chrome).
 
 ### Sessions
 
-| Feature | Detail |
-|:--------|:-------|
-| Resume | `claude --continue` or `claude --resume` to pick up where you left off |
-| Fork | `claude --continue --fork-session` to branch without affecting original |
-| Context window | Holds conversation, files, outputs, CLAUDE.md, skills; auto-compacts when full |
-| `/context` | See what is using context space |
-| `/compact` | Manually compact with optional focus |
+- Sessions are independent -- each starts with a fresh context window
+- Resume with `claude --continue` or `claude --resume`
+- Fork with `claude --continue --fork-session` (new session, preserved history)
+- Persistent knowledge goes in CLAUDE.md or auto memory, not conversation history
+- Parallel sessions via git worktrees for separate directories per branch
+
+### Context Window
+
+Context holds conversation, file contents, command outputs, CLAUDE.md, skills, and system instructions. When it fills up, Claude compacts automatically (clears older tool outputs, summarizes conversation). Run `/context` to check usage, `/compact` with a focus to control what is preserved.
 
 ### Permission Modes
 
@@ -110,46 +140,54 @@ Cycle with `Shift+Tab`:
 |:-----|:---------|
 | Default | Asks before file edits and shell commands |
 | Auto-accept edits | Edits files without asking, still asks for commands |
-| Plan mode | Read-only tools only, creates an approvable plan |
+| Plan mode | Read-only tools only, creates a plan for approval |
 
-### Updates and Release Channels
+Allow trusted commands in `.claude/settings.json` to skip per-command approval.
+
+### Checkpoints
+
+Every file edit is reversible. Press `Esc` twice to rewind to a previous state. Checkpoints are local to the session and separate from git. They only cover file changes, not actions affecting remote systems.
+
+### Updates & Release Channels
 
 | Channel | Behavior |
 |:--------|:---------|
 | `latest` (default) | New features as soon as released |
-| `stable` | ~1 week delay, skips releases with major regressions |
+| `stable` | ~1 week old, skips releases with major regressions |
 
-Configure via `/config` or `autoUpdatesChannel` in settings.json. Disable auto-updates with `DISABLE_AUTOUPDATER: "1"` in settings env.
+Configure via `/config` or `autoUpdatesChannel` in settings.json. Disable auto-updates by setting `DISABLE_AUTOUPDATER=1` in settings env.
 
-### Uninstallation
+### Uninstall
 
 | Method | Command |
 |:-------|:--------|
 | Native (macOS/Linux) | `rm -f ~/.local/bin/claude && rm -rf ~/.local/share/claude` |
-| Native (Windows) | Remove `claude.exe` and `~\.local\share\claude` |
+| Native (Windows) | Remove `%USERPROFILE%\.local\bin\claude.exe` and `%USERPROFILE%\.local\share\claude` |
 | Homebrew | `brew uninstall --cask claude-code` |
 | WinGet | `winget uninstall Anthropic.ClaudeCode` |
-| npm (deprecated) | `npm uninstall -g @anthropic-ai/claude-code` |
-| Config files | Remove `~/.claude`, `~/.claude.json`, and project `.claude/` + `.mcp.json` |
+| npm | `npm uninstall -g @anthropic-ai/claude-code` |
 
-### Tips for Effective Use
+Remove config: delete `~/.claude`, `~/.claude.json`, and project-level `.claude/` and `.mcp.json`.
 
+### Working Effectively
+
+- **Ask Claude for help**: "how do I set up hooks?", `/init`, `/doctor`, `/agents`
+- **Be conversational**: start with what you want, then refine iteratively
+- **Interrupt and steer**: type a correction mid-task and press Enter
 - **Be specific upfront**: reference files, mention constraints, point to patterns
-- **Give verification targets**: include test cases or expected output so Claude can check its work
+- **Give verification targets**: include test cases, expected outputs, screenshots
 - **Explore before implementing**: use plan mode to analyze first, then implement
-- **Delegate, don't dictate**: give context and direction, let Claude figure out details
-- **Iterate conversationally**: refine through back-and-forth rather than crafting perfect prompts
-- **Use `/init`** to create a CLAUDE.md, **`/doctor`** to diagnose issues, **`/agents`** for subagent setup
+- **Delegate, dont dictate**: give context and direction, trust Claude with details
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Claude Code overview](references/claude-code-overview.md) -- product overview, installation across all surfaces (Terminal/VS Code/Desktop/Web/JetBrains), capabilities (automation, features, bugs, commits/PRs, MCP integrations, CLAUDE.md customization, agent teams, CLI piping/scripting, cross-surface workflows), surface comparison table, next steps
-- [Quickstart](references/claude-code-quickstart.md) -- step-by-step first session (install, login, start session, first question, first code change, git operations, bug fixes/features, refactoring/tests/docs/review), essential commands table, pro tips for beginners (be specific, step-by-step instructions, explore first, keyboard shortcuts)
-- [Advanced setup](references/claude-code-setup.md) -- system requirements per OS, platform-specific installation (Native/Homebrew/WinGet), Windows setup (Git Bash/WSL), Alpine/musl dependencies, verification with claude doctor, auto-updates and release channels (latest/stable), disable auto-updates, manual update, specific version installation, npm deprecation and migration, binary integrity and code signing, uninstallation per method, config file removal
-- [Authentication](references/claude-code-authentication.md) -- login flow (browser prompt, /login /logout), account types (Pro/Max/Teams/Enterprise/Console/cloud providers), team setup for Teams/Enterprise/Console/Bedrock/Vertex/Foundry, credential management (macOS Keychain, apiKeyHelper, refresh intervals)
-- [How Claude Code works](references/claude-code-how-it-works.md) -- the agentic loop (gather context/take action/verify results), models (Sonnet/Opus, /model switching), tool categories (file ops/search/execution/web/code intelligence), extending with skills/MCP/hooks/subagents, what Claude can access, execution environments (local/cloud/remote control), interfaces, sessions (resume/fork, context window, compaction, /context, /compact), checkpoints and undo, permission modes (default/auto-accept/plan), tips for effective use (be specific, verify, explore first, delegate)
+- [Claude Code overview](references/claude-code-overview.md) -- install methods (Terminal native/Homebrew/WinGet, VS Code extension, Desktop app macOS/Windows, Web at claude.ai/code, JetBrains plugin), capability descriptions (automate tedious tasks, build features/fix bugs, commits/PRs, MCP tool connections, customization with CLAUDE.md/skills/hooks, agent teams/Agent SDK, CLI piping/scripting/automation, work from anywhere with Remote Control/web/iOS/Desktop/Slack), surface comparison table (Remote Control, Web/iOS, GitHub Actions, GitLab CI/CD, Code Review, Slack, Chrome, Agent SDK), next steps links
+- [Quickstart](references/claude-code-quickstart.md) -- prerequisites, step-by-step walkthrough (install, login with account types, start first session, first question exploring codebase, first code change with approval flow, Git operations commit/branch/merge, bug fixing and feature implementation, other workflows refactor/tests/docs/review), essential commands table, pro tips (be specific, step-by-step instructions, let Claude explore first, keyboard shortcuts), getting help (/help, Discord)
+- [Advanced setup](references/claude-code-setup.md) -- system requirements (OS versions, RAM, network, shell, location), install methods with platform tabs, Windows setup (Git Bash with CLAUDE_CODE_GIT_BASH_PATH, WSL 1/2 with sandboxing note), Alpine/musl dependencies (libgcc libstdc++ ripgrep, USE_BUILTIN_RIPGREP), verify installation (--version, claude doctor), authenticate (account types, Console workspace), auto-updates behavior, release channels (latest/stable, autoUpdatesChannel setting, managed settings for enterprise), disable auto-updates (DISABLE_AUTOUPDATER), manual update (claude update), install specific version (native installer with version/channel args), deprecated npm installation (migration steps, Node.js 18+ requirement, no sudo warning), binary integrity (SHA256 checksums, code signing macOS/Windows), uninstall by method (native/Homebrew/WinGet/npm), remove configuration files
+- [Authentication](references/claude-code-authentication.md) -- login flow (browser prompt, manual URL copy with press c), account types (Pro/Max, Teams/Enterprise, Console, cloud providers), logout (/logout), team setup (Teams vs Enterprise features, Console with bulk invite/SSO/roles Claude Code and Developer, cloud provider distribution), credential management (storage locations macOS Keychain/Linux/Windows, supported auth types, apiKeyHelper with TTL and slow helper notice, CLAUDE_CODE_API_KEY_HELPER_TTL_MS), authentication precedence (cloud providers > ANTHROPIC_AUTH_TOKEN > ANTHROPIC_API_KEY > apiKeyHelper > OAuth, conflict resolution, Web always uses subscription)
+- [How Claude Code works](references/claude-code-how-it-works.md) -- agentic loop (gather context/take action/verify results, interrupting and steering), models (Sonnet/Opus tradeoffs, /model and --model switching), tools (five categories file-ops/search/execution/web/code-intelligence, tool chaining example, extending with skills/MCP/hooks/subagents), what Claude can access (project files, terminal, git state, CLAUDE.md, auto memory, extensions), execution environments (local/cloud/remote-control), interfaces (terminal/desktop/IDE/web/remote-control/Slack/CI), sessions (independent context, branch awareness, resume with --continue/--resume, fork with --fork-session, same session in multiple terminals), context window (what fills it, compaction behavior, /context and /compact, Compact Instructions in CLAUDE.md, skills on-demand loading, subagent isolation, MCP context cost), checkpoints (undo file edits, Esc twice, limitations for remote actions), permission modes (Shift+Tab cycling, default/auto-accept/plan, .claude/settings.json allowlists), working effectively (ask Claude for help /init /agents /doctor, conversational iteration, interrupt and steer, be specific upfront, give verification targets, explore before implementing with plan mode, delegate dont dictate)
 
 ## Sources
 
