@@ -2,6 +2,37 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.19
+
+**20 references updated across 11 skills:** best-practices-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **`ANTHROPIC_CUSTOM_MODEL_OPTION` env var for `/model` picker** — add a custom model entry without replacing built-in aliases; useful for LLM gateways; optional `_NAME` and `_DESCRIPTION` suffix vars control display; validation is skipped for the custom model ID (features-doc, settings-doc)
+- **Built-in IDE MCP server documented** — the VS Code extension runs a local `ide` MCP server on `127.0.0.1` with two model-visible tools: `mcp__ide__getDiagnostics` (reads Problems panel) and `mcp__ide__executeCode` (runs Python cells in Jupyter with a Quick Pick confirmation); auth token is per-activation and stored in `~/.claude/ide/` (ide-doc)
+- **`/remote-control` in VS Code** — bridge a VS Code session to claude.ai/code from the command menu (ide-doc, operations-doc)
+- **AI-generated session titles in VS Code** — new sessions automatically receive titles based on the first message (ide-doc, operations-doc)
+- **`--console` flag for `claude auth login`** — sign in with Anthropic Console for API usage billing instead of a Claude subscription (cli-doc, operations-doc)
+- **`StopFailure` matcher support** — `StopFailure` hook event now supports matchers filtering on error type: `rate_limit`, `authentication_failed`, `billing_error`, `invalid_request`, `server_error`, `max_output_tokens`, `unknown` (hooks-doc)
+- **`InstructionsLoaded` matcher support** — `InstructionsLoaded` now supports matchers filtering on `load_reason`: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact` (hooks-doc)
+- **`Elicitation` and `ElicitationResult` matcher support** — these events now support matchers filtering on MCP server name (hooks-doc)
+- **Remote Control troubleshooting expanded** — new sections for "not yet enabled for your account" (env var conflicts), "disabled by your organization's policy" (API key vs OAuth, admin toggle, compliance), and restructured "credentials fetch failed" (features-doc)
+- **Subagent persistent memory step in `/agents` wizard** — new "Configure memory" step to enable a persistent memory directory at `~/.claude/agent-memory/` during agent creation (sub-agents-doc)
+- **"Show turn duration" toggle in `/config`** — `showTurnDuration` is now configurable from the `/config` menu instead of requiring direct `~/.claude.json` edits (settings-doc, operations-doc)
+
+### Changed
+- **`/bug` command renamed to `/feedback`** — all references updated to `/feedback`; env var `DISABLE_BUG_COMMAND` renamed to `DISABLE_FEEDBACK_COMMAND` (old name still accepted); `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` now references `DISABLE_FEEDBACK_COMMAND` (security-doc, settings-doc, operations-doc)
+- **`bypassPermissions` mode clarified** — no longer described as "skips all permission checks"; now documented as skipping prompts except for writes to `.git`, `.claude`, `.vscode`, and `.idea` directories (with `.claude/commands`, `.claude/agents`, `.claude/skills` exempt) (settings-doc, cli-doc, ide-doc, best-practices-doc, sub-agents-doc)
+- **Sandbox path prefix `//` deprecated in favor of `/`** — single-slash `/path` is now the standard absolute path prefix for sandbox filesystem rules; double-slash `//path` still works; `./path` is project-relative for project settings or `~/.claude`-relative for user settings (security-doc, settings-doc)
+- **Remote Control admin toggle wording updated** — Team and Enterprise plans now state the toggle is "off by default" rather than requiring admins to "enable Claude Code" (features-doc)
+- **Remote Control session title priority documented** — title is chosen from `--name`, `/rename`, last message, or first prompt (in that order) instead of the previous flat description (features-doc)
+- **`CLAUDE_CODE_PLUGIN_SEED_DIR` now supports multiple directories** — paths separated by `:` on Unix or `;` on Windows; first seed containing a given cache wins (plugins-doc, settings-doc)
+- **Plugin hook events table expanded** — replaced flat list with structured table matching user-defined hooks; added `StopFailure`, `InstructionsLoaded`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `Elicitation`, `ElicitationResult` events; added `http` hook type (plugins-doc)
+- **`permission_mode` removed from several hook JSON examples** — `SessionStart`, `InstructionsLoaded`, `Notification`, `SubagentStart`, `ConfigChange`, `PreCompact`, `PostCompact`, and `SessionEnd` examples no longer show `permission_mode`; noted that not all events receive this field (hooks-doc)
+- **Subagent `/agents` wizard UI updated** — "User-level" renamed to "Personal"; agent creation step descriptions reworded; new "save and edit" option with `e` key (sub-agents-doc)
+- **Subagent persistent memory recommended scope changed** — `project` is now the recommended default scope instead of `user`, as it is shareable via version control (sub-agents-doc)
+- **Upstream changelog updated** — new release v2.1.79 covering `--console` auth flag, turn duration toggle, `-p` mode fixes, voice mode fix, rate limit retry fix, `SessionEnd` hook fix, 18MB startup memory reduction, and VS Code `/remote-control` and AI-generated titles (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, operations-doc, plugins-doc docs
+
 ## 26.3.18
 
 **27 references updated across 15 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
