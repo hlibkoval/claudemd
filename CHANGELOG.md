@@ -2,6 +2,31 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.20
+
+**17 references updated across 10 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`--channels` CLI flag** — enable MCP channel servers to push messages (Telegram, Discord, webhooks) into a session (cli-doc)
+- **`--dangerously-load-development-channels` CLI flag** — load unapproved channel servers for local development with a confirmation prompt (cli-doc)
+- **Channels feature documented across docs** — MCP servers can declare the `claude/channel` capability to push messages into sessions; new "Channels" row in integration table and cross-references added (features-doc, getting-started-doc, mcp-doc)
+- **`channelsEnabled` managed setting** — Team/Enterprise admins can allow or block channel message delivery regardless of `--channels` flag (settings-doc)
+- **`effort` frontmatter for skills and subagents** — override model effort level per-skill or per-subagent; inherits from session by default; env var still takes precedence (features-doc, sub-agents-doc)
+- **`rate_limits` field in statusline scripts** — exposes 5-hour and 7-day Claude.ai rate limit windows with `used_percentage` and `resets_at` (operations-doc)
+- **`source: 'settings'` plugin marketplace source** — declare plugin entries inline in `settings.json` (operations-doc)
+- **Workspace trust requirement for status line** — `statusLine` now requires workspace trust acceptance; shows `statusline skipped · restart to fix` notification if trust is not accepted (features-doc)
+- **`resume` reason for `SessionEnd` hooks** — fires when switching sessions via interactive `/resume` (hooks-doc)
+- **`knowledge-work-plugins` added to reserved marketplace names** (plugins-doc)
+
+### Changed
+- **`SessionEnd` hooks timeout scope expanded** — now applies to `/resume` session switching in addition to exit and `/clear` (hooks-doc, settings-doc)
+- **Subagent memory wizard option renamed** — "Enable" changed to "User scope" in the `/agents` wizard memory step (sub-agents-doc)
+- **`--agents` flag supported fields expanded** — now lists `effort`, `background`, and `isolation` alongside existing fields (sub-agents-doc)
+- **Marketplace allowlist source count wording generalized** — "seven marketplace source types" changed to "multiple marketplace source types" (settings-doc)
+- **`/reload-plugins` wording updated** — "reloaded commands" changed to "plugins" in reload output description (plugins-doc)
+- **CLI tool usage detection added to plugin tips** — in addition to file pattern matching (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, skills-doc docs
+
 ## 26.3.19
 
 **20 references updated across 11 skills:** best-practices-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc

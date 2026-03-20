@@ -153,6 +153,10 @@ The optional `compatibility` field:
   ```yaml  theme={null}
   compatibility: Requires git, docker, jq, and access to the internet
   ```
+
+  ```yaml  theme={null}
+  compatibility: Requires Python 3.14+ and uv
+  ```
 </Card>
 
 <Note>
