@@ -2,6 +2,47 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.23
+
+**26 references updated across 14 skills:** ci-cd-doc, cli-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`--bare` CLI flag** — skip auto-discovery of hooks, skills, plugins, MCP servers, auto memory, and CLAUDE.md for faster scripted `-p` calls; requires `ANTHROPIC_API_KEY` or `apiKeyHelper` via `--settings` (cli-doc, headless-doc)
+- **Channel permission relay** — channels that declare `claude/channel/permission` can forward tool approval prompts remotely; full walkthrough with `permission_request` notification fields, verdict format, and assembled example (features-doc)
+- **`showClearContextOnPlanAccept` setting** — controls whether the "clear context" option appears on the plan accept screen; defaults to `false` (settings-doc)
+- **`autoConnectIde` global config key** — automatically connect to a running IDE from an external terminal (settings-doc)
+- **`autoInstallIdeExtension` global config key** — control automatic IDE extension installation from VS Code terminals (settings-doc)
+- **`editorMode` global config key** — set Vim or normal key binding mode directly in `~/.claude.json` (settings-doc)
+- **`user.account_id` OTEL attribute** — tagged format matching Anthropic admin APIs, controlled by `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` (operations-doc)
+- **`prompt.id` and `workspace.host_paths` event attributes** — correlate events per prompt and identify desktop app workspace directories (operations-doc)
+- **`source: 'settings'` inline marketplace source** — declare plugin entries directly in `settings.json` without a hosted marketplace repository (settings-doc)
+- **Hooks in managed settings** — server-managed settings now support hooks with the same format as `settings.json`, with security approval dialog (settings-doc)
+- **`effort` frontmatter for skills** — override effort level per skill; options are `low`, `medium`, `high`, `max` (skills-doc)
+- **Rate limit usage statusline section** — new dedicated section with Bash and Python examples for displaying 5h/7d rate limit windows (features-doc)
+- **How channels compare table** — compares channels to web sessions, Slack, MCP, and Remote Control (features-doc)
+- **tmux passthrough configuration** — `set -g allow-passthrough on` required for notifications and progress bar to reach outer terminal (cli-doc)
+
+### Changed
+- **`--allowedTools` is now the canonical flag name** — `--allowed-tools` still works as an alias (ci-cd-doc, cli-doc)
+- **`--channels` flag description reworded** — clarified as research preview requiring Claude.ai authentication (cli-doc)
+- **Remote Control/web sessions admin controls restructured** — no longer a managed settings key; controlled via Claude Code admin settings page (ide-doc, settings-doc)
+- **Blocking hooks take precedence over allow rules** — clarified that exit code 2 stops tool calls before permission rules are evaluated (settings-doc)
+- **`includeGitInstructions` setting expanded** — now also controls git status snapshot in system prompt (settings-doc)
+- **Plugin agent frontmatter fields documented** — `model`, `effort`, `maxTurns`, `disallowedTools`, and other supported fields now listed; unsupported security fields noted (plugins-doc)
+- **Subagent `tools` vs `disallowedTools` interaction clarified** — `disallowedTools` applied first, then `tools` resolved against remaining pool (sub-agents-doc)
+- **MCP OAuth CIMD support** — Client ID Metadata Document (SEP-991) now auto-discovered for servers without Dynamic Client Registration (mcp-doc)
+- **Sandbox `allowRead` path resolution clarified** — `.` resolves relative to the settings file location (security-doc)
+- **Channel bot token storage path changed** — Telegram/Discord `.env` files now save to `~/.claude/channels/` instead of project-level `.claude/channels/` (features-doc)
+- **Ctrl+O also expands collapsed MCP read/search calls** — shows full output instead of single "Queried" line (cli-doc)
+- **`terminalProgressBarEnabled` supported terminals updated** — ConEmu, Ghostty 1.2.0+, and iTerm2 3.6.6+ replace generic "Windows Terminal and iTerm2" (settings-doc)
+- **Context window description updated** — now mentions auto memory alongside CLAUDE.md (getting-started-doc)
+- **`pip` removed as a marketplace plugin source type** (plugins-doc)
+- **Plugin discover page** — added `claude.com/plugins` web catalog link and concrete install example (plugins-doc)
+- Minor wording/formatting updates across memory-doc, features-doc, skills-doc docs
+
+### Removed
+- **`allow_remote_sessions` managed settings key** — replaced by admin settings toggle for Remote Control and web sessions (settings-doc)
+
 ## 26.3.20
 
 **17 references updated across 10 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc

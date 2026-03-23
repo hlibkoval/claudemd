@@ -1,213 +1,207 @@
 ---
 name: security-doc
-description: Complete documentation for Claude Code security, privacy, and compliance -- security architecture (permission-based model, built-in protections, prompt injection defenses, MCP security, IDE security, cloud execution security), sandboxing (filesystem isolation with allowWrite/denyWrite/denyRead/allowRead, network isolation with domain restrictions and custom proxy, OS-level enforcement via Seatbelt/bubblewrap, sandbox modes auto-allow vs regular permissions, /sandbox command, excludedCommands, dangerouslyDisableSandbox escape hatch, allowUnsandboxedCommands, enableWeakerNestedSandbox), development containers (devcontainer.json/Dockerfile/init-firewall.sh, --dangerously-skip-permissions, firewall whitelisting), enterprise network configuration (HTTPS_PROXY/HTTP_PROXY/NO_PROXY, custom CA certs NODE_EXTRA_CA_CERTS, mTLS with CLAUDE_CODE_CLIENT_CERT/KEY/KEY_PASSPHRASE, required URLs api.anthropic.com/claude.ai/platform.claude.com, GitHub Enterprise IP allowlisting), data usage (training policy consumer vs commercial, Development Partner Program, /feedback data, session quality surveys, data retention 5-year/30-day/ZDR, telemetry Statsig/Sentry, DISABLE_TELEMETRY/DISABLE_ERROR_REPORTING, default behaviors by API provider), legal and compliance (Commercial Terms vs Consumer Terms, BAA with ZDR, acceptable use policy, OAuth vs API key authentication restrictions, HackerOne vulnerability reporting), zero data retention (ZDR scope and coverage, features disabled under ZDR including Claude Code on Web and remote sessions and /feedback, data retention for policy violations, per-organization enablement). Load when discussing Claude Code security, sandboxing, sandbox configuration, filesystem isolation, network isolation, devcontainers, development containers, enterprise proxy, mTLS, custom CA certificates, data usage, data retention, training policy, telemetry, zero data retention, ZDR, legal terms, BAA, HIPAA, compliance, prompt injection protection, HackerOne, trust center, or privacy safeguards.
+description: Complete documentation for Claude Code security, sandboxing, devcontainers, network configuration, data usage, legal compliance, and zero data retention -- permission-based architecture (read-only default, explicit approval for edits/commands), built-in protections (sandboxed bash tool, write access restriction to project scope, prompt fatigue mitigation with allowlists, Accept Edits mode), prompt injection safeguards (permission system, context-aware analysis, input sanitization, command blocklist for curl/wget, isolated context windows for web fetch, trust verification, command injection detection, fail-closed matching), MCP security (user-configured servers, settings checked into source control), IDE and cloud execution security (isolated VMs, network access controls, credential protection, branch restrictions, audit logging), Remote Control (local execution, TLS, short-lived scoped credentials), sandbox modes (auto-allow and regular permissions), OS-level enforcement (Seatbelt on macOS, bubblewrap on Linux/WSL2), filesystem isolation (allowWrite, denyWrite, denyRead, allowRead, path prefix resolution with / ~ ./ conventions, merged arrays across settings scopes, allowManagedReadPathsOnly), network isolation (domain restrictions, user confirmation prompts, allowManagedDomainsOnly, custom proxy with httpProxyPort/socksProxyPort), sandbox escape hatch (dangerouslyDisableSandbox parameter, allowUnsandboxedCommands setting), excludedCommands, enableWeakerNestedSandbox, sandbox limitations (domain fronting, Unix socket escalation, filesystem permission escalation), sandbox and permissions complementary layers, devcontainer setup (Dockerfile, init-firewall.sh, devcontainer.json, --dangerously-skip-permissions, firewall whitelisting, VS Code Remote-Containers), enterprise network configuration (HTTPS_PROXY/HTTP_PROXY/NO_PROXY, NODE_EXTRA_CA_CERTS for custom CA, mTLS with CLAUDE_CODE_CLIENT_CERT/CLAUDE_CODE_CLIENT_KEY/CLAUDE_CODE_CLIENT_KEY_PASSPHRASE, required URLs api.anthropic.com/claude.ai/platform.claude.com, download URLs downloads.claude.ai/storage.googleapis.com, GitHub Enterprise IP allow list), data usage policies (consumer vs commercial training policy, Development Partner Program opt-in, /feedback transcript retention 5 years, session quality surveys numeric-only, data retention 5-year consumer with training on or 30-day without or 30-day commercial or ZDR for Enterprise, local data flow with TLS encryption, cloud data flow with isolated VMs and credential proxy, telemetry Statsig/Sentry with DISABLE_TELEMETRY/DISABLE_ERROR_REPORTING env vars, default behaviors by API provider table), legal and compliance (Commercial Terms vs Consumer Terms, BAA extending to Claude Code with ZDR, OAuth vs API key authentication restrictions, HackerOne vulnerability reporting), zero data retention (ZDR for Claude for Enterprise, per-organization enablement, covers inference calls only, does not cover chat/Cowork/analytics/seat-management/third-party integrations, features disabled under ZDR including Claude Code on Web and remote sessions and /feedback, 2-year retention for policy violations, request through account team). Load when discussing Claude Code security, sandboxing, sandbox configuration, filesystem isolation, network isolation, devcontainers, development containers, prompt injection protection, permission architecture, data usage, data retention, training policy, zero data retention, ZDR, enterprise network config, proxy configuration, custom CA certificates, mTLS, legal compliance, BAA, HIPAA, commercial terms, trust center, security best practices, MCP security, cloud execution security, Remote Control security, WebDAV risk, security vulnerability reporting, HackerOne, telemetry opt-out, Sentry, Statsig, or data privacy.
 user-invocable: false
 ---
 
-# Security, Privacy & Compliance Documentation
+# Security Documentation
 
-This skill provides the complete official documentation for Claude Code's security architecture, sandboxing, data handling, network configuration, and legal compliance.
+This skill provides the complete official documentation for Claude Code security, sandboxing, devcontainers, enterprise network configuration, data usage policies, legal compliance, and zero data retention.
 
 ## Quick Reference
 
-### Security Architecture
+Claude Code is built with security at its core, following Anthropic's comprehensive security program (SOC 2 Type 2, ISO 27001 -- see [Anthropic Trust Center](https://trust.anthropic.com)). It uses strict read-only permissions by default and requires explicit approval for edits, commands, and other actions.
 
-Claude Code uses a **permission-based architecture**: read-only by default, explicit approval required for writes and command execution. Users control whether to approve once or allow automatically.
+### Permission-Based Architecture
 
-**Built-in protections:**
+| Layer | Protection |
+|:------|:-----------|
+| **Read-only default** | Claude can only read by default; writing/executing requires approval |
+| **Write scope restriction** | Writes confined to the folder where Claude Code was started and its subfolders |
+| **Sandboxed bash** | OS-level filesystem and network isolation via `/sandbox` |
+| **Prompt fatigue mitigation** | Allowlist frequently used safe commands per-user, per-codebase, or per-org |
+| **Accept Edits mode** | Batch accept file edits while maintaining command permission prompts |
+
+### Prompt Injection Protections
 
 | Protection | Description |
 |:-----------|:------------|
-| Sandboxed bash tool | OS-level filesystem and network isolation; enable with `/sandbox` |
-| Write access restriction | Can only write within the started folder and subfolders |
-| Prompt fatigue mitigation | Allowlisting safe commands per-user, per-codebase, or per-org |
-| Accept Edits mode | Batch accept edits while keeping command permission prompts |
-| Command blocklist | `curl`, `wget` blocked by default to prevent fetching arbitrary web content |
+| Permission system | Sensitive operations require explicit approval |
+| Context-aware analysis | Detects potentially harmful instructions by analyzing full request |
+| Input sanitization | Prevents command injection via input processing |
+| Command blocklist | Blocks `curl`, `wget` by default; when allowed, pattern limitations apply |
+| Isolated context windows | Web fetch uses separate context to avoid injecting malicious prompts |
+| Trust verification | First-time codebase runs and new MCP servers require trust verification (disabled with `-p`) |
 | Command injection detection | Suspicious bash commands require manual approval even if allowlisted |
 | Fail-closed matching | Unmatched commands default to requiring manual approval |
 
-**Prompt injection defenses:**
-
-- Permission system requires explicit approval for sensitive operations
-- Context-aware analysis detects harmful instructions
-- Input sanitization prevents command injection
-- Network requests require approval; web fetch uses isolated context window
-- First-time codebase runs and new MCP servers require trust verification (disabled with `-p` flag)
-- Secure credential storage with encryption
-
-**Cloud execution security (Claude Code on the web):**
-
-- Isolated VMs per session, network access controls, credential protection via secure proxy
-- Git push restricted to current working branch, audit logging, automatic cleanup
-
-**Remote Control sessions** run locally -- no cloud VMs, connection uses short-lived scoped credentials over TLS.
-
 ### Sandboxing
 
-OS-level enforcement using **Seatbelt** (macOS) and **bubblewrap** (Linux/WSL2). WSL1 is not supported.
+Sandbox provides OS-level enforcement for bash commands, reducing permission prompts while maintaining security. Enable with `/sandbox`.
 
-**Linux prerequisites:** `bubblewrap` and `socat` packages required.
-
-**Sandbox modes (set via `/sandbox`):**
+**Sandbox modes:**
 
 | Mode | Behavior |
 |:-----|:---------|
-| Auto-allow | Sandboxed commands run automatically; non-sandboxable commands fall back to permission flow |
-| Regular permissions | All commands go through standard permission flow even when sandboxed |
+| **Auto-allow** | Sandboxed commands run without permission prompts; non-sandboxable commands fall back to normal flow |
+| **Regular permissions** | All commands go through standard permission flow even when sandboxed |
 
-Auto-allow mode works independently of the permission mode setting.
+**OS-level enforcement:**
 
-**Filesystem isolation defaults:**
+| Platform | Mechanism |
+|:---------|:----------|
+| macOS | Seatbelt (built-in, works out of the box) |
+| Linux / WSL2 | bubblewrap + socat (install via `apt-get` or `dnf`) |
+| WSL1 | Not supported |
+| Windows native | Planned |
 
-| Access | Scope |
-|:-------|:------|
-| Read + Write | Current working directory and subdirectories |
-| Read only | Entire computer (except denied directories) |
-| Blocked | Modifications outside working directory |
-
-**Filesystem path configuration (`sandbox.filesystem.*` in settings.json):**
+**Filesystem isolation settings:**
 
 | Setting | Purpose |
 |:--------|:--------|
-| `allowWrite` | Grant subprocess write access to additional paths |
-| `denyWrite` | Block subprocess write access to specific paths |
-| `denyRead` | Block subprocess read access to specific paths |
-| `allowRead` | Re-allow reading within a `denyRead` region (takes precedence) |
-| `allowManagedReadPathsOnly` | Only respect managed `allowRead` entries |
-
-Path arrays from multiple settings scopes are **merged** (not replaced). Paths from `sandbox.filesystem` and permission rules (`Read(...)`, `Edit(...)`) are merged into the final sandbox config.
+| `sandbox.filesystem.allowWrite` | Grant subprocess write access to paths outside project (e.g., `["~/.kube", "/tmp/build"]`) |
+| `sandbox.filesystem.denyWrite` | Block subprocess writes to specific paths |
+| `sandbox.filesystem.denyRead` | Block subprocess reads from specific paths |
+| `sandbox.filesystem.allowRead` | Re-allow reads within a `denyRead` region (takes precedence) |
+| `allowManagedReadPathsOnly` | Only managed `allowRead` entries are respected; user/project/local entries ignored |
 
 **Path prefix resolution:**
 
 | Prefix | Meaning | Example |
 |:-------|:--------|:--------|
-| `/` | Absolute from filesystem root | `/tmp/build` |
-| `~/` | Relative to home directory | `~/.kube` -> `$HOME/.kube` |
-| `./` or none | Relative to project root (project settings) or `~/.claude` (user settings) | `./output` |
+| `/` | Absolute path | `/tmp/build` |
+| `~/` | Relative to home | `~/.kube` becomes `$HOME/.kube` |
+| `./` or none | Relative to project root (in project settings) or `~/.claude` (in user settings) | `./output` |
+
+Arrays are **merged** across settings scopes (managed + user + project), not replaced.
 
 **Network isolation:**
 
-- Domain-based restrictions via proxy server running outside the sandbox
-- New domain requests trigger permission prompts
-- `allowManagedDomainsOnly` blocks non-allowed domains automatically
-- Custom proxy support via `sandbox.network.httpProxyPort` / `socksProxyPort`
+| Setting | Purpose |
+|:--------|:--------|
+| `sandbox.network.allowedDomains` | Domains bash commands can reach |
+| `allowManagedDomainsOnly` | Blocks non-allowed domains automatically (no user prompt) |
+| `sandbox.network.httpProxyPort` | Custom HTTP proxy port |
+| `sandbox.network.socksProxyPort` | Custom SOCKS proxy port |
 
-**Escape hatch:** When a command fails due to sandbox restrictions, Claude may retry with `dangerouslyDisableSandbox` (goes through normal permission flow). Disable with `"allowUnsandboxedCommands": false`. Alternatively, list incompatible tools in `excludedCommands`.
+**Escape hatch:** Commands that fail due to sandbox restrictions may retry with `dangerouslyDisableSandbox`, going through normal permission flow. Disable with `"allowUnsandboxedCommands": false`.
 
-**Security limitations:**
+**Sandbox security limitations:**
+- Network filtering restricts domains only; does not inspect traffic. Domain fronting may bypass filtering.
+- `allowUnixSockets` can grant access to powerful system services (e.g., Docker socket).
+- Overly broad filesystem write permissions can enable privilege escalation via executables in `$PATH` or shell config files.
+- Linux `enableWeakerNestedSandbox` mode (for Docker without privileged namespaces) considerably weakens security.
 
-- Network filtering is domain-based only; does not inspect traffic content
-- Broad domains (e.g., `github.com`) may allow data exfiltration; domain fronting possible
-- `allowUnixSockets` can grant access to powerful system services (e.g., Docker socket)
-- Overly broad filesystem writes can enable privilege escalation
-- `enableWeakerNestedSandbox` (for Docker without privileged namespaces) considerably weakens security
+### Devcontainers
 
-**Incompatible tools:** `watchman` (use `jest --no-watchman`), `docker` (add to `excludedCommands`)
+The reference [devcontainer setup](https://github.com/anthropics/claude-code/tree/main/.devcontainer) provides a preconfigured container for secure, isolated development. Components: `devcontainer.json`, `Dockerfile`, `init-firewall.sh`.
 
-### Development Containers
-
-Reference devcontainer at `github.com/anthropics/claude-code/.devcontainer`. Enables `--dangerously-skip-permissions` for unattended operation.
-
-**Components:** `devcontainer.json` (settings, extensions, mounts), `Dockerfile` (image, tools), `init-firewall.sh` (network rules).
-
-**Security features:** Outbound connections restricted to whitelisted domains only (npm, GitHub, Claude API), default-deny policy, startup firewall verification, system isolation.
+| Feature | Details |
+|:--------|:--------|
+| Firewall | Default-deny policy; whitelists npm registry, GitHub, Claude API, DNS, SSH only |
+| Isolation | Separated from host system |
+| Unattended mode | Enables `claude --dangerously-skip-permissions` |
+| Platform support | macOS, Windows, Linux |
+| VS Code integration | Remote-Containers extension |
 
 ### Enterprise Network Configuration
 
-**Proxy configuration:**
+**Proxy:**
 
 | Variable | Purpose |
 |:---------|:--------|
-| `HTTPS_PROXY` | HTTPS proxy (recommended) |
+| `HTTPS_PROXY` | HTTPS proxy URL (recommended) |
 | `HTTP_PROXY` | HTTP proxy fallback |
 | `NO_PROXY` | Bypass proxy (space or comma-separated; `*` for all) |
 
-SOCKS proxies are not supported. Basic auth via `http://user:pass@proxy:port`. All env vars can also go in `settings.json`.
+SOCKS proxies are not supported. For advanced auth (NTLM, Kerberos), use an LLM Gateway.
 
-**Custom CA certificates:** `NODE_EXTRA_CA_CERTS=/path/to/ca-cert.pem`
+**Custom CA:** `NODE_EXTRA_CA_CERTS=/path/to/ca-cert.pem`
 
-**mTLS authentication:**
+**mTLS:**
 
 | Variable | Purpose |
 |:---------|:--------|
 | `CLAUDE_CODE_CLIENT_CERT` | Client certificate path |
 | `CLAUDE_CODE_CLIENT_KEY` | Client private key path |
-| `CLAUDE_CODE_CLIENT_KEY_PASSPHRASE` | Passphrase for encrypted key |
+| `CLAUDE_CODE_CLIENT_KEY_PASSPHRASE` | Passphrase for encrypted key (optional) |
 
 **Required network access:**
 
 | URL | Purpose |
 |:----|:--------|
-| `api.anthropic.com` | Claude API endpoints |
+| `api.anthropic.com` | Claude API |
 | `claude.ai` | Authentication (claude.ai accounts) |
 | `platform.claude.com` | Authentication (Console accounts) |
-| `downloads.claude.ai` | Native installer and updates |
-| `storage.googleapis.com` | Legacy download bucket (deprecation in progress) |
+| `downloads.claude.ai` | Native installer, updates |
+| `storage.googleapis.com` | Legacy downloads (deprecating) |
 
-For GitHub Enterprise Cloud with IP restrictions: enable IP allow list inheritance for installed GitHub Apps, or manually add ranges from Anthropic API IP addresses page.
+For GitHub Enterprise Cloud with IP restrictions, enable IP allow list inheritance for installed GitHub Apps or add ranges from [Anthropic API IP addresses](https://platform.claude.com/docs/en/api/ip-addresses).
 
 ### Data Usage & Retention
 
 **Training policy:**
 
-| Plan type | Policy |
-|:----------|:-------|
-| Consumer (Free/Pro/Max) | Opt-in choice to allow training; configurable in privacy settings |
-| Commercial (Team/Enterprise/API) | Not used for training unless opted into Development Partner Program |
+| Plan type | Training |
+|:----------|:---------|
+| Free, Pro, Max (consumer) | Opt-in via privacy settings (on by default) |
+| Team, Enterprise, API (commercial) | Not used for training unless opted in via Development Partner Program |
 
 **Data retention:**
 
-| Scenario | Retention |
-|:---------|:----------|
-| Consumer, training allowed | 5 years |
-| Consumer, training disallowed | 30 days |
+| Account type | Retention |
+|:-------------|:----------|
+| Consumer (training on) | 5 years |
+| Consumer (training off) | 30 days |
 | Commercial (standard) | 30 days |
-| Commercial (ZDR) | Not retained (except law/misuse) |
-| Local session cache | Up to 30 days (configurable) |
+| Commercial (ZDR) | No retention (except law/misuse) |
 | `/feedback` transcripts | 5 years |
-| Session quality surveys | Numeric rating only (1/2/3/dismiss); no conversation data |
+| Local session cache | Up to 30 days (configurable) |
 
-**Telemetry environment variables:**
+**Telemetry opt-out:**
 
-| Variable | Disables |
-|:---------|:---------|
-| `DISABLE_TELEMETRY` | Statsig operational metrics |
-| `DISABLE_ERROR_REPORTING` | Sentry error logging |
-| `DISABLE_FEEDBACK_COMMAND` | `/feedback` command |
-| `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY` | Session quality surveys |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | All non-essential traffic including surveys |
+| Service | Env var to disable |
+|:--------|:-------------------|
+| Statsig (metrics) | `DISABLE_TELEMETRY=1` |
+| Sentry (errors) | `DISABLE_ERROR_REPORTING=1` |
+| `/feedback` command | `DISABLE_FEEDBACK_COMMAND=1` |
+| Session quality surveys | `CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY=1` |
+| All non-essential traffic | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` |
 
-Bedrock, Vertex, and Foundry providers have telemetry **off by default** (except session quality surveys).
-
-### Legal & Compliance
-
-**Applicable terms:** Commercial Terms (Team/Enterprise/API) or Consumer Terms (Free/Pro/Max). Existing commercial agreements apply to Claude Code usage.
-
-**Healthcare (BAA):** Automatically extends to Claude Code if customer has executed a BAA **and** has ZDR activated. ZDR is per-organization.
-
-**Authentication restrictions:** OAuth tokens from Free/Pro/Max are for Claude Code and claude.ai only -- using them in other products (including Agent SDK) violates Consumer Terms. Developers building products must use API keys via Claude Console.
-
-**Vulnerability reporting:** HackerOne program at `hackerone.com/anthropic-vdp`.
+Bedrock, Vertex, and Foundry have telemetry/error reporting/feedback **off by default** (session surveys still on).
 
 ### Zero Data Retention (ZDR)
 
-Available for Claude Code on Claude for Enterprise. Prompts and responses are not stored after the response is returned.
+Available for Claude Code on Claude for Enterprise. Enabled per-organization by Anthropic account team.
 
-**ZDR covers:** Model inference calls through Claude Code on Claude for Enterprise.
+**ZDR covers:** Model inference calls (prompts and responses not retained).
 
-**ZDR does NOT cover:** Chat on claude.ai, Cowork, Claude Code Analytics (metadata only), user/seat management, third-party integrations.
+**ZDR does not cover:** Chat on claude.ai, Cowork, Claude Code Analytics metadata, user/seat management, third-party integrations.
 
-**Features disabled under ZDR:**
+**Features disabled under ZDR:** Claude Code on the Web, remote sessions from Desktop app, `/feedback` submission.
 
-| Feature | Reason |
-|:--------|:-------|
-| Claude Code on the Web | Requires server-side conversation storage |
-| Remote sessions from Desktop app | Requires persistent session data |
-| `/feedback` submission | Sends conversation data to Anthropic |
+**Policy violations:** Data may be retained up to 2 years if flagged.
 
-**Policy violations:** Flagged sessions may be retained up to 2 years.
+### Legal & Compliance
 
-**Enablement:** Per-organization, contact Anthropic account team. Does not auto-apply to new organizations.
+| Topic | Details |
+|:------|:--------|
+| License | [Commercial Terms](https://www.anthropic.com/legal/commercial-terms) (Team, Enterprise, API) or [Consumer Terms](https://www.anthropic.com/legal/consumer-terms) (Free, Pro, Max) |
+| BAA (HIPAA) | Extends to Claude Code when customer has BAA + ZDR activated |
+| OAuth tokens | Exclusively for Claude Code and claude.ai; using in other products/Agent SDK violates Consumer Terms |
+| API keys | Required for developers building products with Agent SDK or cloud providers |
+| Vulnerability reporting | [HackerOne program](https://hackerone.com/anthropic-vdp/reports/new?type=team&report_type=vulnerability) |
+
+### Cloud Execution Security
+
+| Control | Description |
+|:--------|:------------|
+| Isolated VMs | Each session runs in an Anthropic-managed VM |
+| Network access controls | Limited by default; configurable per-domain |
+| Credential protection | GitHub auth via secure proxy with scoped credentials |
+| Branch restrictions | Git push restricted to current working branch |
+| Audit logging | All operations logged |
+| Automatic cleanup | Environments terminated after session completion |
 
 ### Security Best Practices
 
@@ -216,28 +210,30 @@ Available for Claude Code on Claude for Enterprise. Prompts and responses are no
 - Consider devcontainers for additional isolation
 - Audit permissions with `/permissions`
 - Use managed settings for organizational standards
-- Monitor usage via OpenTelemetry metrics
-- Audit settings changes with `ConfigChange` hooks
-- Report vulnerabilities via HackerOne (do not disclose publicly)
+- Share approved permission configs via version control
+- Monitor usage through OpenTelemetry metrics
+- Audit config changes with `ConfigChange` hooks
+- Avoid piping untrusted content directly to Claude
+- Use VMs for scripts interacting with external web services
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Security](references/claude-code-security.md) -- security foundation (Anthropic Trust Center, SOC 2, ISO 27001), permission-based architecture, built-in protections (sandboxed bash, write access restriction, prompt fatigue mitigation, Accept Edits mode), prompt injection defenses (permission system, context-aware analysis, input sanitization, command blocklist for curl/wget), privacy safeguards (retention periods, restricted access, training preferences), additional safeguards (network request approval, isolated context windows, trust verification, command injection detection, fail-closed matching, credential encryption), Windows WebDAV warning, best practices for untrusted content, MCP security, IDE security, cloud execution security (isolated VMs, network access controls, credential protection, branch restrictions, audit logging, automatic cleanup), Remote Control sessions (local execution, short-lived scoped credentials), security best practices for sensitive code and teams, vulnerability reporting via HackerOne
-- [Sandboxing](references/claude-code-sandboxing.md) -- overview and motivation (approval fatigue, reduced productivity), filesystem isolation (default read/write to CWD, configurable allowWrite/denyWrite/denyRead/allowRead paths, path prefix resolution, settings scope merging, allowManagedReadPathsOnly), network isolation (domain restrictions, user confirmation, allowManagedDomainsOnly, custom proxy support), OS-level enforcement (Seatbelt on macOS, bubblewrap on Linux/WSL2), getting started (prerequisites, /sandbox command), sandbox modes (auto-allow vs regular permissions), configuration (sandbox.filesystem settings, path prefixes, compatibility notes for watchman/docker, dangerouslyDisableSandbox escape hatch, allowUnsandboxedCommands), security benefits (prompt injection protection, filesystem/network protection, monitoring), security limitations (domain-based filtering only, domain fronting, Unix socket risks, filesystem permission escalation, enableWeakerNestedSandbox weakness), sandbox vs permissions relationship, advanced usage (custom proxy httpProxyPort/socksProxyPort, integration with permissions/devcontainers/enterprise policies), best practices, open source sandbox-runtime npm package, platform limitations
-- [Development Containers](references/claude-code-devcontainer.md) -- reference devcontainer setup (devcontainer.json, Dockerfile, init-firewall.sh), key features (Node.js 20, security firewall, dev tools, VS Code integration, session persistence), getting started steps, configuration breakdown, security features (whitelisted domains, allowed outbound DNS/SSH, default-deny, startup verification, isolation), customization options, example use cases (secure client work, team onboarding, CI/CD environments)
-- [Enterprise Network Configuration](references/claude-code-network-config.md) -- proxy configuration (HTTPS_PROXY, HTTP_PROXY, NO_PROXY with space/comma-separated formats, basic auth, no SOCKS support), custom CA certificates (NODE_EXTRA_CA_CERTS), mTLS authentication (CLAUDE_CODE_CLIENT_CERT, CLAUDE_CODE_CLIENT_KEY, CLAUDE_CODE_CLIENT_KEY_PASSPHRASE), required network URLs (api.anthropic.com, claude.ai, platform.claude.com, downloads.claude.ai, storage.googleapis.com), GitHub Enterprise IP allow list inheritance, all env vars configurable in settings.json
-- [Data Usage](references/claude-code-data-usage.md) -- training policy (consumer opt-in choice, commercial not trained, Development Partner Program), /feedback data handling, session quality surveys (numeric rating only, CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY, feedbackSurveyRate setting), data retention (consumer 5-year or 30-day, commercial 30-day or ZDR, local cache up to 30 days, session deletion), data access (local vs cloud data flows), telemetry services (Statsig metrics, Sentry errors, /feedback transcripts), default behaviors by API provider table (Claude/Vertex/Bedrock/Foundry), DISABLE_TELEMETRY/DISABLE_ERROR_REPORTING/DISABLE_FEEDBACK_COMMAND/CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
-- [Legal and Compliance](references/claude-code-legal-and-compliance.md) -- license (Commercial Terms for Team/Enterprise/API, Consumer Terms for Free/Pro/Max), commercial agreements (1P and 3P providers), BAA coverage (requires ZDR, per-organization), acceptable use policy, authentication and credential restrictions (OAuth for Claude Code/claude.ai only, API keys for developers/Agent SDK, no third-party Claude.ai login routing), trust center and transparency hub, HackerOne vulnerability reporting
-- [Zero Data Retention](references/claude-code-zero-data-retention.md) -- ZDR scope (Claude Code inference on Claude for Enterprise only, per-organization enablement), what ZDR covers (prompts and responses not retained), what ZDR does NOT cover (chat on claude.ai, Cowork, Analytics metadata, user management, third-party integrations), features disabled under ZDR (Claude Code on Web, remote Desktop sessions, /feedback), data retention for policy violations (up to 2 years), requesting ZDR (contact account team, audit-logged enablement), migration from API keys to Claude for Enterprise
+- [Security](references/claude-code-security.md) -- permission-based architecture (read-only default, explicit approval, write access restriction), built-in protections (sandboxed bash, prompt fatigue mitigation, Accept Edits mode), prompt injection safeguards (permission system, context-aware analysis, input sanitization, command blocklist, isolated context windows, trust verification, command injection detection, fail-closed matching, natural language descriptions, secure credential storage, Windows WebDAV warning), best practices for untrusted content, MCP security (user-configured servers, settings in source control), IDE security, cloud execution security (isolated VMs, network controls, credential protection, branch restrictions, audit logging, automatic cleanup), Remote Control (local execution, TLS, short-lived scoped credentials), team security (managed settings, version-controlled permissions, OpenTelemetry monitoring, ConfigChange hooks), vulnerability reporting via HackerOne
+- [Sandboxing](references/claude-code-sandboxing.md) -- sandbox overview and motivation (approval fatigue, reduced productivity, limited autonomy), OS-level enforcement (Seatbelt on macOS, bubblewrap on Linux/WSL2), sandbox modes (auto-allow, regular permissions), filesystem isolation (allowWrite, denyWrite, denyRead, allowRead, path prefix resolution, merged arrays across scopes, allowManagedReadPathsOnly), network isolation (domain restrictions, allowManagedDomainsOnly, custom proxy httpProxyPort/socksProxyPort), escape hatch (dangerouslyDisableSandbox, allowUnsandboxedCommands), excludedCommands, security benefits (prompt injection protection, reduced attack surface, transparent operation), security limitations (domain fronting, Unix socket escalation, filesystem permission escalation, enableWeakerNestedSandbox), sandboxing and permissions complementary layers, advanced custom proxy configuration, integration with permissions/devcontainers/enterprise policies, open source sandbox-runtime npm package
+- [Development containers](references/claude-code-devcontainer.md) -- reference devcontainer setup (devcontainer.json, Dockerfile, init-firewall.sh), firewall configuration (whitelisted domains, default-deny, DNS/SSH allowed), --dangerously-skip-permissions for unattended operation, VS Code Remote-Containers integration, customization options, use cases (secure client work, team onboarding, consistent CI/CD)
+- [Enterprise network configuration](references/claude-code-network-config.md) -- proxy configuration (HTTPS_PROXY, HTTP_PROXY, NO_PROXY, basic auth), custom CA certificates (NODE_EXTRA_CA_CERTS), mTLS authentication (CLAUDE_CODE_CLIENT_CERT, CLAUDE_CODE_CLIENT_KEY, CLAUDE_CODE_CLIENT_KEY_PASSPHRASE), required URLs (api.anthropic.com, claude.ai, platform.claude.com), download URLs (downloads.claude.ai, storage.googleapis.com), GitHub Enterprise Cloud IP allow list inheritance
+- [Data usage](references/claude-code-data-usage.md) -- training policy (consumer opt-in, commercial not trained), Development Partner Program, /feedback transcript retention, session quality surveys (numeric only, no transcript data), data retention periods (5-year consumer with training, 30-day without, 30-day commercial, ZDR), local and cloud data flows, telemetry services (Statsig metrics, Sentry errors, DISABLE_TELEMETRY, DISABLE_ERROR_REPORTING, DISABLE_FEEDBACK_COMMAND), default behaviors by API provider (Claude/Vertex/Bedrock/Foundry table), CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+- [Legal and compliance](references/claude-code-legal-and-compliance.md) -- license terms (Commercial Terms for Team/Enterprise/API, Consumer Terms for Free/Pro/Max), commercial agreements (1P API and 3P Bedrock/Vertex), BAA for healthcare compliance (extends to Claude Code with ZDR), acceptable use policy, OAuth vs API key authentication restrictions (OAuth for Claude Code/claude.ai only, API keys for developers/Agent SDK), HackerOne vulnerability reporting, trust center and transparency hub
+- [Zero data retention](references/claude-code-zero-data-retention.md) -- ZDR for Claude for Enterprise (per-organization enablement, covers inference calls only), what ZDR does not cover (chat on claude.ai, Cowork, analytics metadata, seat management, third-party integrations), features disabled under ZDR (Claude Code on Web, remote Desktop sessions, /feedback), data retention for policy violations (up to 2 years), requesting ZDR through account team, transitioning from API keys to Enterprise with ZDR
 
 ## Sources
 
 - Security: https://code.claude.com/docs/en/security.md
 - Sandboxing: https://code.claude.com/docs/en/sandboxing.md
-- Development Containers: https://code.claude.com/docs/en/devcontainer.md
-- Enterprise Network Configuration: https://code.claude.com/docs/en/network-config.md
-- Data Usage: https://code.claude.com/docs/en/data-usage.md
-- Legal and Compliance: https://code.claude.com/docs/en/legal-and-compliance.md
-- Zero Data Retention: https://code.claude.com/docs/en/zero-data-retention.md
+- Development containers: https://code.claude.com/docs/en/devcontainer.md
+- Enterprise network configuration: https://code.claude.com/docs/en/network-config.md
+- Data usage: https://code.claude.com/docs/en/data-usage.md
+- Legal and compliance: https://code.claude.com/docs/en/legal-and-compliance.md
+- Zero data retention: https://code.claude.com/docs/en/zero-data-retention.md
