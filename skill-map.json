@@ -47,7 +47,8 @@
       {"url": "https://code.claude.com/docs/en/quickstart.md", "file": "claude-code-quickstart.md"},
       {"url": "https://code.claude.com/docs/en/setup.md", "file": "claude-code-setup.md"},
       {"url": "https://code.claude.com/docs/en/authentication.md", "file": "claude-code-authentication.md"},
-      {"url": "https://code.claude.com/docs/en/how-claude-code-works.md", "file": "claude-code-how-it-works.md"}
+      {"url": "https://code.claude.com/docs/en/how-claude-code-works.md", "file": "claude-code-how-it-works.md"},
+      {"url": "https://code.claude.com/docs/en/platforms.md", "file": "claude-code-platforms.md"}
     ],
     "best-practices-doc": [
       {"url": "https://code.claude.com/docs/en/best-practices.md", "file": "claude-code-best-practices.md"},
@@ -100,7 +101,8 @@
       {"url": "https://code.claude.com/docs/en/scheduled-tasks.md", "file": "claude-code-scheduled-tasks.md"},
       {"url": "https://code.claude.com/docs/en/voice-dictation.md", "file": "claude-code-voice-dictation.md"},
       {"url": "https://code.claude.com/docs/en/channels.md", "file": "claude-code-channels.md"},
-      {"url": "https://code.claude.com/docs/en/channels-reference.md", "file": "claude-code-channels-reference.md"}
+      {"url": "https://code.claude.com/docs/en/channels-reference.md", "file": "claude-code-channels-reference.md"},
+      {"url": "https://code.claude.com/docs/en/web-scheduled-tasks.md", "file": "claude-code-web-scheduled-tasks.md"}
     ],
     "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},

@@ -2,6 +2,26 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.24
+
+**9 references updated across 8 skills:** best-practices-doc, cli-doc, features-doc, getting-started-doc, headless-doc, ide-doc, plugins-doc, security-doc
+
+### New
+- **Computer use on Desktop** — research preview (macOS, Pro/Max plans) lets Claude open apps, control the screen, and interact with GUIs; includes per-app permission tiers (view-only, click-only, full control), denied-app list, and window-hiding behavior (ide-doc)
+- **Dispatch sessions** — send a task from the Claude mobile app and get a Desktop Code session; Dispatch badge in sidebar, push notifications on completion, 30-minute app-approval window for computer use (ide-doc, getting-started-doc, features-doc)
+- **Cloud scheduled tasks** — run on Anthropic-managed infrastructure without your machine on; create via `/schedule` CLI command, web UI, or Desktop app; minimum 1-hour interval; connectors configured per task (cli-doc, features-doc, ide-doc, headless-doc, best-practices-doc, getting-started-doc)
+- **`/schedule` slash command** — create, update, list, or run cloud scheduled tasks conversationally from the CLI (cli-doc)
+- **Scheduling options comparison table** — side-by-side matrix of Cloud vs Desktop vs `/loop` covering where tasks run, persistence, local file access, MCP servers, and minimum interval (features-doc, ide-doc, best-practices-doc)
+- **"Choose the right approach" table for remote work** — compares Dispatch, Remote Control, Channels, Slack, and Scheduled tasks by trigger, runtime, and setup (features-doc)
+- **"What sandboxing does not cover" section** — documents that built-in file tools (Read/Edit/Write) bypass the sandbox and computer use runs on the real desktop (security-doc)
+
+### Changed
+- **Desktop scheduled tasks split into local and remote** — task grid now shows both kinds; "New task" prompts for local vs remote; local task docs scoped to machine-only behavior (ide-doc)
+- **Scheduled tasks page links to Cloud tasks for durable scheduling** — replaced single Desktop/GitHub Actions references with Cloud/Desktop/GitHub Actions alternatives throughout (features-doc)
+- **Connectors note for remote sessions updated** — clarifies that cloud scheduled tasks configure connectors at task creation time instead of via the + button (ide-doc)
+- **Plugin marketplace example command fixed** — corrected `/review` to `/quality-review` to match the actual plugin name in the walkthrough (plugins-doc)
+- Minor wording/formatting updates across getting-started-doc, ide-doc docs
+
 ## 26.3.23
 
 **26 references updated across 14 skills:** ci-cd-doc, cli-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
