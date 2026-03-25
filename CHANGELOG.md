@@ -2,6 +2,48 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.25
+
+**20 references updated across 11 skills:** best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, settings-doc, sub-agents-doc
+
+### New
+- **Auto mode permission mode** — classifier-based permission mode that reviews tool calls with background safety checks, blocking scope escalation, unknown infrastructure, and hostile-content-driven actions; available on Team plans with Sonnet 4.6 or Opus 4.6; cycles via `Shift+Tab`, `--permission-mode auto`, or `--enable-auto-mode` flag (best-practices-doc, cli-doc, getting-started-doc, hooks-doc, ide-doc, settings-doc, sub-agents-doc)
+- **`autoMode` settings block** — configure the auto mode classifier with `environment`, `allow`, and `soft_deny` prose rules to define trusted repos, buckets, and domains; read from user, local, and managed settings but not shared project settings (settings-doc)
+- **`claude auto-mode defaults` / `config` / `critique` CLI subcommands** — inspect built-in classifier rules, view effective config with settings applied, and get AI feedback on custom rules (cli-doc, settings-doc)
+- **`--enable-auto-mode` CLI flag** — unlock auto mode in the `Shift+Tab` cycle; requires Team plan and Sonnet 4.6 or Opus 4.6 (cli-doc)
+- **`disableAutoMode` setting** — set to `"disable"` to prevent auto mode activation; works in user, project, and managed settings (settings-doc, ide-doc)
+- **iMessage channel** — reads Messages database directly, sends replies via AppleScript; requires macOS, no bot token; self-chat bypasses access control, other senders added by handle with `/imessage:access allow` (features-doc)
+- **MCP `headersHelper` for dynamic authentication headers** — run a shell command at connection time to generate custom HTTP headers (e.g., Kerberos, short-lived tokens); 10-second timeout, runs fresh on each connect (mcp-doc)
+- **`managed-settings.d/` drop-in directory** — deploy independent policy fragments alongside `managed-settings.json` that merge alphabetically (operations-doc)
+- **`CwdChanged` and `FileChanged` hook events** — reactive environment management hooks, e.g. for direnv (operations-doc)
+- **`sandbox.failIfUnavailable` setting** — exit with error when sandbox cannot start instead of running unsandboxed (operations-doc)
+- **`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1`** — strip Anthropic and cloud provider credentials from subprocess environments (operations-doc)
+- **Transcript search** — press `/` in transcript mode (`Ctrl+O`) to search, `n`/`N` to step through matches (operations-doc)
+- **`Ctrl+X Ctrl+E` external editor alias** — readline-native binding alongside `Ctrl+G` (operations-doc, cli-doc)
+- **Subagent `initialPrompt` frontmatter** — agents can auto-submit a first turn (operations-doc)
+- **Plugin `userConfig` options** — plugins can prompt for configuration at enable time, with `sensitive: true` values stored in keychain (operations-doc)
+
+### Changed
+- **Permission modes documentation restructured** — permission modes now have their own dedicated page (`/en/permission-modes`); links updated across all docs (best-practices-doc, cli-doc, ide-doc, settings-doc, sub-agents-doc)
+- **`Shift+Tab` cycles through all enabled modes** — description updated from "toggle" to "cycle through `default`, `acceptEdits`, `plan`, and any enabled modes such as `auto` or `bypassPermissions`" (cli-doc)
+- **`--dangerously-skip-permissions` removed from best practices** — replaced with auto mode as the recommended approach for reducing interruptions; warning about `--dangerously-skip-permissions` removed (best-practices-doc)
+- **`allowDangerouslySkipPermissions` VS Code setting repurposed** — now enables both Auto and Bypass permissions in the mode selector, not just bypass (ide-doc)
+- **`initialPermissionMode` VS Code setting** — now accepts `auto` as a value (ide-doc)
+- **`disableBypassPermissionsMode` managed setting key changed** — now namespaced as `permissions.disableBypassPermissionsMode` (ide-doc)
+- **`permission_mode` hook field** — now includes `"auto"` as a possible value (hooks-doc)
+- **LiteLLM security warning** — PyPI versions 1.82.7 and 1.82.8 flagged as compromised with credential-stealing malware; remediation steps linked (cloud-providers-doc)
+- **Plugin MCP `.mcp.json` example fixed** — corrected to include the required `mcpServers` wrapper object (mcp-doc)
+- **Desktop `@mention` unavailable in remote sessions** — clarified limitation for remote sessions (ide-doc)
+- **"Stop all background agents" keybinding changed** — from `Ctrl+F` to `Ctrl+X Ctrl+K` to stop shadowing readline forward-char (operations-doc)
+- **`Ctrl+M` documented as non-rebindable** — identical to Enter in terminals (both send CR) (cli-doc)
+- **Subagent `permissionMode` inheritance with auto mode** — subagents inherit auto mode from parent and frontmatter override is ignored; classifier evaluates subagent tool calls with parent rules (sub-agents-doc)
+- **Settings precedence applies uniformly across CLI, VS Code, and JetBrains** — clarified in settings docs (settings-doc)
+- **Quickstart page rebuilt with interactive install configurator** — React-based UI with Terminal/Desktop/VS Code/JetBrains tabs, team/provider selection, and platform-specific install commands (getting-started-doc)
+- **v2.1.83 changelog entry added** — covers managed-settings.d, CwdChanged/FileChanged hooks, sandbox.failIfUnavailable, transcript search, auto mode, and dozens of bug fixes (operations-doc)
+
+### Removed
+- **`disableBypassPermissionsMode` from managed-only settings table** — setting moved to `permissions.disableBypassPermissionsMode` and is no longer managed-only (settings-doc)
+
 ## 26.3.24
 
 **9 references updated across 8 skills:** best-practices-doc, cli-doc, features-doc, getting-started-doc, headless-doc, ide-doc, plugins-doc, security-doc
