@@ -2,6 +2,49 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.26
+
+**23 references updated across 11 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **PowerShell tool (opt-in preview)** — run PowerShell commands natively on Windows via `CLAUDE_CODE_USE_POWERSHELL_TOOL=1`; auto-detects `pwsh.exe` with fallback to `powershell.exe`; `defaultShell`, hook `shell`, and skill `shell` frontmatter control where PowerShell is used (cli-doc, getting-started-doc, settings-doc, hooks-doc, skills-doc)
+- **Pinned model display and capability overrides** — `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL_NAME`, `_DESCRIPTION`, and `_SUPPORTED_CAPABILITIES` env vars customize the `/model` picker label and declare `effort`, `max_effort`, `thinking`, `adaptive_thinking`, `interleaved_thinking` for third-party provider models (features-doc, settings-doc)
+- **`allowedChannelPlugins` managed setting** — Team/Enterprise admins can define a channel plugin allowlist that replaces the default Anthropic allowlist; requires `channelsEnabled: true` (features-doc, settings-doc)
+- **`TaskCreated` hook event** — fires when a task is created via `TaskCreate` (operations-doc)
+- **`WorktreeCreate` HTTP hook support** — return worktree path via `hookSpecificOutput.worktreePath` in the response JSON (hooks-doc, plugins-doc)
+- **VS Code URI handler** — `vscode://anthropic.claude-code/open` opens a Claude Code tab from external tools; supports `prompt` and `session` query parameters (ide-doc)
+- **AGENTS.md import** — import `AGENTS.md` from `CLAUDE.md` so repositories using other coding agents share instructions without duplication (memory-doc)
+- **HTML comment stripping in CLAUDE.md** — block-level HTML comments are stripped before injection into context, saving tokens while preserving notes for human maintainers (memory-doc)
+- **`CLAUDE_STREAM_IDLE_TIMEOUT_MS` env var** — configure the streaming idle watchdog threshold (default 90s) (settings-doc)
+- **Transcript viewer shortcuts** — `Ctrl+E` toggles show-all content; `q`/`Ctrl+C`/`Esc` exits transcript view (cli-doc)
+- **`chat:killAgents` keybinding** — `Ctrl+X Ctrl+K` replaces `Ctrl+F` for killing all background agents (cli-doc)
+- **`chat:fastMode` keybinding** — `Alt+O` toggles fast mode (cli-doc)
+- **`footer:up` / `footer:down` keybinding actions** — navigate vertically in footer (cli-doc)
+- **`useAutoModeDuringPlan` setting** — controls whether plan mode uses auto mode semantics when available (settings-doc)
+- **`sandbox.failIfUnavailable` setting** — documented in sandboxing page with full explanation of behavior (security-doc)
+
+### Changed
+- **Effort level defaults clarified** — Opus 4.6 and Sonnet 4.6 both default to medium effort across all providers; `max` can now persist via `CLAUDE_CODE_EFFORT_LEVEL` env var; "ultrathink" keyword triggers high effort for a single turn (features-doc)
+- **Enterprise channels controls rewritten** — channels page now documents `channelsEnabled` and `allowedChannelPlugins` as two separate managed settings with a detailed table; Pro/Max users without an org skip checks entirely (features-doc)
+- **`CwdChanged` and `FileChanged` hooks fully documented** — hook guide adds direnv reload example; hook reference adds full input/output schemas, `watchPaths` output, `CLAUDE_ENV_FILE` support, and matcher semantics for `FileChanged` (hooks-doc)
+- **Plugin hook events table updated** — adds `CwdChanged` and `FileChanged` to the lifecycle events table (plugins-doc)
+- **Plugin manifest `commands`/`agents`/`skills`/`outputStyles` now replace defaults** — custom paths replace the default directory instead of supplementing it; include the default in your array to keep both (plugins-doc)
+- **Plugin `userConfig` and `channels` manifest fields** — new sections document user-configurable values prompted at enable time and channel declarations (plugins-doc)
+- **`/copy` command gains `w` key** — press `w` in the code block picker to write selection to a file instead of clipboard (cli-doc)
+- **`/plan` accepts optional description** — `/plan fix the auth bug` enters plan mode and starts immediately (cli-doc)
+- **`/status` works during responses** — no longer waits for current response to finish (cli-doc)
+- **`/debug` enables debug logging mid-session** — debug logging is off by default; `/debug` starts capturing from that point forward (skills-doc)
+- **`claude plugin` CLI command added** — new top-level command for managing plugins with alias `claude plugins` (cli-doc)
+- **Background task output uses Read tool** — output is written to a file; `TaskOutput` tool is deprecated in favor of `Read` (cli-doc)
+- **`OTEL_LOG_TOOL_DETAILS` expanded** — now also logs tool input arguments (truncated to 512 chars per value, ~4K total) in addition to MCP/skill names (operations-doc)
+- **`CLAUDE_ENV_FILE` description updated** — now mentions `CwdChanged` and `FileChanged` hooks alongside `SessionStart` (settings-doc)
+- **`managed-settings.d/` drop-in directory documented in settings page** — merge semantics (alphabetical, deep-merge, arrays concatenated) and precedence within managed tier clarified (settings-doc)
+- **Hook events support `command` and `http` types** — many events previously documented as command-only now support HTTP hooks; `SessionStart` remains command-only (hooks-doc)
+- **Subagent model resolution order documented** — `CLAUDE_CODE_SUBAGENT_MODEL` > per-invocation > frontmatter > main conversation model (sub-agents-doc)
+- **Subagent `initialPrompt` frontmatter** — auto-submitted as first user turn when running as main session agent via `--agent` (sub-agents-doc)
+- **Rules/skills `paths:` frontmatter accepts YAML list of globs** (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, memory-doc, features-doc docs
+
 ## 26.3.25
 
 **20 references updated across 11 skills:** best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, settings-doc, sub-agents-doc
