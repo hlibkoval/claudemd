@@ -2,6 +2,34 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.27
+
+**24 references updated across 16 skills:** agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`.worktreeinclude` file** — copy gitignored files like `.env` and `.env.local` into new worktrees automatically; uses `.gitignore` syntax and applies to `--worktree`, subagent worktrees, and desktop app parallel sessions (best-practices-doc, ide-doc)
+- **`@claude review once`** — run a single code review without subscribing the PR to push-triggered reviews; manual triggers now also work on draft PRs (ci-cd-doc)
+- **Code Review check run output** — severity summary table in the Details link, per-line annotations in the Files changed tab, and a machine-readable JSON comment for CI parsing via `gh` and jq (ci-cd-doc)
+- **Auto-fix pull requests** — Claude Code on the web can watch a PR and automatically respond to CI failures and review comments; available via the CI status bar, mobile app, or by pasting a PR URL (headless-doc)
+- **`chat:newline` keybinding action** — insert a newline without submitting; unbound by default, assignable via keybindings config (cli-doc)
+- **Chord unbinding** — unbind all chords sharing a prefix to free it for a single-key binding; partial unbinding still enters chord-wait mode (cli-doc)
+- **`TaskCreated` hook fully documented** — input schema with `task_id`, `task_subject`, `task_description`, `teammate_name`, `team_name`; decision control via exit code 2 or `continue: false` JSON; example enforcing ticket-number naming conventions (hooks-doc, agent-teams-doc, plugins-doc)
+- **Remote Control troubleshooting** — three new entries for subscription required, full-scope token required, and stale organization info errors (features-doc)
+- **`paths` skill frontmatter field** — glob patterns that limit when a skill auto-activates; accepts comma-separated string or YAML list, same format as path-specific rules (skills-doc)
+
+### Changed
+- **MCP tool search is now on by default** — only tool names load at session start; full schemas are deferred until Claude needs a specific tool; `ENABLE_TOOL_SEARCH=auto` reverts to the old threshold-based mode (features-doc, getting-started-doc, mcp-doc, operations-doc)
+- **Auto memory limit adds 25KB cap** — MEMORY.md loads the first 200 lines or 25KB, whichever comes first (getting-started-doc, memory-doc, sub-agents-doc)
+- **`OTEL_LOG_TOOL_DETAILS` now gates `tool_parameters` too** — bash commands, MCP server/tool names, and skill names in tool_result events require `OTEL_LOG_TOOL_DETAILS=1`; security docs simplified accordingly (operations-doc)
+- **Code Review severity label renamed** — "Normal" is now "Important" in the severity table (ci-cd-doc)
+- **`Ctrl+U` description corrected** — now reads "Delete from cursor to line start" with note about repeating to clear across multiline input (cli-doc)
+- **Context window visualization page linked** — new `/en/context-window` interactive walkthrough referenced from best-practices, features overview, how-it-works, memory, and sub-agents docs (best-practices-doc, features-doc, getting-started-doc, memory-doc, sub-agents-doc)
+- **MCP local config takes precedence over claude.ai connectors** — when a server is configured both locally and through a connector, the local configuration wins (mcp-doc)
+- **MCP tool description truncation** — tool descriptions and server instructions are truncated at 2KB each; authors advised to keep them concise (mcp-doc)
+- **`CLAUDE_STREAM_IDLE_TIMEOUT_MS` env var added** — configure the streaming idle watchdog threshold; default 90s (settings-doc)
+- **`allowedChannelPlugins` managed setting documented** — allowlist for channel plugins that may push messages; requires `channelsEnabled: true` (settings-doc)
+- Minor wording/formatting updates across getting-started-doc, hooks-doc, operations-doc, settings-doc, skills-doc docs
+
 ## 26.3.26
 
 **23 references updated across 11 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc

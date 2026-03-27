@@ -23,7 +23,8 @@
       {"url": "https://code.claude.com/docs/en/mcp.md", "file": "claude-code-mcp.md"}
     ],
     "memory-doc": [
-      {"url": "https://code.claude.com/docs/en/memory.md", "file": "claude-code-memory.md"}
+      {"url": "https://code.claude.com/docs/en/memory.md", "file": "claude-code-memory.md"},
+      {"url": "https://code.claude.com/docs/en/claude-directory.md", "file": "claude-code-claude-directory.md"}
     ],
     "agent-teams-doc": [
       {"url": "https://code.claude.com/docs/en/agent-teams.md", "file": "claude-code-agent-teams.md"}
@@ -103,7 +104,8 @@
       {"url": "https://code.claude.com/docs/en/voice-dictation.md", "file": "claude-code-voice-dictation.md"},
       {"url": "https://code.claude.com/docs/en/channels.md", "file": "claude-code-channels.md"},
       {"url": "https://code.claude.com/docs/en/channels-reference.md", "file": "claude-code-channels-reference.md"},
-      {"url": "https://code.claude.com/docs/en/web-scheduled-tasks.md", "file": "claude-code-web-scheduled-tasks.md"}
+      {"url": "https://code.claude.com/docs/en/web-scheduled-tasks.md", "file": "claude-code-web-scheduled-tasks.md"},
+      {"url": "https://code.claude.com/docs/en/context-window.md", "file": "claude-code-context-window.md"}
     ],
     "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},
