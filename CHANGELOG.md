@@ -2,6 +2,31 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.28
+
+**12 references updated across 8 skills:** agent-teams-doc, best-practices-doc, cli-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, settings-doc
+
+### New
+- **`--tmux` CLI flag** — create a tmux session for a worktree; requires `--worktree`; auto-detects iTerm2 native panes, pass `--tmux=classic` for traditional tmux (cli-doc)
+- **`if` field for hooks** — filter individual hook handlers with permission rule syntax (e.g., `Bash(git *)`, `Edit(*.ts)`) so hooks only spawn when the tool call matches; works on `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, and `PermissionRequest` events (hooks-doc)
+- **`AskUserQuestion` tool in PreToolUse** — hook into multiple-choice questions Claude asks the user; supply `updatedInput` with an `answers` object to answer programmatically in headless mode (hooks-doc)
+- **`ExitPlanMode` tool in PreToolUse** — now hookable alongside `AskUserQuestion`; return `permissionDecision: "allow"` with `updatedInput` for non-interactive flows (hooks-doc)
+- **`CLAUDE_CODE_MCP_SERVER_NAME` / `CLAUDE_CODE_MCP_SERVER_URL` env vars for `headersHelper`** — write a single helper script that serves multiple MCP servers by reading which server triggered it (mcp-doc)
+- **`disableDeepLinkRegistration` setting** — set to `"disable"` to prevent Claude Code from registering the `claude-cli://` protocol handler on startup (settings-doc)
+- **`.worktreeinclude` in file explorer** — new entry in the interactive explorer and file reference table documenting the worktree include file (memory-doc)
+- **v2.1.86 changelog entry** — `X-Claude-Code-Session-Id` header, `.jj`/`.sl` VCS exclusions, numerous bug fixes, reduced token overhead for `@` mentions and Read tool, improved prompt cache hit rate for Bedrock/Vertex/Foundry (operations-doc)
+
+### Changed
+- **Worktree base branch documented** — worktrees branch from `origin/HEAD`; instructions for re-syncing with `git remote set-head origin -a` or setting an explicit branch; WorktreeCreate hook noted as full override for custom base selection (best-practices-doc)
+- **`.worktreeinclude` skipped with WorktreeCreate hooks** — custom VCS hooks replace default git behavior entirely, so `.worktreeinclude` is not processed; copy files inside the hook script instead (best-practices-doc, hooks-doc)
+- **`updatedInput` replaces entire input object** — PreToolUse and PermissionRequest docs now clarify that `updatedInput` replaces all fields, so unchanged fields must be included (hooks-doc)
+- **OAuth metadata discovery clarified** — default flow now described as RFC 9728 Protected Resource Metadata first, then RFC 8414 authorization server metadata fallback (mcp-doc)
+- **`ENABLE_TOOL_SEARCH` values reworded** — unset now described as "all MCP tools deferred"; `auto` described as threshold mode loading upfront when tools fit within context percentage (mcp-doc, settings-doc)
+- **`OTEL_METRICS_EXPORTER` / `OTEL_LOGS_EXPORTER` accept `none`** — explicitly disable an exporter while keeping telemetry enabled (operations-doc)
+- **`tool_input` truncation details** — individual values over 512 characters are truncated, full payload bounded to ~4K characters (operations-doc)
+- **`teammateMode` setting location** — now points to global config `~/.claude.json` instead of generic settings.json reference (agent-teams-doc)
+- Minor wording/formatting updates across cli-doc, memory-doc, operations-doc, settings-doc docs
+
 ## 26.3.27
 
 **24 references updated across 16 skills:** agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc

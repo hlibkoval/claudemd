@@ -1,437 +1,232 @@
 ---
 name: settings-doc
-description: Complete documentation for Claude Code settings, permissions, permission modes, server-managed settings, and environment variables. Covers configuration scopes (managed/user/project/local), settings.json structure and all available settings keys (apiKeyHelper, autoMemoryDirectory, cleanupPeriodDays, companyAnnouncements, env, attribution, permissions, autoMode, hooks, model, availableModels, modelOverrides, effortLevel, sandbox, statusLine, fileSuggestion, outputStyle, agent, worktree, spinnerVerbs, language, voiceEnabled, autoUpdatesChannel, feedbackSurveyRate, and more), settings files and delivery mechanisms (user ~/.claude/settings.json, project .claude/settings.json, local .claude/settings.local.json, managed via server/MDM/plist/registry/file-based managed-settings.json with drop-in managed-settings.d/), settings precedence (managed > CLI args > local > project > user, array settings merge across scopes), permission system (tiered tool approval, allow/ask/deny rules evaluated deny-first, /permissions command), permission rule syntax (Tool or Tool(specifier) format, Bash wildcard patterns with word boundary semantics, Read/Edit gitignore-spec patterns with //absolute ~/home /project-relative ./cwd-relative, WebFetch domain rules, MCP server/tool rules, Agent subagent rules), permission modes (default, acceptEdits, plan, auto, dontAsk, bypassPermissions -- switching via Shift+Tab in CLI or mode selector in VS Code/Desktop/Web, --permission-mode flag, defaultMode setting), auto mode (classifier model review, autoMode.environment for trusted infrastructure, autoMode.allow and autoMode.soft_deny prose rules, claude auto-mode defaults/config/critique commands, classifier evaluation order, subagent handling, fallback behavior), plan mode (read-only exploration, /plan prefix, plan acceptance options), sandbox settings (sandbox.enabled, filesystem allowWrite/denyWrite/denyRead/allowRead with path prefixes, network allowedDomains/allowManagedDomainsOnly, excludedCommands, failIfUnavailable, enableWeakerNestedSandbox), plugin configuration (enabledPlugins, extraKnownMarketplaces with source types github/git/url/npm/file/directory/hostPattern/settings, strictKnownMarketplaces and blockedMarketplaces for managed policy), managed-only settings (allowManagedPermissionRulesOnly, allowManagedHooksOnly, allowManagedMcpServersOnly, allowedChannelPlugins, blockedMarketplaces, sandbox.network.allowManagedDomainsOnly, sandbox.filesystem.allowManagedReadPathsOnly, strictKnownMarketplaces), hook configuration settings (allowedHttpHookUrls, httpHookAllowedEnvVars, disableAllHooks), server-managed settings (web-based admin console delivery, Teams/Enterprise plans, fetch and caching behavior, security approval dialogs, platform availability, audit logging, security considerations vs endpoint-managed), environment variables reference (ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_BASE_URL, CLAUDE_CODE_USE_BEDROCK/VERTEX, proxy variables, CLAUDE_CODE_MAX_OUTPUT_TOKENS, MAX_THINKING_TOKENS, MCP_TIMEOUT, DISABLE_AUTOUPDATER, DISABLE_TELEMETRY, and 50+ more), global config settings (~/.claude.json for autoConnectIde, editorMode, showTurnDuration), working directories (--add-dir, /add-dir, additionalDirectories), hooks extending permissions (PreToolUse allow/deny/escalate, PermissionRequest hooks). Load when discussing Claude Code settings, configuration, settings.json, permissions, permission rules, permission modes, auto mode, plan mode, dontAsk mode, bypassPermissions, managed settings, server-managed settings, MDM policy, environment variables, sandbox configuration, plugin configuration, marketplace restrictions, or any configuration-related topic for Claude Code.
+description: Complete documentation for Claude Code settings, permissions, permission modes, environment variables, and server-managed settings. Covers settings.json (all available settings keys including permissions, sandbox, attribution, hooks, model, autoMode, worktree, fileSuggestion, spinnerVerbs, language, and 50+ other keys), configuration scopes (managed/user/project/local with precedence rules), settings files (user ~/.claude/settings.json, project .claude/settings.json, local .claude/settings.local.json, managed via server/MDM/OS-level/file-based with drop-in managed-settings.d/ directory), global config settings in ~/.claude.json (autoConnectIde, editorMode, showTurnDuration, terminalProgressBarEnabled, teammateMode), permission system (tiered approval for read-only/bash/file-modification, allow/ask/deny rules evaluated deny->ask->allow, /permissions command), permission rule syntax (Tool and Tool(specifier) format, wildcards with * in Bash rules, Read/Edit rules following gitignore spec with //path ~/path /path ./path patterns, WebFetch domain matching, MCP server/tool matching, Agent subagent rules), permission modes (default, acceptEdits, plan, auto, bypassPermissions, dontAsk -- switching via Shift+Tab/CLI flag/settings/VS Code/Desktop/Web, plan mode for research-then-propose, auto mode with classifier model reviewing actions and blocking unsafe operations, dontAsk for pre-approved-only, bypassPermissions for containers), auto mode classifier configuration (autoMode.environment for trusted infrastructure, autoMode.allow and autoMode.soft_deny for overriding built-in rules, claude auto-mode defaults/config/critique commands, what auto mode blocks and allows by default, subagent evaluation, fallback behavior), managed settings (server-managed via Claude.ai admin console with hourly polling, endpoint-managed via MDM/OS policies, managed-only keys allowManagedPermissionRulesOnly/allowManagedHooksOnly/allowManagedMcpServersOnly/allowedChannelPlugins/blockedMarketplaces/sandbox.network.allowManagedDomainsOnly/sandbox.filesystem.allowManagedReadPathsOnly/strictKnownMarketplaces, security approval dialogs, settings delivery and caching, platform availability), sandbox settings (enabled, filesystem allowWrite/denyWrite/denyRead/allowRead with path prefixes, network allowedDomains/allowUnixSockets/allowLocalBinding, excludedCommands, enableWeakerNestedSandbox), environment variables (ANTHROPIC_API_KEY, ANTHROPIC_BASE_URL, ANTHROPIC_MODEL, CLAUDE_CODE_USE_BEDROCK/VERTEX/FOUNDRY, CLAUDE_CODE_ENABLE_TELEMETRY, CLAUDE_CODE_DISABLE_* flags, BASH_DEFAULT_TIMEOUT_MS, MAX_THINKING_TOKENS, proxy vars HTTP_PROXY/HTTPS_PROXY/NO_PROXY, MCP_TIMEOUT, and 80+ other env vars), and settings precedence (managed > CLI args > local > project > user with array merging across scopes). Load when discussing Claude Code settings, settings.json, configuration, permissions, permission rules, allow/deny rules, permission modes, auto mode, plan mode, bypassPermissions, dontAsk mode, acceptEdits mode, managed settings, server-managed settings, MDM policies, environment variables, env vars, ANTHROPIC_API_KEY, ANTHROPIC_BASE_URL, sandbox settings, sandbox configuration, /config command, /permissions command, /status command, settings precedence, settings scopes, defaultMode, disableBypassPermissionsMode, autoMode classifier, hook configuration settings, MCP server settings, or any settings/configuration/permissions/env-var topic for Claude Code.
 user-invocable: false
 ---
 
-# Settings & Configuration Documentation
+# Settings Documentation
 
-This skill provides the complete official documentation for Claude Code settings, permissions, permission modes, server-managed settings, and environment variables.
+This skill provides the complete official documentation for Claude Code settings, permissions, permission modes, environment variables, and server-managed settings.
 
 ## Quick Reference
 
 ### Configuration Scopes
 
-| Scope | Location | Who it affects | Shared? |
-|:------|:---------|:---------------|:--------|
-| **Managed** | Server-managed, plist/registry, or `managed-settings.json` | All users on machine | Yes (deployed by IT) |
+| Scope | Location | Who it affects | Shared with team? |
+|:------|:---------|:---------------|:-------------------|
+| **Managed** | Server-managed, plist/registry, or `managed-settings.json` | All users on the machine | Yes (deployed by IT) |
 | **User** | `~/.claude/settings.json` | You, across all projects | No |
-| **Project** | `.claude/settings.json` | All collaborators | Yes (committed to git) |
+| **Project** | `.claude/settings.json` | All collaborators on this repo | Yes (committed to git) |
 | **Local** | `.claude/settings.local.json` | You, in this repo only | No (gitignored) |
 
-**Precedence** (highest to lowest): Managed > CLI arguments > Local > Project > User. Array settings (like `permissions.allow`) merge across scopes rather than replacing.
+### Settings Precedence (highest to lowest)
 
-Verify active settings with `/status`. Add the JSON Schema line for editor autocomplete:
-```json
-{ "$schema": "https://json.schemastore.org/claude-code-settings.json" }
-```
+1. **Managed settings** (server-managed > MDM/OS-level > file-based)
+2. **Command line arguments**
+3. **Local project settings** (`.claude/settings.local.json`)
+4. **Shared project settings** (`.claude/settings.json`)
+5. **User settings** (`~/.claude/settings.json`)
 
-### Managed Settings Delivery Mechanisms
-
-| Mechanism | Location |
-|:----------|:---------|
-| **Server-managed** | Claude.ai admin console (Teams/Enterprise) |
-| **macOS MDM** | `com.anthropic.claudecode` managed preferences domain |
-| **Windows registry** | `HKLM\SOFTWARE\Policies\ClaudeCode` (admin) or `HKCU` (user) |
-| **File-based** | macOS: `/Library/Application Support/ClaudeCode/managed-settings.json`, Linux/WSL: `/etc/claude-code/managed-settings.json`, Windows: `C:\Program Files\ClaudeCode\managed-settings.json` |
-| **Drop-in directory** | `managed-settings.d/*.json` alongside `managed-settings.json` (merged alphabetically, use numeric prefixes) |
-
-Within the managed tier: server-managed > MDM/OS-level > file-based > HKCU registry. Only one managed source is used; sources do not merge across tiers.
-
-### Available Settings (settings.json)
-
-**Core settings:**
-
-| Key | Description |
-|:----|:------------|
-| `permissions` | Permission rules (`allow`, `ask`, `deny` arrays), `defaultMode`, `additionalDirectories`, `disableBypassPermissionsMode` |
-| `autoMode` | Auto mode classifier config: `environment`, `allow`, `soft_deny` arrays of prose rules |
-| `hooks` | Lifecycle event hooks (PreToolUse, PostToolUse, etc.) |
-| `env` | Environment variables applied to every session |
-| `model` | Override the default model |
-| `availableModels` | Restrict which models users can select |
-| `modelOverrides` | Map Anthropic model IDs to provider-specific IDs (e.g., Bedrock ARNs) |
-| `effortLevel` | Persist effort level across sessions: `"low"`, `"medium"`, or `"high"` |
-| `sandbox` | Sandbox configuration (see Sandbox Settings section below) |
-| `attribution` | Customize commit and PR attribution (`commit`, `pr` subkeys) |
-
-**Behavior and UI settings:**
-
-| Key | Description |
-|:----|:------------|
-| `language` | Response language (e.g., `"japanese"`); also sets voice dictation language |
-| `outputStyle` | Output style for system prompt adjustment |
-| `defaultShell` | Shell for `!` commands: `"bash"` (default) or `"powershell"` |
-| `statusLine` | Custom status line command |
-| `fileSuggestion` | Custom `@` file autocomplete command |
-| `respectGitignore` | Whether `@` picker respects `.gitignore` (default: `true`) |
-| `spinnerVerbs` | Custom spinner action verbs (`mode`: `"replace"` or `"append"`, `verbs` array) |
-| `spinnerTipsEnabled` | Show tips in spinner (default: `true`) |
-| `spinnerTipsOverride` | Custom spinner tips (`tips` array, `excludeDefault` boolean) |
-| `prefersReducedMotion` | Reduce UI animations for accessibility |
-| `voiceEnabled` | Enable push-to-talk voice dictation |
-| `alwaysThinkingEnabled` | Enable extended thinking by default |
-| `plansDirectory` | Where plan files are stored (default: `~/.claude/plans`) |
-| `showClearContextOnPlanAccept` | Show "clear context" option on plan accept screen |
-| `autoUpdatesChannel` | `"stable"` (week-old, skip regressions) or `"latest"` (default) |
-| `feedbackSurveyRate` | Survey probability 0-1 (set `0` to suppress) |
-| `agent` | Run main thread as a named subagent |
-| `teammateMode` | Agent team display: `"auto"`, `"in-process"`, or `"tmux"` |
-
-**Session and storage settings:**
-
-| Key | Description |
-|:----|:------------|
-| `cleanupPeriodDays` | Inactive session deletion threshold (default: 30); `0` disables persistence entirely |
-| `autoMemoryDirectory` | Custom auto-memory storage path (not allowed in project settings) |
-| `apiKeyHelper` | Shell script to generate auth value |
-
-**Login and account settings:**
-
-| Key | Description |
-|:----|:------------|
-| `forceLoginMethod` | Restrict login: `"claudeai"` or `"console"` |
-| `forceLoginOrgUUID` | Auto-select org during login (requires `forceLoginMethod`) |
-
-**MCP settings:**
-
-| Key | Description |
-|:----|:------------|
-| `enableAllProjectMcpServers` | Auto-approve all MCP servers from project `.mcp.json` |
-| `enabledMcpjsonServers` | Specific MCP servers to approve from `.mcp.json` |
-| `disabledMcpjsonServers` | Specific MCP servers to reject from `.mcp.json` |
-
-**Hook configuration settings:**
-
-| Key | Description |
-|:----|:------------|
-| `disableAllHooks` | Disable all hooks and custom status line |
-| `allowManagedHooksOnly` | (Managed only) Block user/project/plugin hooks |
-| `allowedHttpHookUrls` | URL pattern allowlist for HTTP hooks (supports `*` wildcard) |
-| `httpHookAllowedEnvVars` | Env var allowlist for HTTP hook header interpolation |
-
-**Worktree settings:**
-
-| Key | Description |
-|:----|:------------|
-| `worktree.symlinkDirectories` | Directories to symlink from main repo into worktrees |
-| `worktree.sparsePaths` | Directories to sparse-checkout in worktrees |
-
-**Git settings (`includeGitInstructions`):** Set `false` to remove built-in commit/PR instructions from system prompt.
-
-**Global config settings** (stored in `~/.claude.json`, not `settings.json`):
-
-| Key | Description |
-|:----|:------------|
-| `autoConnectIde` | Auto-connect to running IDE from external terminal |
-| `autoInstallIdeExtension` | Auto-install Claude Code IDE extension in VS Code |
-| `editorMode` | Key binding mode: `"normal"` or `"vim"` |
-| `showTurnDuration` | Show turn duration after responses |
-| `terminalProgressBarEnabled` | Terminal progress bar in supported terminals |
-
-### Permission System
-
-Rules evaluated in order: **deny > ask > allow**. First matching rule wins.
-
-| Tool type | Example | Approval required | "Don't ask again" behavior |
-|:----------|:--------|:------------------|:---------------------------|
-| Read-only | File reads, Grep | No | N/A |
-| Bash commands | Shell execution | Yes | Permanently per project + command |
-| File modification | Edit/write files | Yes | Until session end |
-
-Manage with `/permissions`. Compound command approval saves a rule per subcommand (up to 5).
-
-### Permission Rule Syntax
-
-**Format:** `Tool` or `Tool(specifier)`
-
-**Bash rules** -- glob patterns with `*`:
-
-| Pattern | Matches |
-|:--------|:--------|
-| `Bash` or `Bash(*)` | All bash commands |
-| `Bash(npm run *)` | Commands starting with `npm run ` (word boundary) |
-| `Bash(npm*)` | Commands starting with `npm` (no word boundary) |
-| `Bash(* --version)` | Commands ending with ` --version` |
-| `Bash(git * main)` | Commands like `git checkout main` |
-
-The space before `*` enforces a word boundary. Claude Code is aware of shell operators so `Bash(safe-cmd *)` does not permit `safe-cmd && other-cmd`.
-
-**Read and Edit rules** -- gitignore-spec patterns:
-
-| Pattern prefix | Meaning | Example |
-|:---------------|:--------|:--------|
-| `//path` | Absolute path from filesystem root | `Read(//Users/alice/secrets/**)` |
-| `~/path` | Home directory relative | `Read(~/Documents/*.pdf)` |
-| `/path` | Relative to **project root** | `Edit(/src/**/*.ts)` |
-| `path` or `./path` | Relative to **current directory** | `Read(*.env)` |
-
-`*` matches within one directory; `**` matches recursively. Note: `/Users/alice/file` is project-relative, not absolute -- use `//Users/alice/file` for absolute paths.
-
-Read/Edit deny rules apply to Claude's built-in file tools only, not to Bash subprocesses. For OS-level enforcement, enable the sandbox.
-
-**Other tool rules:**
-
-| Rule | Effect |
-|:-----|:-------|
-| `WebFetch(domain:example.com)` | Fetch requests to that domain |
-| `mcp__puppeteer` | All tools from the puppeteer MCP server |
-| `mcp__puppeteer__puppeteer_navigate` | Specific MCP tool |
-| `Agent(Explore)` | The Explore subagent |
-| `Agent(my-custom-agent)` | A custom subagent |
+Array-valued settings (like `permissions.allow`, `sandbox.filesystem.allowWrite`) merge across scopes -- they are concatenated and deduplicated, not replaced.
 
 ### Permission Modes
 
 | Mode | What Claude can do without asking | Best for |
 |:-----|:----------------------------------|:---------|
 | `default` | Read files | Getting started, sensitive work |
-| `acceptEdits` | Read and edit files | Iterating on code you review |
-| `plan` | Read files (no edits, proposes plans) | Exploring codebases, planning refactors |
-| `auto` | All actions with background classifier checks | Long-running tasks, reducing prompt fatigue |
-| `dontAsk` | Only pre-approved tools (all else auto-denied) | Locked-down environments, CI pipelines |
-| `bypassPermissions` | All actions, no checks | Isolated containers/VMs only |
+| `acceptEdits` | Read and edit files | Iterating on code you're reviewing |
+| `plan` | Read files (no edits) | Exploring a codebase, planning a refactor |
+| `auto` | All actions, with background safety checks | Long-running tasks, reducing prompt fatigue |
+| `dontAsk` | Only pre-approved tools | Locked-down environments |
+| `bypassPermissions` | All actions, no checks | Isolated containers and VMs only |
 
-**Switching modes:**
-- **CLI**: `Shift+Tab` cycles through modes; `--permission-mode <mode>` at startup
-- **VS Code**: Click mode indicator at bottom of prompt box
-- **Desktop**: Mode selector next to send button
-- **Web/mobile**: Mode dropdown next to prompt box
-- **Setting**: `permissions.defaultMode` in settings.json
+Switch modes with `Shift+Tab` (CLI), mode selector (VS Code/Desktop/Web), or `--permission-mode <mode>` at startup. Set `defaultMode` in settings.
 
-**Auto mode** requires a Team plan (Enterprise/API rolling out), Claude Sonnet 4.6 or Opus 4.6, and admin enablement. A separate classifier model reviews each action against block/allow rules. Cost: classifier calls count toward token usage. Latency: one round-trip per checked action.
+### Permission Rule Evaluation
 
-Auto mode action evaluation order:
-1. Allow/deny rules resolve immediately
-2. Read-only actions and file edits in cwd auto-approved
-3. Everything else goes to classifier
-4. If blocked, Claude tries an alternative approach
+Rules evaluate in order: **deny -> ask -> allow**. The first matching rule wins, so deny rules always take precedence.
 
-On entering auto mode, blanket allow rules granting arbitrary code execution (e.g., `Bash(*)`, `Bash(python*)`, any `Agent` allow) are dropped; narrow rules like `Bash(npm test)` carry over.
+| Rule format | Effect |
+|:------------|:-------|
+| `Bash` | Matches all Bash commands |
+| `Bash(npm run *)` | Matches commands starting with `npm run` |
+| `Read(./.env)` | Matches reading the `.env` file |
+| `Edit(/src/**/*.ts)` | Matches editing `.ts` files under `src/` (project-relative) |
+| `Read(~/.zshrc)` | Matches reading home directory's `.zshrc` |
+| `Read(//Users/alice/secrets/**)` | Matches absolute path (double-slash prefix) |
+| `WebFetch(domain:example.com)` | Matches fetch requests to example.com |
+| `mcp__puppeteer__puppeteer_navigate` | Matches specific MCP tool |
+| `Agent(Explore)` | Matches the Explore subagent |
 
-Fallback: after 3 consecutive blocks or 20 total in a session, auto mode pauses and resumes prompting. Approving a prompted action resets counters.
+Read/Edit rules follow gitignore spec: `//path` = absolute, `~/path` = home, `/path` = project root, `./path` or `path` = current directory. `*` matches single directory, `**` matches recursively.
 
-**Plan mode** proposes changes without making them. Enter with `/plan` prefix or switch via `Shift+Tab`. When ready, approve with auto mode, accept edits, manual review, or continue planning.
+### Key Settings (settings.json)
 
-**dontAsk mode** auto-denies everything not explicitly allowed. Even `ask` rules are denied rather than prompting.
+| Key | Description |
+|:----|:------------|
+| `permissions.allow` | Array of permission rules to allow without prompting |
+| `permissions.deny` | Array of rules to block tool use |
+| `permissions.ask` | Array of rules requiring confirmation |
+| `permissions.defaultMode` | Default permission mode (`default`, `acceptEdits`, `plan`, `auto`, `dontAsk`, `bypassPermissions`) |
+| `permissions.disableBypassPermissionsMode` | Set to `"disable"` to prevent bypass mode |
+| `permissions.additionalDirectories` | Extra working directories for Claude |
+| `model` | Override the default model |
+| `availableModels` | Restrict which models users can select |
+| `effortLevel` | Persist effort level: `"low"`, `"medium"`, `"high"` |
+| `env` | Environment variables applied to every session |
+| `hooks` | Custom commands at lifecycle events |
+| `sandbox.enabled` | Enable bash sandboxing |
+| `sandbox.filesystem.allowWrite` | Additional writable paths in sandbox |
+| `sandbox.filesystem.denyRead` | Paths blocked from reading in sandbox |
+| `sandbox.network.allowedDomains` | Allowed domains for outbound network |
+| `autoMode.environment` | Trusted infrastructure descriptions for auto mode classifier |
+| `autoMode.allow` | Override auto mode allow rules (replaces defaults) |
+| `autoMode.soft_deny` | Override auto mode block rules (replaces defaults) |
+| `disableAutoMode` | Set to `"disable"` to prevent auto mode |
+| `language` | Preferred response language |
+| `outputStyle` | Output style for system prompt |
+| `statusLine` | Custom status line configuration |
+| `attribution.commit` | Git commit attribution text |
+| `attribution.pr` | PR description attribution text |
+| `apiKeyHelper` | Custom script to generate auth value |
+| `companyAnnouncements` | Startup announcements for users |
+| `autoUpdatesChannel` | `"stable"` or `"latest"` (default) |
+| `cleanupPeriodDays` | Session retention period (default: 30) |
+| `worktree.symlinkDirectories` | Directories to symlink in worktrees |
+| `worktree.sparsePaths` | Sparse-checkout paths for worktrees |
+| `fileSuggestion` | Custom `@` file autocomplete script |
+| `forceLoginMethod` | Restrict login to `claudeai` or `console` |
+| `includeGitInstructions` | Include built-in git instructions (default: `true`) |
+| `alwaysThinkingEnabled` | Enable extended thinking by default |
+| `defaultShell` | `"bash"` (default) or `"powershell"` |
+| `spinnerVerbs` | Customize spinner action verbs |
 
-**bypassPermissions mode** disables all checks. Admin-blockable via `permissions.disableBypassPermissionsMode: "disable"` in managed settings. Also triggered by `--dangerously-skip-permissions` flag.
+### Global Config Settings (~/.claude.json)
+
+| Key | Description |
+|:----|:------------|
+| `autoConnectIde` | Auto-connect to IDE from external terminal |
+| `autoInstallIdeExtension` | Auto-install IDE extension (default: `true`) |
+| `editorMode` | Key binding mode: `"normal"` or `"vim"` |
+| `showTurnDuration` | Show turn duration after responses (default: `true`) |
+| `terminalProgressBarEnabled` | Show terminal progress bar (default: `true`) |
+| `teammateMode` | Agent team display: `auto`, `in-process`, `tmux` |
+
+### Managed-Only Settings
+
+These settings are only effective in managed settings:
+
+| Setting | Description |
+|:--------|:------------|
+| `allowManagedPermissionRulesOnly` | Only managed permission rules apply |
+| `allowManagedHooksOnly` | Only managed and SDK hooks load |
+| `allowManagedMcpServersOnly` | Only managed MCP server allowlist applies |
+| `allowedChannelPlugins` | Allowlist of channel plugins |
+| `blockedMarketplaces` | Blocklist of marketplace sources |
+| `sandbox.network.allowManagedDomainsOnly` | Only managed domain allowlists apply |
+| `sandbox.filesystem.allowManagedReadPathsOnly` | Only managed read paths apply |
+| `strictKnownMarketplaces` | Restrict which marketplaces users can add |
+| `channelsEnabled` | Enable channels for Team/Enterprise users |
 
 ### Auto Mode Classifier Configuration
 
-The `autoMode` block tells the classifier which infrastructure is trusted. Read from user settings, `.claude/settings.local.json`, and managed settings -- not from shared project settings.
+The `autoMode` block tells the classifier which infrastructure your organization trusts. Read from user settings, `.claude/settings.local.json`, and managed settings -- NOT from shared project settings.
 
-**`autoMode.environment`** (most organizations only need this):
 ```json
 {
   "autoMode": {
     "environment": [
-      "Organization: AcmeCorp. Primary use: software development",
-      "Source control: github.example.com/acme-corp",
-      "Trusted cloud buckets: s3://acme-builds, gs://acme-datasets",
-      "Trusted internal domains: *.internal.example.com",
-      "Key internal services: Jenkins at ci.example.com"
+      "Source control: github.example.com/acme-corp and all repos under it",
+      "Trusted cloud buckets: s3://acme-build-artifacts",
+      "Trusted internal domains: *.corp.example.com"
     ]
   }
 }
 ```
 
-Entries are prose (natural-language), not regex. Setting `environment` alone leaves default `allow` and `soft_deny` lists intact.
-
-**`autoMode.allow`** and **`autoMode.soft_deny`**: Replace built-in rule lists entirely when set. Always start from `claude auto-mode defaults` output and edit -- never start from an empty list.
-
-Precedence inside classifier: `soft_deny` blocks first, `allow` overrides as exceptions, explicit user intent overrides both.
-
-**Inspect commands:**
+Inspect and validate with CLI commands:
 - `claude auto-mode defaults` -- built-in rules
 - `claude auto-mode config` -- effective merged config
 - `claude auto-mode critique` -- AI feedback on custom rules
 
-### Sandbox Settings
+Setting `allow` or `soft_deny` **replaces the entire default list** for that section. Always start from `claude auto-mode defaults` output.
 
-All under the `sandbox` key in settings.json:
+### Key Environment Variables
 
-| Key | Description |
-|:----|:------------|
-| `enabled` | Enable sandboxing (default: `false`) |
-| `failIfUnavailable` | Exit on startup if sandbox cannot start |
-| `autoAllowBashIfSandboxed` | Auto-approve sandboxed bash commands (default: `true`) |
-| `excludedCommands` | Commands that run outside sandbox |
-| `allowUnsandboxedCommands` | Set `false` to disable `dangerouslyDisableSandbox` escape hatch |
-| `enableWeakerNestedSandbox` | For unprivileged Docker (Linux/WSL2 only, reduces security) |
-| `enableWeakerNetworkIsolation` | Allow macOS TLS trust service in sandbox (for Go tools like `gh`) |
-
-**Filesystem paths** (`sandbox.filesystem.*`):
-
-| Key | Description |
-|:----|:------------|
-| `allowWrite` | Additional writable paths |
-| `denyWrite` | Blocked write paths |
-| `denyRead` | Blocked read paths |
-| `allowRead` | Re-allow reads within `denyRead` regions |
-| `allowManagedReadPathsOnly` | (Managed only) Ignore non-managed `allowRead` entries |
-
-Path prefixes: `/` = absolute, `~/` = home-relative, `./` or bare = project-relative (project settings) or `~/.claude`-relative (user settings).
-
-**Network settings** (`sandbox.network.*`):
-
-| Key | Description |
-|:----|:------------|
-| `allowedDomains` | Domains bash commands can reach (supports wildcards like `*.npmjs.org`) |
-| `allowManagedDomainsOnly` | (Managed only) Block non-allowed domains automatically |
-| `allowUnixSockets` | Unix socket paths accessible in sandbox |
-| `allowAllUnixSockets` | Allow all Unix socket connections |
-| `allowLocalBinding` | Allow binding to localhost ports (macOS only) |
-| `httpProxyPort` | Custom HTTP proxy port |
-| `socksProxyPort` | Custom SOCKS5 proxy port |
-
-### Managed-Only Settings
-
-These settings are only effective in managed settings and cannot be overridden:
-
-| Setting | Description |
-|:--------|:------------|
-| `allowManagedPermissionRulesOnly` | Block user/project permission rules |
-| `allowManagedHooksOnly` | Block user/project/plugin hooks |
-| `allowManagedMcpServersOnly` | Only admin-allowlisted MCP servers apply |
-| `allowedChannelPlugins` | Channel plugin allowlist (requires `channelsEnabled: true`) |
-| `blockedMarketplaces` | Marketplace blocklist (checked before download) |
-| `sandbox.network.allowManagedDomainsOnly` | Only managed domain allowlists apply |
-| `sandbox.filesystem.allowManagedReadPathsOnly` | Only managed `allowRead` paths apply |
-| `strictKnownMarketplaces` | Marketplace addition allowlist |
-| `disableAutoMode` | Set `"disable"` to prevent auto mode activation |
-| `channelsEnabled` | Allow channels for Team/Enterprise users |
-| `pluginTrustMessage` | Custom message appended to plugin trust warning |
-| `companyAnnouncements` | Announcements displayed at startup |
-
-### Plugin Configuration
-
-**`enabledPlugins`**: Controls which plugins are active. Format: `"plugin-name@marketplace-name": true/false`
-
-**`extraKnownMarketplaces`**: Defines additional marketplaces. Supported source types: `github`, `git`, `url`, `npm`, `file`, `directory`, `hostPattern`, `settings` (inline).
-
-**`strictKnownMarketplaces`** (managed only): Allowlist of marketplaces users may add. Uses exact matching for source specs. `undefined` = no restrictions, `[]` = lockdown.
-
-**`blockedMarketplaces`** (managed only): Blocklist checked before download.
+| Variable | Purpose |
+|:---------|:--------|
+| `ANTHROPIC_API_KEY` | API key (overrides subscription when set) |
+| `ANTHROPIC_BASE_URL` | Override API endpoint for proxy/gateway |
+| `ANTHROPIC_MODEL` | Model setting to use |
+| `ANTHROPIC_AUTH_TOKEN` | Custom Authorization header value |
+| `ANTHROPIC_CUSTOM_HEADERS` | Custom headers (newline-separated) |
+| `CLAUDE_CODE_USE_BEDROCK` | Use Amazon Bedrock |
+| `CLAUDE_CODE_USE_VERTEX` | Use Google Vertex AI |
+| `CLAUDE_CODE_USE_FOUNDRY` | Use Microsoft Foundry |
+| `CLAUDE_CODE_ENABLE_TELEMETRY` | Enable OpenTelemetry (`1`) |
+| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Disable updates, telemetry, error reporting |
+| `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | Disable auto memory (`1`) |
+| `CLAUDE_CODE_DISABLE_FAST_MODE` | Disable fast mode (`1`) |
+| `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` | Disable background tasks (`1`) |
+| `CLAUDE_CODE_SIMPLE` | Minimal system prompt, basic tools only (`1`) |
+| `CLAUDE_CODE_SHELL` | Override shell detection |
+| `CLAUDE_CODE_SHELL_PREFIX` | Command prefix for all bash commands |
+| `CLAUDE_CODE_EFFORT_LEVEL` | Set effort level: `low`, `medium`, `high`, `max`, `auto` |
+| `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` | Strip credentials from subprocess environments (`1`) |
+| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | Auto-compaction trigger percentage (1-100) |
+| `CLAUDE_CONFIG_DIR` | Custom config/data directory |
+| `CLAUDE_ENV_FILE` | Shell script sourced before each Bash command |
+| `BASH_DEFAULT_TIMEOUT_MS` | Default bash command timeout |
+| `BASH_MAX_TIMEOUT_MS` | Maximum bash command timeout |
+| `MAX_THINKING_TOKENS` | Override thinking token budget |
+| `MAX_MCP_OUTPUT_TOKENS` | Max tokens in MCP responses (default: 25000) |
+| `MCP_TIMEOUT` | MCP server startup timeout (ms) |
+| `MCP_TOOL_TIMEOUT` | MCP tool execution timeout (ms) |
+| `HTTP_PROXY` / `HTTPS_PROXY` | Proxy server for network connections |
+| `NO_PROXY` | Domains/IPs to bypass proxy |
+| `DISABLE_AUTOUPDATER` | Disable automatic updates (`1`) |
+| `DISABLE_TELEMETRY` | Opt out of Statsig telemetry (`1`) |
+| `DISABLE_PROMPT_CACHING` | Disable prompt caching (`1`) |
+| `CLAUDECODE` | Set to `1` in Claude-spawned shells (detection) |
 
 ### Server-Managed Settings
 
-Delivered from Anthropic's servers via Claude.ai admin console. Requires Teams or Enterprise plan, Claude Code >= 2.1.38 (Teams) or >= 2.1.30 (Enterprise), and access to `api.anthropic.com`.
+Delivered from Anthropic's servers via the Claude.ai admin console. Requires Team or Enterprise plan, Claude Code v2.1.38+, and access to `api.anthropic.com`.
 
-**Behavior:**
-- Fetched at startup and polled hourly during active sessions
-- Cached settings apply immediately on subsequent launches; fresh settings fetched in background
-- Settings with shell commands, custom env vars, or hooks trigger a security approval dialog
-- In non-interactive mode (`-p` flag), dialogs are skipped and settings applied automatically
-- When both server-managed and endpoint-managed settings exist, server-managed takes precedence
+- Settings fetched at startup and polled hourly
+- Cached settings apply immediately on subsequent launches
+- Cannot be overridden by any other settings level
+- When both server-managed and endpoint-managed settings exist, server-managed wins
+- Shell commands, custom env vars, and hooks require user security approval dialog
+- Access limited to Primary Owner and Owner roles
+- MCP server configurations not yet supported via server-managed settings
 
-**Access control:** Primary Owner and Owner roles can manage settings.
+### Managed Settings File Locations
 
-**Current limitations:** Settings apply uniformly (no per-group). MCP server configs cannot be distributed via server-managed settings.
+| Platform | File path |
+|:---------|:----------|
+| macOS (plist) | `com.anthropic.claudecode` managed preferences domain |
+| macOS (file) | `/Library/Application Support/ClaudeCode/managed-settings.json` |
+| Linux/WSL (file) | `/etc/claude-code/managed-settings.json` |
+| Windows (registry) | `HKLM\SOFTWARE\Policies\ClaudeCode` (REG_SZ `Settings` value) |
+| Windows (file) | `C:\Program Files\ClaudeCode\managed-settings.json` |
 
-**Not available with:** Bedrock, Vertex AI, Foundry, custom `ANTHROPIC_BASE_URL`, or LLM gateways.
-
-### Environment Variables (Key Selection)
-
-**API and model:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `ANTHROPIC_API_KEY` | API key for direct API usage |
-| `ANTHROPIC_MODEL` | Override the model (e.g., `claude-sonnet-4-6`) |
-| `ANTHROPIC_BASE_URL` | Override API base URL |
-| `ANTHROPIC_AUTH_TOKEN` | Custom auth token (overrides API key and OAuth) |
-
-**Provider selection:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `CLAUDE_CODE_USE_BEDROCK` | Set `1` to use Amazon Bedrock |
-| `CLAUDE_CODE_USE_VERTEX` | Set `1` to use Google Vertex AI |
-| `CLAUDE_CODE_USE_FOUNDRY` | Set `1` to use Microsoft Foundry |
-| `AWS_REGION`, `AWS_PROFILE` | AWS config for Bedrock |
-| `CLOUD_ML_REGION`, `ANTHROPIC_VERTEX_PROJECT_ID` | Vertex AI config |
-
-**Token and output control:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `CLAUDE_CODE_MAX_OUTPUT_TOKENS` | Override max output tokens per turn |
-| `MAX_THINKING_TOKENS` | Override extended thinking token budget; `0` disables thinking |
-
-**Feature toggles:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `DISABLE_AUTOUPDATER` | Set `1` to disable auto-updates |
-| `DISABLE_TELEMETRY` | Set `1` to opt out of Statsig telemetry |
-| `DISABLE_ERROR_REPORTING` | Set `1` to opt out of Sentry error reporting |
-| `DISABLE_COST_WARNINGS` | Set `1` to disable cost warnings |
-| `DISABLE_PROMPT_CACHING` | Set `1` to disable prompt caching |
-| `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` | Disable all non-essential outbound traffic |
-| `CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS` | Remove git instructions from system prompt |
-| `IS_DEMO` | Enable demo mode (hide email/org, skip onboarding) |
-
-**MCP configuration:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `MCP_TIMEOUT` | MCP server startup timeout (ms) |
-| `MCP_TOOL_TIMEOUT` | MCP tool execution timeout (ms) |
-| `MAX_MCP_OUTPUT_TOKENS` | Max tokens in MCP tool responses (default: 25000) |
-| `ENABLE_TOOL_SEARCH` | Control MCP tool search behavior (`true`, `auto`, `auto:N`, `false`) |
-
-**Proxy and network:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `HTTP_PROXY` / `HTTPS_PROXY` | Proxy server for network connections |
-| `NO_PROXY` | Domains/IPs to bypass proxy |
-| `CLAUDE_CODE_CLIENT_CERT` | Client certificate path for mTLS |
-| `CLAUDE_CODE_CLIENT_KEY` | Client private key path for mTLS |
-
-**Misc:**
-
-| Variable | Purpose |
-|:---------|:--------|
-| `CLAUDE_CODE_SKIP_OTEL_METADATA` | Skip collecting metadata for OTEL spans |
-| `CLAUDE_STREAM_IDLE_TIMEOUT_MS` | Streaming idle watchdog timeout (default: 90000ms) |
-| `USE_BUILTIN_RIPGREP` | Set `0` to use system `rg` instead of bundled |
-| `CLAUDE_CODE_USE_POWERSHELL_TOOL` | Set `1` to enable PowerShell tool on Windows |
-
-For the complete list of 50+ environment variables, see the [full reference](references/claude-code-env-vars.md).
-
-### Extending Permissions with Hooks
-
-PreToolUse hooks run before permission prompts and can:
-- **Deny** (exit code 2): blocks the tool call before permission rules are evaluated
-- **Allow** (output `{"allow": true}`): skips the prompt, but deny/ask rules still apply after
-- **Escalate** (output `{"escalate": true}`): forces a permission prompt
-
-PermissionRequest hooks intercept the permission dialog itself and can answer on the user's behalf.
-
-### Working Directories
-
-Extend file access beyond the launch directory:
-- `--add-dir <path>` at startup
-- `/add-dir` during a session
-- `additionalDirectories` in settings
-
-Files in additional directories follow the same permission rules as the original working directory.
+Drop-in directory `managed-settings.d/` alongside the base file supports independent policy fragments. Files sorted alphabetically; use numeric prefixes (e.g., `10-telemetry.json`, `20-security.json`).
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Settings](references/claude-code-settings.md) -- Complete configuration reference: configuration scopes (managed/user/project/local with precedence), settings files and delivery mechanisms (user/project/local/managed including server-managed, MDM/plist/registry, file-based managed-settings.json with drop-in managed-settings.d), all available settings keys table (apiKeyHelper, autoMemoryDirectory, cleanupPeriodDays, companyAnnouncements, env, attribution, permissions, autoMode, hooks, model, availableModels, modelOverrides, effortLevel, sandbox, statusLine, fileSuggestion, outputStyle, agent, language, voiceEnabled, autoUpdatesChannel, feedbackSurveyRate, spinnerVerbs, worktree, and more), global config settings (~/.claude.json), permission settings (allow/ask/deny arrays, defaultMode, additionalDirectories, disableBypassPermissionsMode), permission rule syntax (Tool/Tool(specifier), Bash wildcards, Read/Edit gitignore patterns), sandbox settings (enabled, filesystem allowWrite/denyWrite/denyRead/allowRead, network allowedDomains, excludedCommands, failIfUnavailable), attribution settings (commit/pr customization), file suggestion settings (custom @ autocomplete), hook configuration (allowManagedHooksOnly, allowedHttpHookUrls, httpHookAllowedEnvVars), settings precedence (managed > CLI > local > project > user with array merging), plugin configuration (enabledPlugins, extraKnownMarketplaces, strictKnownMarketplaces with all source types), /status verification, JSON Schema support, excluding sensitive files, subagent configuration, environment variables overview
-- [Permissions](references/claude-code-permissions.md) -- Permission system (tiered tool approval table), managing permissions (/permissions command, allow/ask/deny rules, deny-first evaluation), permission modes table (default/acceptEdits/plan/auto/dontAsk/bypassPermissions), permission rule syntax (Tool(specifier) format, Bash wildcard patterns with word boundary semantics and shell operator awareness, compound command approval saving per-subcommand rules, Bash pattern security limitations with curl examples, Read/Edit gitignore-spec patterns with //absolute ~/home /project-relative ./cwd-relative prefixes and * vs ** matching, WebFetch domain rules, MCP server/tool rules, Agent subagent rules), extending permissions with hooks (PreToolUse allow/deny/escalate, blocking hook precedence over allow rules), working directories (--add-dir, /add-dir, additionalDirectories), permissions and sandboxing interaction (complementary layers, defense-in-depth), managed settings (managed-only settings table: allowManagedPermissionRulesOnly, allowManagedHooksOnly, allowManagedMcpServersOnly, allowedChannelPlugins, blockedMarketplaces, sandbox.network.allowManagedDomainsOnly, sandbox.filesystem.allowManagedReadPathsOnly, strictKnownMarketplaces), auto mode classifier configuration (autoMode.environment prose rules for trusted infrastructure, autoMode.allow and autoMode.soft_deny replacement lists with danger warnings, template for environment entries, claude auto-mode defaults/config/critique commands, precedence of soft_deny > allow > user intent), settings precedence (managed > CLI > local > project > user, deny at any level cannot be overridden), example configurations link
-- [Server-Managed Settings](references/claude-code-server-managed-settings.md) -- Server-managed settings overview (public beta, Teams/Enterprise), requirements (version 2.1.38+ Teams or 2.1.30+ Enterprise, api.anthropic.com access), server-managed vs endpoint-managed comparison, configuration via admin console (JSON format, permission deny lists, hooks, autoMode examples), verification with /permissions, access control (Primary Owner and Owner roles), current limitations (no per-group, no MCP server configs), settings delivery (precedence over endpoint-managed, fetch at startup with hourly polling, caching behavior for first and subsequent launches), security approval dialogs (shell commands, custom env vars, hooks require user approval, -p flag skips dialogs), platform availability (not available with Bedrock/Vertex/Foundry/custom base URL), audit logging (compliance API events), security considerations (client-side control, tampering scenarios, ConfigChange hooks for detection)
-- [Environment Variables](references/claude-code-env-vars.md) -- Complete reference of 50+ environment variables: API and authentication (ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, ANTHROPIC_MODEL, ANTHROPIC_BASE_URL, ANTHROPIC_SMALL_FAST_MODEL, CLAUDE_CODE_API_KEY_HELPER_TTL_MS), provider selection (CLAUDE_CODE_USE_BEDROCK/VERTEX/FOUNDRY, AWS_REGION, AWS_PROFILE, CLOUD_ML_REGION, ANTHROPIC_VERTEX_PROJECT_ID, VERTEX_REGION_* overrides), output and thinking (CLAUDE_CODE_MAX_OUTPUT_TOKENS, MAX_THINKING_TOKENS, CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING), feature toggles (DISABLE_AUTOUPDATER, DISABLE_TELEMETRY, DISABLE_ERROR_REPORTING, DISABLE_COST_WARNINGS, DISABLE_PROMPT_CACHING, IS_DEMO, FORCE_AUTOUPDATE_PLUGINS), MCP (MCP_TIMEOUT, MCP_TOOL_TIMEOUT, MAX_MCP_OUTPUT_TOKENS, ENABLE_TOOL_SEARCH, MCP_CLIENT_SECRET, MCP_OAUTH_CALLBACK_PORT, ENABLE_CLAUDEAI_MCP_SERVERS), proxy and network (HTTP_PROXY, HTTPS_PROXY, NO_PROXY, CLAUDE_CODE_CLIENT_CERT/KEY/KEY_PASSPHRASE), git and system (CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS, CLAUDE_CODE_GIT_REMOTE, CLAUDE_CODE_SKIP_OTEL_METADATA, USE_BUILTIN_RIPGREP), IDE (CLAUDE_CODE_IDE_SKIP_AUTO_INSTALL), and more
-- [Permission Modes](references/claude-code-permission-modes.md) -- How to switch modes (Shift+Tab in CLI, mode selectors in VS Code/Desktop/Web, --permission-mode flag, defaultMode setting), available modes comparison table (default/acceptEdits/plan/auto/dontAsk/bypassPermissions with what each allows and best use cases), plan mode (read-only exploration, /plan prefix, plan acceptance options with auto mode/accept edits/manual review/continue planning, clear context option), auto mode (Team plan requirement, Sonnet 4.6/Opus 4.6 requirement, admin enablement, classifier model overview, cost and latency, action evaluation order with allow/deny > read-only auto-approve > classifier, blanket allow rule dropping on entry, classifier input filtering, subagent handling at spawn and return, default blocks and allows lists, fallback after 3 consecutive or 20 total blocks), dontAsk mode (fully non-interactive, ask rules also denied), bypassPermissions mode (no checks, --dangerously-skip-permissions flag, admin disable option), comparison table across modes, customizing with permission rules and hooks (PreToolUse and PermissionRequest hooks)
+- [Claude Code Settings](references/claude-code-settings.md) -- full settings.json reference, all available settings keys, configuration scopes, settings precedence, sandbox settings, attribution, file suggestion, hook configuration
+- [Configure Permissions](references/claude-code-permissions.md) -- permission system, permission rules syntax, tool-specific rules (Bash, Read, Edit, WebFetch, MCP, Agent), managed-only settings, auto mode classifier, working directories, hooks for permissions
+- [Choose a Permission Mode](references/claude-code-permission-modes.md) -- all permission modes, switching modes across CLI/VS Code/Desktop/Web, plan mode, auto mode with classifier details, dontAsk mode, bypassPermissions mode
+- [Environment Variables](references/claude-code-env-vars.md) -- complete reference for all environment variables controlling Claude Code behavior
+- [Server-Managed Settings](references/claude-code-server-managed-settings.md) -- centralized server-delivered settings, admin console configuration, settings delivery and caching, security considerations
 
 ## Sources
 
-- Settings: https://code.claude.com/docs/en/settings.md
-- Permissions: https://code.claude.com/docs/en/permissions.md
-- Server-Managed Settings: https://code.claude.com/docs/en/server-managed-settings.md
+- Claude Code Settings: https://code.claude.com/docs/en/settings.md
+- Configure Permissions: https://code.claude.com/docs/en/permissions.md
+- Choose a Permission Mode: https://code.claude.com/docs/en/permission-modes.md
 - Environment Variables: https://code.claude.com/docs/en/env-vars.md
-- Permission Modes: https://code.claude.com/docs/en/permission-modes.md
+- Server-Managed Settings: https://code.claude.com/docs/en/server-managed-settings.md
