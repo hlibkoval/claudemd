@@ -2,6 +2,20 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.29
+
+**6 references updated across 6 skills:** cli-doc, cloud-providers-doc, hooks-doc, security-doc, settings-doc, skills-doc
+
+### New
+- **`X-Claude-Code-Session-Id` request header** — documented new header sent on every API request; proxies can use it to aggregate requests per session (cloud-providers-doc)
+- **macOS notification troubleshooting for hooks** — accordion explaining how to grant Script Editor notification permission when `osascript` notifications fail silently (hooks-doc)
+
+### Changed
+- **`CLAUDE_CODE_SIMPLE` preserves `--mcp-config` tools** — MCP tools passed via `--mcp-config` are now available even in simple/bare mode (settings-doc)
+- **Skill description 250-character truncation** — descriptions longer than 250 characters are truncated in the skill listing; front-load the key use case (skills-doc)
+- **Skill metadata budget reduced to 1% / 8,000 chars** — `SLASH_COMMAND_TOOL_CHAR_BUDGET` default changed from 2% / 16,000 to 1% / 8,000; all skill names are always included but descriptions may be shortened (skills-doc, settings-doc)
+- Minor wording/formatting updates across cli-doc, security-doc docs
+
 ## 26.3.28
 
 **12 references updated across 8 skills:** agent-teams-doc, best-practices-doc, cli-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, settings-doc
