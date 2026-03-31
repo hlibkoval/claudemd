@@ -61,7 +61,8 @@
       {"url": "https://code.claude.com/docs/en/desktop-quickstart.md", "file": "claude-code-desktop-quickstart.md"},
       {"url": "https://code.claude.com/docs/en/vs-code.md", "file": "claude-code-vs-code.md"},
       {"url": "https://code.claude.com/docs/en/jetbrains.md", "file": "claude-code-jetbrains.md"},
-      {"url": "https://code.claude.com/docs/en/chrome.md", "file": "claude-code-chrome.md"}
+      {"url": "https://code.claude.com/docs/en/chrome.md", "file": "claude-code-chrome.md"},
+      {"url": "https://code.claude.com/docs/en/computer-use.md", "file": "claude-code-computer-use.md"}
     ],
     "cloud-providers-doc": [
       {"url": "https://code.claude.com/docs/en/amazon-bedrock.md", "file": "claude-code-amazon-bedrock.md"},
@@ -74,7 +75,8 @@
       {"url": "https://code.claude.com/docs/en/github-actions.md", "file": "claude-code-github-actions.md"},
       {"url": "https://code.claude.com/docs/en/gitlab-ci-cd.md", "file": "claude-code-gitlab-ci-cd.md"},
       {"url": "https://code.claude.com/docs/en/slack.md", "file": "claude-code-slack.md"},
-      {"url": "https://code.claude.com/docs/en/code-review.md", "file": "claude-code-code-review.md"}
+      {"url": "https://code.claude.com/docs/en/code-review.md", "file": "claude-code-code-review.md"},
+      {"url": "https://code.claude.com/docs/en/github-enterprise-server.md", "file": "claude-code-github-enterprise-server.md"}
     ],
     "security-doc": [
       {"url": "https://code.claude.com/docs/en/security.md", "file": "claude-code-security.md"},
@@ -105,7 +107,8 @@
       {"url": "https://code.claude.com/docs/en/channels.md", "file": "claude-code-channels.md"},
       {"url": "https://code.claude.com/docs/en/channels-reference.md", "file": "claude-code-channels-reference.md"},
       {"url": "https://code.claude.com/docs/en/web-scheduled-tasks.md", "file": "claude-code-web-scheduled-tasks.md"},
-      {"url": "https://code.claude.com/docs/en/context-window.md", "file": "claude-code-context-window.md"}
+      {"url": "https://code.claude.com/docs/en/context-window.md", "file": "claude-code-context-window.md"},
+      {"url": "https://code.claude.com/docs/en/fullscreen.md", "file": "claude-code-fullscreen.md"}
     ],
     "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},

@@ -2,6 +2,38 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.3.31
+
+**22 references updated across 13 skills:** agent-teams-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **Subagent definitions for agent team teammates** — teammates can reference a subagent type by name and inherit its system prompt, tools, and model (agent-teams-doc, sub-agents-doc)
+- **Code Review troubleshooting section** — how to retrigger failed/timed-out reviews with `@claude review once`, and where to find findings that aren't showing as inline comments (ci-cd-doc)
+- **GitHub Enterprise Server support for Code Review and cloud sessions** — self-hosted GHES instances supported for Teams and Enterprise plans (ci-cd-doc, headless-doc)
+- **`/web-setup` command** — connect GitHub to Claude Code on the web from the terminal using local `gh` CLI credentials (headless-doc)
+- **`CLAUDE_CODE_NO_FLICKER` env var** — opt into fullscreen alt-screen rendering that reduces flicker and keeps memory flat in long sessions (settings-doc, cli-doc)
+- **`CLAUDE_CODE_DISABLE_MOUSE` env var** — disable mouse tracking in fullscreen rendering to keep native copy-on-select (settings-doc)
+- **`CLAUDE_CODE_SCROLL_SPEED` env var** — set mouse wheel scroll multiplier (1-20) in fullscreen rendering (settings-doc)
+- **Computer use listed as CLI integration** — platforms comparison now shows computer use available in CLI on Pro and Max via `/mcp` (getting-started-doc, ide-doc)
+- **GHES firewall allowlisting** — allowlist Anthropic API IP addresses so cloud infrastructure can reach self-hosted GHES instances (security-doc)
+- **v2.1.87 and v2.1.88 changelog entries** — Cowork Dispatch fix, `CLAUDE_CODE_NO_FLICKER`, `PermissionDenied` hook, numerous bug fixes including prompt cache misses, CRLF doubling, and OOM on large files (operations-doc)
+
+### Changed
+- **Model pinning with `ANTHROPIC_DEFAULT_*_MODEL` env vars** — documented how to pin what the Default option and `sonnet`/`opus`/`haiku` aliases resolve to, since `model` setting is initial selection not enforcement (features-doc)
+- **Scheduled tasks minimum interval** — cron expressions that fire more frequently than once per hour are now rejected (features-doc)
+- **`bypassPermissions` now prompts for some writes** — writes to `.git`, `.vscode`, `.idea`, and `.claude` (except commands/agents/skills) still require confirmation (settings-doc)
+- **Auto mode prompt injection defense documented** — server-side probe scans tool results before Claude reads them; classifier never sees tool results so injected instructions cannot influence approvals (settings-doc)
+- **Auto mode available on Enterprise and API plans** — previously documented as Team-only with Enterprise "rolling out shortly" (settings-doc, cli-doc, ide-doc)
+- **`--permission-mode` accepted values listed** — `default`, `acceptEdits`, `plan`, `auto`, `dontAsk`, `bypassPermissions`; overrides `defaultMode` from settings (cli-doc, settings-doc)
+- **`--allow-dangerously-skip-permissions` clarified** — adds `bypassPermissions` to the `Shift+Tab` cycle without starting in it (cli-doc)
+- **Voice dictation privacy notice** — clarified that audio is streamed to Anthropic servers for transcription, not processed locally (features-doc)
+- **Hook debug output simplified** — verbose hook matcher details moved behind `CLAUDE_CODE_DEBUG_LOG_LEVEL=verbose`; default `--debug` shows fewer lines (hooks-doc)
+- **TaskCreated exit code 2 wording** — changed from "prevents creation" to "rolls back the task creation" (hooks-doc)
+- **Desktop computer use setup reformatted** — enable steps presented as numbered sequence; Settings path updated to "Settings > General" (ide-doc)
+- **Dev Containers extension name updated** — "Remote - Containers" renamed to "Dev Containers" throughout devcontainer setup (security-doc)
+- **Plugin marketplace GHES reference** — regex host allowlisting now recommended for GitHub Enterprise Server and self-hosted GitLab (plugins-doc)
+- **Agent team config is runtime state** — clarified that team config is auto-generated and should not be hand-edited; use subagent definitions for reusable roles (agent-teams-doc)
+
 ## 26.3.29
 
 **6 references updated across 6 skills:** cli-doc, cloud-providers-doc, hooks-doc, security-doc, settings-doc, skills-doc
