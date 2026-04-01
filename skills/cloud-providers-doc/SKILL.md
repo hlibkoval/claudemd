@@ -1,142 +1,136 @@
 ---
 name: cloud-providers-doc
-description: Complete documentation for using Claude Code with cloud providers -- Amazon Bedrock (AWS credentials, IAM policies, Guardrails, inference profiles, modelOverrides, cross-region config), Google Vertex AI (GCP setup, regional and global endpoints, 1M context window, VERTEX_REGION_* overrides), Microsoft Foundry (Azure setup, API key and Entra ID auth, RBAC), enterprise deployment overview (comparing Teams/Enterprise/Console/Bedrock/Vertex/Foundry on billing/auth/regions/features, best practices for organizations, proxy and gateway config), and LLM gateway configuration (gateway requirements for Anthropic/Bedrock/Vertex API formats, LiteLLM setup with unified and pass-through endpoints, authentication methods including apiKeyHelper and ANTHROPIC_AUTH_TOKEN). Load when discussing Bedrock, Vertex AI, Microsoft Foundry, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_VERTEX, CLAUDE_CODE_USE_FOUNDRY, AWS_REGION, CLOUD_ML_REGION, ANTHROPIC_VERTEX_PROJECT_ID, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_FOUNDRY_BASE_URL, ANTHROPIC_BEDROCK_BASE_URL, ANTHROPIC_VERTEX_BASE_URL, ANTHROPIC_BASE_URL, LLM gateway, LiteLLM, cloud provider setup, enterprise deployment, third-party integrations, inference profiles, modelOverrides, pin model versions, AWS Guardrails, corporate proxy, HTTPS_PROXY, or any cloud-provider-related topic for Claude Code.
+description: Complete documentation for Claude Code cloud provider integrations -- Amazon Bedrock (AWS credentials, IAM policy, Guardrails, credential refresh, Bedrock API keys, cross-region inference profiles, modelOverrides, ANTHROPIC_BEDROCK_BASE_URL), Google Vertex AI (GCP credentials, IAM roles, global/regional endpoints, VERTEX_REGION_CLAUDE_* overrides, 1M context window, ANTHROPIC_VERTEX_BASE_URL), Microsoft Foundry (Azure Entra ID, API key auth, RBAC, ANTHROPIC_FOUNDRY_RESOURCE, ANTHROPIC_FOUNDRY_BASE_URL), enterprise deployment overview (Teams vs Enterprise vs Console vs cloud providers comparison, proxy and gateway configuration, best practices), and LLM gateway configuration (gateway requirements, API format compatibility, LiteLLM setup, apiKeyHelper, ANTHROPIC_AUTH_TOKEN, pass-through endpoints, CLAUDE_CODE_SKIP_*_AUTH). Load when discussing Bedrock, Vertex AI, Microsoft Foundry, Azure, AWS, GCP, cloud provider setup, LLM gateways, LiteLLM, enterprise deployment, model pinning for cloud providers, CLAUDE_CODE_USE_BEDROCK, CLAUDE_CODE_USE_VERTEX, CLAUDE_CODE_USE_FOUNDRY, corporate proxies, HTTPS_PROXY, or any cloud provider integration topic for Claude Code.
 user-invocable: false
 ---
 
 # Cloud Providers Documentation
 
-This skill provides the complete official documentation for using Claude Code with cloud providers -- Amazon Bedrock, Google Vertex AI, Microsoft Foundry, enterprise deployment options, and LLM gateway configuration.
+This skill provides the complete official documentation for Claude Code cloud provider integrations -- Amazon Bedrock, Google Vertex AI, Microsoft Foundry, enterprise deployment overview, and LLM gateway configuration.
 
 ## Quick Reference
 
-### Provider Enablement
+### Provider Comparison
 
-| Provider | Enable variable | Required variables |
-|:---------|:---------------|:-------------------|
-| Amazon Bedrock | `CLAUDE_CODE_USE_BEDROCK=1` | `AWS_REGION` |
-| Google Vertex AI | `CLAUDE_CODE_USE_VERTEX=1` | `CLOUD_ML_REGION`, `ANTHROPIC_VERTEX_PROJECT_ID` |
-| Microsoft Foundry | `CLAUDE_CODE_USE_FOUNDRY=1` | `ANTHROPIC_FOUNDRY_RESOURCE` or `ANTHROPIC_FOUNDRY_BASE_URL` |
+| Feature | Claude Teams/Enterprise | Anthropic Console | Amazon Bedrock | Google Vertex AI | Microsoft Foundry |
+|:--------|:----------------------|:-----------------|:---------------|:----------------|:-----------------|
+| Best for | Most organizations | Individual devs | AWS-native | GCP-native | Azure-native |
+| Billing | Per-seat / Contact Sales | PAYG | PAYG via AWS | PAYG via GCP | PAYG via Azure |
+| Auth | Claude.ai SSO/email | API key | API key or AWS creds | GCP credentials | API key or Entra ID |
+| Prompt caching | Default on | Default on | Default on | Default on | Default on |
+| Enterprise features | Team mgmt, SSO, usage | None | IAM, CloudTrail | IAM, Cloud Audit | RBAC, Azure Monitor |
 
-When using any cloud provider, `/login` and `/logout` are disabled -- authentication is handled through provider credentials.
+### Provider Enable Variables
 
-### Authentication Methods
+| Provider | Enable Variable | Region Variable | Base URL Override |
+|:---------|:---------------|:----------------|:-----------------|
+| Amazon Bedrock | `CLAUDE_CODE_USE_BEDROCK=1` | `AWS_REGION` (required) | `ANTHROPIC_BEDROCK_BASE_URL` |
+| Google Vertex AI | `CLAUDE_CODE_USE_VERTEX=1` | `CLOUD_ML_REGION` (e.g., `global`) | `ANTHROPIC_VERTEX_BASE_URL` |
+| Microsoft Foundry | `CLAUDE_CODE_USE_FOUNDRY=1` | N/A | `ANTHROPIC_FOUNDRY_BASE_URL` |
 
-| Provider | Methods |
-|:---------|:--------|
-| Bedrock | AWS CLI (`aws configure`), env vars (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`), SSO profile (`AWS_PROFILE`), `aws login`, Bedrock API keys (`AWS_BEARER_TOKEN_BEDROCK`) |
-| Vertex AI | Standard Google Cloud auth (`gcloud auth`), `ANTHROPIC_VERTEX_PROJECT_ID` overrides gcloud project |
-| Foundry | API key (`ANTHROPIC_FOUNDRY_API_KEY`), or Microsoft Entra ID via Azure SDK default credential chain (`az login`) |
+### Model Pinning Variables
 
-### Model Pinning (All Providers)
+Pin specific model versions to prevent breakage when new models release:
 
-Pin specific model versions to prevent breakage when Anthropic releases new models:
-
-| Variable | Bedrock example | Vertex AI example | Foundry example |
+| Variable | Bedrock Example | Vertex AI Example | Foundry Example |
 |:---------|:---------------|:-----------------|:---------------|
 | `ANTHROPIC_DEFAULT_OPUS_MODEL` | `us.anthropic.claude-opus-4-6-v1` | `claude-opus-4-6` | `claude-opus-4-6` |
 | `ANTHROPIC_DEFAULT_SONNET_MODEL` | `us.anthropic.claude-sonnet-4-6` | `claude-sonnet-4-6` | `claude-sonnet-4-6` |
 | `ANTHROPIC_DEFAULT_HAIKU_MODEL` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` | `claude-haiku-4-5@20251001` | `claude-haiku-4-5` |
 
-Additional model variables: `ANTHROPIC_MODEL` (primary model override), `ANTHROPIC_DEFAULT_HAIKU_MODEL` (small/fast model).
+Override primary model: `ANTHROPIC_MODEL`. Override small/fast model region (Bedrock): `ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION`.
 
-### Default Models (When Not Pinned)
+### Amazon Bedrock
 
-| Provider | Primary model | Small/fast model |
-|:---------|:-------------|:----------------|
-| Bedrock | `global.anthropic.claude-sonnet-4-6` | `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
-| Vertex AI | `claude-sonnet-4-6` | `claude-haiku-4-5@20251001` |
+**Credential methods:** AWS CLI (`aws configure`), env vars (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`), SSO profile (`AWS_PROFILE`), `aws login`, or Bedrock API keys (`AWS_BEARER_TOKEN_BEDROCK`).
 
-### Bedrock-Specific Configuration
+**Auto credential refresh settings (in settings file):**
+- `awsAuthRefresh` -- runs command that modifies `.aws` directory (e.g., `aws sso login --profile myprofile`)
+- `awsCredentialExport` -- runs command that outputs JSON with `Credentials.AccessKeyId`, `SecretAccessKey`, `SessionToken`
 
-| Setting | Purpose |
-|:--------|:--------|
-| `AWS_REGION` | Required. Not read from `.aws` config |
-| `ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION` | Override region for Haiku |
-| `DISABLE_PROMPT_CACHING=1` | Disable prompt caching (not available in all regions) |
-| `modelOverrides` (settings) | Map model versions to specific inference profile ARNs |
-| `awsAuthRefresh` (settings) | Command to refresh AWS credentials (e.g., `aws sso login --profile myprofile`) |
-| `awsCredentialExport` (settings) | Command that outputs JSON credentials directly |
-| `ANTHROPIC_CUSTOM_HEADERS` | Set Guardrail headers (e.g., `X-Amzn-Bedrock-GuardrailIdentifier`) |
+**IAM actions required:** `bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream`, `bedrock:ListInferenceProfiles`.
 
-**Bedrock IAM permissions required:** `bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream`, `bedrock:ListInferenceProfiles` on inference-profile, application-inference-profile, and foundation-model resources.
+**Model overrides:** Use `modelOverrides` setting to map specific model versions to application inference profile ARNs:
 
-### Vertex AI-Specific Configuration
+```json
+{
+  "modelOverrides": {
+    "claude-opus-4-6": "arn:aws:bedrock:us-east-2:123456789012:application-inference-profile/opus-46-prod"
+  }
+}
+```
 
-| Setting | Purpose |
-|:--------|:--------|
-| `CLOUD_ML_REGION` | Region or `global` for global endpoint |
-| `ANTHROPIC_VERTEX_PROJECT_ID` | GCP project ID |
-| `VERTEX_REGION_CLAUDE_3_5_HAIKU` | Override region for Haiku when using global endpoint |
-| `VERTEX_REGION_CLAUDE_4_0_OPUS` | Override region for Opus |
-| `VERTEX_REGION_CLAUDE_4_0_SONNET` | Override region for Sonnet |
+**Guardrails:** Set via `ANTHROPIC_CUSTOM_HEADERS` with `X-Amzn-Bedrock-GuardrailIdentifier` and `X-Amzn-Bedrock-GuardrailVersion`.
 
-**Vertex AI IAM:** `roles/aiplatform.user` role (needs `aiplatform.endpoints.predict`).
+**Default models (no pinning):** Primary = `global.anthropic.claude-sonnet-4-6`, Small/fast = `us.anthropic.claude-haiku-4-5-20251001-v1:0`.
 
-**1M context window:** Supported for Claude Opus 4.6, Sonnet 4.6, Sonnet 4.5, and Sonnet 4. Append `[1m]` to the pinned model ID to enable.
+### Google Vertex AI
 
-### Foundry-Specific Configuration
+**Required env vars:** `CLAUDE_CODE_USE_VERTEX=1`, `CLOUD_ML_REGION` (e.g., `global`), `ANTHROPIC_VERTEX_PROJECT_ID`.
 
-| Setting | Purpose |
-|:--------|:--------|
-| `ANTHROPIC_FOUNDRY_RESOURCE` | Azure resource name |
-| `ANTHROPIC_FOUNDRY_BASE_URL` | Full base URL (alternative to resource name) |
-| `ANTHROPIC_FOUNDRY_API_KEY` | API key (omit for Entra ID auth) |
+**Per-model region overrides (when using global endpoint):** `VERTEX_REGION_CLAUDE_HAIKU_4_5`, `VERTEX_REGION_CLAUDE_4_6_SONNET`, etc.
 
-**Foundry RBAC:** `Azure AI User` or `Cognitive Services User` roles. Custom role needs `Microsoft.CognitiveServices/accounts/providers/*` dataAction.
+**IAM role:** `roles/aiplatform.user` (needs `aiplatform.endpoints.predict`).
 
-### Enterprise Deployment Comparison
+**1M context window:** Supported on Opus 4.6, Sonnet 4.6, Sonnet 4.5, Sonnet 4. Append `[1m]` to model ID.
 
-| Feature | Teams/Enterprise | Console | Bedrock | Vertex AI | Foundry |
-|:--------|:----------------|:--------|:--------|:----------|:--------|
-| Best for | Most orgs (recommended) | Individual devs | AWS-native | GCP-native | Azure-native |
-| Billing | Seat-based / Contact Sales | PAYG | PAYG (AWS) | PAYG (GCP) | PAYG (Azure) |
-| Auth | Claude.ai SSO/email | API key | API key / AWS creds | GCP creds | API key / Entra ID |
-| Includes Claude web | Yes | No | No | No | No |
+**Default models (no pinning):** Primary = `claude-sonnet-4-6`, Small/fast = `claude-haiku-4-5@20251001`.
 
-### Proxy and Gateway Configuration
+### Microsoft Foundry
 
-| Provider | Corporate proxy | LLM gateway base URL | Skip auth variable |
-|:---------|:---------------|:--------------------|:-------------------|
-| Bedrock | `HTTPS_PROXY` | `ANTHROPIC_BEDROCK_BASE_URL` | `CLAUDE_CODE_SKIP_BEDROCK_AUTH=1` |
-| Vertex AI | `HTTPS_PROXY` | `ANTHROPIC_VERTEX_BASE_URL` | `CLAUDE_CODE_SKIP_VERTEX_AUTH=1` |
-| Foundry | `HTTPS_PROXY` | `ANTHROPIC_FOUNDRY_BASE_URL` | `CLAUDE_CODE_SKIP_FOUNDRY_AUTH=1` |
-| Anthropic API | `HTTPS_PROXY` | `ANTHROPIC_BASE_URL` | N/A |
+**Required env vars:** `CLAUDE_CODE_USE_FOUNDRY=1`, `ANTHROPIC_FOUNDRY_RESOURCE={resource}` (or `ANTHROPIC_FOUNDRY_BASE_URL`).
 
-### LLM Gateway Requirements
+**Auth methods:** API key (`ANTHROPIC_FOUNDRY_API_KEY`) or Microsoft Entra ID (Azure SDK default credential chain, e.g., `az login`).
 
-The gateway must expose at least one of these API formats:
+**RBAC roles:** `Azure AI User` or `Cognitive Services User`. Custom role needs `Microsoft.CognitiveServices/accounts/providers/*` data action.
 
-| Format | Endpoints | Must forward |
-|:-------|:----------|:------------|
-| Anthropic Messages | `/v1/messages`, `/v1/messages/count_tokens` | Headers: `anthropic-beta`, `anthropic-version` |
-| Bedrock InvokeModel | `/invoke`, `/invoke-with-response-stream` | Body fields: `anthropic_beta`, `anthropic_version` |
-| Vertex rawPredict | `:rawPredict`, `:streamRawPredict`, `/count-tokens:rawPredict` | Headers: `anthropic-beta`, `anthropic-version` |
+### LLM Gateway Configuration
 
-Every request includes `X-Claude-Code-Session-Id` header for session aggregation.
+**Supported API formats:**
+- Anthropic Messages: `/v1/messages`, `/v1/messages/count_tokens`
+- Bedrock InvokeModel: `/invoke`, `/invoke-with-response-stream`
+- Vertex rawPredict: `:rawPredict`, `:streamRawPredict`, `/count-tokens:rawPredict`
 
-### LiteLLM Integration
+**Skip auth variables (when gateway handles auth):** `CLAUDE_CODE_SKIP_BEDROCK_AUTH=1`, `CLAUDE_CODE_SKIP_VERTEX_AUTH=1`, `CLAUDE_CODE_SKIP_FOUNDRY_AUTH=1`.
 
-| Mode | Environment variables |
-|:-----|:---------------------|
-| Unified (recommended) | `ANTHROPIC_BASE_URL=https://litellm-server:4000` |
-| Anthropic pass-through | `ANTHROPIC_BASE_URL=https://litellm-server:4000/anthropic` |
-| Bedrock pass-through | `ANTHROPIC_BEDROCK_BASE_URL=https://litellm-server:4000/bedrock` + `CLAUDE_CODE_SKIP_BEDROCK_AUTH=1` + `CLAUDE_CODE_USE_BEDROCK=1` |
-| Vertex pass-through | `ANTHROPIC_VERTEX_BASE_URL=https://litellm-server:4000/vertex_ai/v1` + `CLAUDE_CODE_SKIP_VERTEX_AUTH=1` + `CLAUDE_CODE_USE_VERTEX=1` + `CLOUD_ML_REGION` + `ANTHROPIC_VERTEX_PROJECT_ID` |
+**Auth for gateways:** `ANTHROPIC_AUTH_TOKEN` (static key) or `apiKeyHelper` (dynamic script). Helper TTL: `CLAUDE_CODE_API_KEY_HELPER_TTL_MS`.
 
-**Authentication:** Static key via `ANTHROPIC_AUTH_TOKEN`, or dynamic key via `apiKeyHelper` setting with optional `CLAUDE_CODE_API_KEY_HELPER_TTL_MS` for refresh interval.
+**Session header:** Every request includes `X-Claude-Code-Session-Id`.
 
-When using Anthropic Messages format with Bedrock or Vertex backend, set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1`.
+### Proxy and Gateway Setup
+
+| Provider | Corporate Proxy | LLM Gateway |
+|:---------|:---------------|:------------|
+| Bedrock | `HTTPS_PROXY` + standard Bedrock vars | `ANTHROPIC_BEDROCK_BASE_URL` + `CLAUDE_CODE_SKIP_BEDROCK_AUTH=1` |
+| Vertex AI | `HTTPS_PROXY` + standard Vertex vars | `ANTHROPIC_VERTEX_BASE_URL` + `CLAUDE_CODE_SKIP_VERTEX_AUTH=1` |
+| Foundry | `HTTPS_PROXY` + standard Foundry vars | `ANTHROPIC_FOUNDRY_BASE_URL` + `CLAUDE_CODE_SKIP_FOUNDRY_AUTH=1` |
+
+### LiteLLM Endpoints
+
+| Method | Env Var | Value |
+|:-------|:--------|:------|
+| Unified (recommended) | `ANTHROPIC_BASE_URL` | `https://litellm-server:4000` |
+| Claude pass-through | `ANTHROPIC_BASE_URL` | `https://litellm-server:4000/anthropic` |
+| Bedrock pass-through | `ANTHROPIC_BEDROCK_BASE_URL` | `https://litellm-server:4000/bedrock` |
+| Vertex pass-through | `ANTHROPIC_VERTEX_BASE_URL` | `https://litellm-server:4000/vertex_ai/v1` |
+
+### Common Notes
+
+- `/login` and `/logout` commands are disabled for all cloud providers (auth handled by provider credentials).
+- Disable prompt caching: `DISABLE_PROMPT_CACHING=1`.
+- Use `/status` to verify proxy and gateway configuration.
+- Bedrock uses Invoke API only (not Converse API).
+- `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` may be needed when using Anthropic Messages format with Bedrock/Vertex via gateway.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Claude Code on Amazon Bedrock](references/claude-code-amazon-bedrock.md) -- AWS setup, credential configuration (CLI, env vars, SSO, Bedrock API keys), advanced credential refresh (awsAuthRefresh, awsCredentialExport), model pinning with inference profile IDs, modelOverrides for mapping versions to ARNs, IAM policy with required permissions, AWS Guardrails configuration, troubleshooting region and throughput issues
-- [Claude Code on Google Vertex AI](references/claude-code-google-vertex-ai.md) -- GCP setup, enabling Vertex AI API, requesting model access, authentication, regional and global endpoint configuration, per-model region overrides (VERTEX_REGION_*), model pinning, 1M token context window support, IAM roles, troubleshooting quota/404/429 errors
-- [Claude Code on Microsoft Foundry](references/claude-code-microsoft-foundry.md) -- Azure setup, provisioning Foundry resources, API key and Entra ID authentication, model pinning, Azure RBAC configuration with required permissions, troubleshooting credential errors
-- [Enterprise Deployment Overview](references/claude-code-third-party-integrations.md) -- Comparison of Teams/Enterprise/Console/Bedrock/Vertex/Foundry on billing, regions, caching, auth, cost tracking, enterprise features; proxy and gateway configuration per provider; best practices for organizations (documentation, deployment, model pinning, security, MCP)
-- [LLM Gateway Configuration](references/claude-code-llm-gateway.md) -- Gateway requirements (API formats, required headers/fields), model selection, LiteLLM setup (authentication methods, unified endpoint, provider-specific pass-through endpoints for Anthropic/Bedrock/Vertex)
+- [Claude Code on Amazon Bedrock](references/claude-code-amazon-bedrock.md) -- Setup, AWS credentials, IAM policy, Guardrails, model pinning, and troubleshooting for Bedrock
+- [Claude Code on Google Vertex AI](references/claude-code-google-vertex-ai.md) -- Setup, GCP credentials, IAM roles, global/regional endpoints, 1M context, and troubleshooting for Vertex AI
+- [Claude Code on Microsoft Foundry](references/claude-code-microsoft-foundry.md) -- Setup, Azure credentials, RBAC configuration, and troubleshooting for Microsoft Foundry
+- [Enterprise Deployment Overview](references/claude-code-third-party-integrations.md) -- Deployment option comparison, proxy/gateway configuration, and best practices for organizations
+- [LLM Gateway Configuration](references/claude-code-llm-gateway.md) -- Gateway requirements, authentication methods, LiteLLM setup, and provider-specific endpoints
 
 ## Sources
 
