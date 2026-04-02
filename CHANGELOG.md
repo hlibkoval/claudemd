@@ -2,6 +2,43 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.2
+
+**30 references updated across 13 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+- **`PermissionDenied` hook event** — fires when the auto mode classifier denies a tool call; return `{retry: true}` to tell the model it may retry (hooks-doc, plugins-doc)
+- **`"defer"` permission decision for `PreToolUse` hooks** — pauses a headless `-p` session at a tool call so an Agent SDK wrapper can collect input and resume with `--resume` (hooks-doc)
+- **`best` model alias** — uses the most capable available model, currently equivalent to `opus` (features-doc)
+- **`default` model alias clarification** — `default` now documented as a special value that clears any model override, not itself a model alias (features-doc)
+- **`color` subagent frontmatter field** — set a display color (`red`, `blue`, `green`, etc.) for a subagent in the task list and transcript (sub-agents-doc)
+- **`auto` permission mode for subagents** — subagent `permissionMode` field now accepts `auto` alongside `default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, and `plan` (sub-agents-doc)
+- **Managed subagents** — organization admins can deploy subagents via managed settings; managed definitions take highest priority (sub-agents-doc)
+- **`MCP_CONNECTION_NONBLOCKING` env var** — skip the MCP connection wait in non-interactive mode when MCP tools are not needed (settings-doc)
+- **`showThinkingSummaries` setting** — show extended thinking summaries in interactive sessions instead of collapsed stubs (settings-doc)
+- **`forceLoginOrgUUID` array support** — now accepts an array of UUIDs to allow any listed organization, not just a single UUID (settings-doc)
+- **1M token context window on Bedrock** — Opus 4.6 and Sonnet 4.6 support the extended context window on Amazon Bedrock; append `[1m]` to model ID (cloud-providers-doc)
+- **GPG-signed release manifests** — binary integrity verification now uses a detached GPG signature on `manifest.json` with step-by-step verification instructions (getting-started-doc)
+- **`/powerup` command** — interactive lessons teaching Claude Code features with animated demos (operations-doc)
+- **Auto mode denied actions in `/permissions`** — denied actions now appear in `/permissions` under the Recently denied tab; press `r` to mark for retry (settings-doc)
+- **Hook output character cap** — hook output injected into context is capped at 10,000 characters; larger output is saved to a file (hooks-doc)
+- **PowerShell install troubleshooting** — added note about `&&` token separator error when running CMD installer in PowerShell (getting-started-doc)
+- **iTerm2 mouse reporting note** — fullscreen mode mouse wheel scrolling requires Enable mouse reporting in iTerm2 profile settings (features-doc)
+- **Plugin marketplace worktree behavior** — relative `directory`/`file` marketplace paths resolve against the main checkout, not the worktree (plugins-doc)
+
+### Changed
+- **Scheduled task expiry extended from 3 days to 7 days** — recurring tasks now expire after 7 days instead of 3 (features-doc)
+- **`cleanupPeriodDays` setting** — setting to `0` is now rejected; minimum is 1; use `--no-session-persistence` to disable transcript writes (settings-doc)
+- **Bedrock default primary model** — changed from `global.anthropic.claude-sonnet-4-6` to `us.anthropic.claude-sonnet-4-5-20250929-v1:0` (cloud-providers-doc)
+- **Vertex AI default primary model** — changed from `claude-sonnet-4-6` to `claude-sonnet-4-5@20250929` (cloud-providers-doc)
+- **`permissions.disableBypassPermissionsMode` key path** — corrected to use `permissions.` prefix; `disableAutoMode` similarly corrected to `permissions.disableAutoMode` (settings-doc)
+- **Bash subagent removed from built-in agents table** — the Bash helper agent no longer listed as a separate built-in subagent (sub-agents-doc)
+- **`--agent-teams` flag removal** — agent teams now enabled only via `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, `--agent-teams` flag removed (sub-agents-doc)
+- **Output styles token usage** — removed claim that all styles exclude conciseness instructions; added section on token usage by style (features-doc, best-practices-doc)
+- **Network config URL roles clarified** — `storage.googleapis.com` is the primary download bucket; `downloads.claude.ai` hosts install scripts, manifests, signing keys, and plugin executables (security-doc)
+- **PreToolUse decision precedence** — documented that when multiple hooks return different decisions, precedence is `deny` > `defer` > `ask` > `allow` (hooks-doc)
+- Minor wording/formatting updates across cli-doc, ide-doc, ci-cd-doc, plugins-doc docs
+
 ## 26.4.1
 
 **22 references updated across 13 skills:** cli-doc, cloud-providers-doc, features-doc, headless-doc, hooks-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
