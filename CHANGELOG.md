@@ -2,6 +2,54 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.3
+
+**37 references updated across 16 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`CLAUDE.local.md` files** — personal project-specific memory files that load alongside `CLAUDE.md` but are gitignored; `/init` creates one automatically (memory-doc, best-practices-doc, settings-doc, ide-doc)
+- **Plugin `bin/` directory** — plugins can ship executables under `bin/` that are added to the Bash tool's `PATH` while the plugin is enabled (plugins-doc)
+- **CLI marketplace management subcommands** — `claude plugin marketplace add|list|remove|update` for non-interactive scripting and automation (plugins-doc)
+- **`CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE` env var** — keeps existing marketplace cache when `git pull` fails instead of wiping it, for offline/airgapped environments (plugins-doc, settings-doc)
+- **`CLAUDE_CODE_PLUGIN_CACHE_DIR` for seed builds** — set during image build so plugins install directly into the seed path, skipping the copy step (plugins-doc)
+- **MCP `_meta["anthropic/maxResultSizeChars"]` annotation** — MCP servers can override per-tool result size limits up to 500K characters (mcp-doc, operations-doc)
+- **OpenTelemetry distributed tracing (beta)** — export spans linking prompts to API requests and tool executions via `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER` (operations-doc)
+- **`OTEL_LOG_TOOL_CONTENT` env var** — log full tool input/output content in trace spans, truncated at 60 KB (operations-doc)
+- **Statusline `workspace.added_dirs` field** — exposes directories added via `/add-dir` or `--add-dir` (features-doc)
+- **Statusline `session_name` field** — exposes the custom session name set with `--name` or `/rename` (features-doc)
+- **`disableSkillShellExecution` setting** — disables inline shell execution in skills, custom slash commands, and plugin commands (operations-doc)
+- **`confirm:toggle` keybinding** — Space key toggles selection in confirmation dialogs (cli-doc)
+- **`app:redraw` keybinding** — `Ctrl+L` is now a rebindable action in the Global context (cli-doc)
+- **`settings:close` keybinding** — Enter saves and closes the config panel; Escape discards changes (cli-doc)
+- **`/powerup` command** — added to the slash commands reference table (cli-doc)
+- **Subagent worktree auto-cleanup** — orphaned subagent worktrees are removed at startup after `cleanupPeriodDays` if they have no modifications or unpushed commits (best-practices-doc, settings-doc)
+- **Sandbox `autoAllowBashIfSandboxed` interaction with ask rules** — documented that sandboxed Bash commands bypass `ask: Bash(*)` rules when this default-on setting is active (settings-doc)
+
+### Changed
+- **Computer use now available on Windows via Desktop app** — previously macOS-only; CLI remains macOS-only (ide-doc, getting-started-doc)
+- **Protected directories include `.husky`** — `bypassPermissions`, `acceptEdits`, and `auto` modes now also protect `.husky` from unintended writes (settings-doc, sub-agents-doc)
+- **`acceptEdits` mode excludes protected directories** — file edits in `.git`, `.claude`, `.vscode`, `.idea`, and `.husky` still prompt (settings-doc)
+- **Permission mode comparison table updated** — reflects protected-directory behavior across all modes (settings-doc)
+- **`allowed-tools` frontmatter accepts space-separated strings** — comma-separated format replaced by spaces or YAML lists in skill examples (skills-doc)
+- **`/resume` picker shows interactive sessions only** — headless `claude -p` sessions no longer appear; use `--resume <id>` to resume them directly (best-practices-doc)
+- **Sandbox `excludedCommands` example uses glob pattern** — `"docker"` changed to `"docker *"` in docs and examples (settings-doc, security-doc)
+- **Seed marketplace mutation blocked** — `/plugin marketplace remove` and `update` against seed-managed marketplaces now fail with guidance (plugins-doc)
+- **Sandbox auto-allow mode clarification** — explicit deny rules always respected; ask rules apply only to non-sandboxed fallback commands (security-doc)
+- **`Ctrl+L` redraws the screen** — previously described as "clear terminal screen" (cli-doc)
+- **`chat:undo` gains `Ctrl+Shift+-` binding** — additional default binding alongside `Ctrl+_` (cli-doc)
+- **Transcript `q` key is now rebindable** — `transcript:exit` binding includes `q` alongside `Ctrl+C` and `Escape` (cli-doc)
+- **`Alt+T` extended thinking toggle** — no longer requires `/terminal-setup`; just configure Option as Meta on macOS (cli-doc)
+- **VS Code Meta key docs updated** — now references `terminal.integrated.macOptionIsMeta` setting instead of Profiles > Keys (cli-doc)
+- **Windows download URLs use `/setup/` path** — Desktop app download links changed from `/exe/` to `/setup/` across multiple pages (getting-started-doc, ide-doc)
+- **`cleanupPeriodDays` also controls worktree cleanup** — setting now governs both session and orphaned subagent worktree removal (settings-doc)
+- **Deep link `q` parameter supports multi-line prompts** — URL-encoded newlines (`%0A`) are no longer rejected (settings-doc)
+- **Analytics dashboard heading renamed** — "Teams and Enterprise" changed to "Team and Enterprise" throughout (operations-doc)
+- Minor wording/formatting updates across ci-cd-doc, cloud-providers-doc, headless-doc, operations-doc, getting-started-doc docs
+
+### Removed
+- **Fullscreen keybinding customization paragraph** — removed the paragraph about rebinding `scroll:*` actions and listing additional unbound scroll actions (features-doc)
+- **`claude commit` from quickstart cheat sheet** — removed from the essential commands table (getting-started-doc)
+
 ## 26.4.2
 
 **30 references updated across 13 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
