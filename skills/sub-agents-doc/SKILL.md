@@ -1,87 +1,64 @@
 ---
 name: sub-agents-doc
-description: Complete documentation for Claude Code subagents -- creating, configuring, and managing specialized AI subagents that run in isolated context windows. Covers built-in subagents (Explore, Plan, general-purpose), custom subagent creation via /agents command or Markdown files, all frontmatter fields (name, description, tools, disallowedTools, model, permissionMode, maxTurns, skills, mcpServers, hooks, memory, background, effort, isolation, color, initialPrompt), subagent scopes and priority (managed, CLI, project, user, plugin), model resolution order, tool control (allowlist, denylist, Agent(type) restrictions), permission modes, MCP server scoping, persistent memory (user/project/local), hooks in subagent frontmatter and settings.json (PreToolUse, PostToolUse, SubagentStart, SubagentStop), foreground vs background execution, invocation patterns (natural language, @-mention, --agent flag), resuming subagents, auto-compaction, context management, and example subagents (code-reviewer, debugger, data-scientist, db-reader with hook validation). Load when discussing subagents, custom agents, Agent tool, /agents command, agent delegation, agent teams vs subagents, subagent tools, subagent permissions, subagent hooks, subagent memory, background tasks, --agent flag, agent isolation, worktree isolation, or any subagent-related topic for Claude Code.
+description: Complete documentation for Claude Code subagents -- creating, configuring, and managing custom subagents. Covers built-in subagents (Explore, Plan, general-purpose), subagent file format (YAML frontmatter fields), scope and priority (managed, CLI, project, user, plugin), tool access control (tools, disallowedTools, Agent(type) restrictions), model selection (sonnet, opus, haiku, inherit, full IDs, resolution order), permission modes (default, acceptEdits, auto, dontAsk, bypassPermissions, plan), MCP server scoping (inline definitions, named references), persistent memory (user, project, local scopes), skills preloading, hooks in frontmatter (PreToolUse, PostToolUse, Stop), project-level hooks (SubagentStart, SubagentStop), isolation via git worktrees, foreground vs background execution, auto-delegation, explicit invocation (@-mention, --agent flag, agent setting), subagent resumption (SendMessage, agent IDs), context management (auto-compaction, transcript persistence), disabling subagents (permissions.deny, --disallowedTools), and example subagents (code-reviewer, debugger, data-scientist, db-reader with hook validation). Load when discussing subagents, custom agents, Agent tool, agent delegation, agent teams vs subagents, /agents command, agent configuration, agent frontmatter, agent memory, agent permissions, agent hooks, agent isolation, background agents, or any subagent-related topic for Claude Code.
 user-invocable: false
 ---
 
 # Subagents Documentation
 
-This skill provides the complete official documentation for Claude Code subagents -- specialized AI assistants that handle specific tasks in isolated context windows with custom system prompts, tool access, and permissions.
+This skill provides the complete official documentation for Claude Code subagents -- specialized AI assistants that handle specific types of tasks with their own context window, system prompt, tool access, and permissions.
 
 ## Quick Reference
 
 ### Built-in Subagents
 
-| Subagent | Model | Tools | Purpose |
-|:---------|:------|:------|:--------|
-| Explore | Haiku | Read-only (no Write/Edit) | File discovery, code search, codebase exploration |
-| Plan | Inherited | Read-only (no Write/Edit) | Codebase research for planning mode |
+| Agent | Model | Tools | Purpose |
+|:------|:------|:------|:--------|
+| Explore | Haiku | Read-only | File discovery, code search, codebase exploration |
+| Plan | Inherited | Read-only | Codebase research for planning (plan mode) |
 | General-purpose | Inherited | All tools | Complex research, multi-step operations, code modifications |
 | statusline-setup | Sonnet | -- | Configures status line via `/statusline` |
 | Claude Code Guide | Haiku | -- | Answers questions about Claude Code features |
 
-### Subagent File Format
+### Subagent Scope and Priority
 
-```markdown
----
-name: my-agent
-description: When Claude should delegate to this agent
-tools: Read, Grep, Glob, Bash
-model: sonnet
----
+| Location | Scope | Priority |
+|:---------|:------|:---------|
+| Managed settings | Organization-wide | 1 (highest) |
+| `--agents` CLI flag | Current session only | 2 |
+| `.claude/agents/` | Current project | 3 |
+| `~/.claude/agents/` | All your projects | 4 |
+| Plugin `agents/` directory | Where plugin is enabled | 5 (lowest) |
 
-System prompt in Markdown goes here.
-```
+When multiple subagents share the same name, the higher-priority location wins.
 
 ### Supported Frontmatter Fields
 
 | Field | Required | Description |
 |:------|:---------|:-----------|
-| `name` | Yes | Unique identifier (lowercase letters and hyphens) |
+| `name` | Yes | Unique identifier using lowercase letters and hyphens |
 | `description` | Yes | When Claude should delegate to this subagent |
-| `tools` | No | Allowlist of tools. Inherits all if omitted |
-| `disallowedTools` | No | Tools to deny (removed from inherited or specified list) |
-| `model` | No | `sonnet`, `opus`, `haiku`, full model ID, or `inherit` (default) |
-| `permissionMode` | No | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan` |
-| `maxTurns` | No | Maximum agentic turns before subagent stops |
-| `skills` | No | Skills injected into subagent context at startup |
-| `mcpServers` | No | MCP servers: inline definitions or string references |
+| `tools` | No | Tools the subagent can use (inherits all if omitted) |
+| `disallowedTools` | No | Tools to deny, removed from inherited or specified list |
+| `model` | No | `sonnet`, `opus`, `haiku`, full model ID, or `inherit` (default: `inherit`) |
+| `permissionMode` | No | `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, or `plan` |
+| `maxTurns` | No | Maximum agentic turns before the subagent stops |
+| `skills` | No | Skills to inject into the subagent's context at startup |
+| `mcpServers` | No | MCP servers available to this subagent (inline or named reference) |
 | `hooks` | No | Lifecycle hooks scoped to this subagent |
 | `memory` | No | Persistent memory scope: `user`, `project`, or `local` |
-| `background` | No | `true` to always run as background task (default: `false`) |
-| `effort` | No | `low`, `medium`, `high`, `max` (Opus 4.6 only). Default: inherits |
-| `isolation` | No | `worktree` for git worktree isolation (auto-cleaned if no changes) |
-| `color` | No | `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan` |
-| `initialPrompt` | No | Auto-submitted first turn when running as main agent via `--agent` |
-
-### Subagent Scopes (Priority Order)
-
-| Priority | Location | Scope |
-|:---------|:---------|:------|
-| 1 (highest) | Managed settings | Organization-wide |
-| 2 | `--agents` CLI flag | Current session only |
-| 3 | `.claude/agents/` | Current project |
-| 4 | `~/.claude/agents/` | All your projects |
-| 5 (lowest) | Plugin `agents/` directory | Where plugin is enabled |
-
-When multiple subagents share the same name, the higher-priority location wins.
+| `background` | No | `true` to always run as a background task (default: `false`) |
+| `effort` | No | `low`, `medium`, `high`, or `max` (Opus 4.6 only). Default: inherited |
+| `isolation` | No | Set to `worktree` for isolated git worktree execution |
+| `color` | No | Display color: `red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan` |
+| `initialPrompt` | No | Auto-submitted as first user turn when running as main agent via `--agent` |
 
 ### Model Resolution Order
 
-1. `CLAUDE_CODE_SUBAGENT_MODEL` environment variable
-2. Per-invocation `model` parameter
+1. `CLAUDE_CODE_SUBAGENT_MODEL` environment variable (if set)
+2. Per-invocation `model` parameter (passed by Claude at delegation time)
 3. Subagent definition's `model` frontmatter
 4. Main conversation's model
-
-### Tool Control
-
-**Allowlist** (`tools`): Only listed tools are available.
-
-**Denylist** (`disallowedTools`): Listed tools removed from inherited set.
-
-If both are set, `disallowedTools` is applied first, then `tools` resolved against the remaining pool.
-
-**Restrict spawnable subagents** (main agent only): `tools: Agent(worker, researcher), Read, Bash` -- only `worker` and `researcher` can be spawned. `Agent` without parentheses allows all. Omitting `Agent` entirely prevents spawning.
 
 ### Permission Modes
 
@@ -94,67 +71,100 @@ If both are set, `disallowedTools` is applied first, then `tools` resolved again
 | `bypassPermissions` | Skip permission prompts (use with caution) |
 | `plan` | Plan mode (read-only exploration) |
 
-Parent `bypassPermissions` takes precedence. Parent `auto` mode forces subagent into auto mode.
+If parent uses `bypassPermissions`, it takes precedence. If parent uses `auto`, the subagent inherits auto mode and `permissionMode` frontmatter is ignored.
 
-### Persistent Memory
+### Persistent Memory Scopes
 
 | Scope | Location | Use when |
 |:------|:---------|:---------|
-| `user` | `~/.claude/agent-memory/<name>/` | Learnings apply across all projects |
-| `project` | `.claude/agent-memory/<name>/` | Knowledge is project-specific, shareable via VCS |
+| `user` | `~/.claude/agent-memory/<name>/` | Knowledge applies across all projects |
+| `project` | `.claude/agent-memory/<name>/` | Project-specific, shareable via VCS |
 | `local` | `.claude/agent-memory-local/<name>/` | Project-specific, not checked into VCS |
 
-When enabled: system prompt includes memory instructions, first 200 lines / 25KB of `MEMORY.md` is auto-included, Read/Write/Edit tools auto-enabled.
-
-### Foreground vs Background Execution
-
-| Mode | Permissions | Clarifying questions | How to trigger |
-|:-----|:-----------|:--------------------|:---------------|
-| Foreground | Interactive prompts passed through | Supported | Default behavior |
-| Background | Pre-approved upfront, auto-deny others | Fail (subagent continues) | Ask Claude, press Ctrl+B, or set `background: true` |
-
-Disable background tasks: `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
-
-### Invocation Patterns
-
-| Pattern | Behavior |
-|:--------|:---------|
-| Natural language: "Use the code-reviewer subagent to..." | Claude decides whether to delegate |
-| @-mention: `@"code-reviewer (agent)" ...` | Guarantees subagent runs for one task |
-| `claude --agent code-reviewer` | Entire session uses subagent's config |
-| `"agent": "code-reviewer"` in `.claude/settings.json` | Default agent for every session in project |
-
-Plugin subagents: `claude --agent <plugin-name>:<agent-name>`
-
-### Hooks for Subagents
-
-**In subagent frontmatter** (run only while subagent is active):
-
-| Event | Matcher | When |
-|:------|:--------|:-----|
-| `PreToolUse` | Tool name | Before subagent uses a tool |
-| `PostToolUse` | Tool name | After subagent uses a tool |
-| `Stop` | (none) | When subagent finishes (converted to `SubagentStop`) |
-
-**In settings.json** (main session events):
-
-| Event | Matcher | When |
-|:------|:--------|:-----|
-| `SubagentStart` | Agent type name | When a subagent begins |
-| `SubagentStop` | Agent type name | When a subagent completes |
+When memory is enabled, the subagent's system prompt includes the first 200 lines or 25KB of `MEMORY.md` from the memory directory. Read, Write, and Edit tools are automatically enabled.
 
 ### MCP Server Scoping
 
+Subagents can access MCP servers via inline definitions or named references:
+
 ```yaml
 mcpServers:
-  # Inline: scoped to subagent only, not visible in main conversation
+  # Inline definition: scoped to this subagent only
   - playwright:
       type: stdio
       command: npx
       args: ["-y", "@playwright/mcp@latest"]
-  # Reference: reuses already-configured server
+  # Reference by name: reuses an already-configured server
   - github
 ```
+
+Inline definitions keep MCP tools out of the main conversation's context.
+
+### Hooks in Subagent Frontmatter
+
+| Event | Matcher input | When it fires |
+|:------|:-------------|:-------------|
+| `PreToolUse` | Tool name | Before the subagent uses a tool |
+| `PostToolUse` | Tool name | After the subagent uses a tool |
+| `Stop` | (none) | When the subagent finishes (converted to `SubagentStop` at runtime) |
+
+All hook events are supported. `Stop` hooks in frontmatter are automatically converted to `SubagentStop` events.
+
+### Project-Level Subagent Hooks (in settings.json)
+
+| Event | Matcher input | When it fires |
+|:------|:-------------|:-------------|
+| `SubagentStart` | Agent type name | When a subagent begins execution |
+| `SubagentStop` | Agent type name | When a subagent completes |
+
+### Tool Access Control
+
+- **`tools` field**: Allowlist of tools the subagent can use
+- **`disallowedTools` field**: Denylist removed from inherited tools
+- If both set, `disallowedTools` is applied first, then `tools` resolved against remaining pool
+- **`Agent(type)` syntax**: Restrict which subagent types can be spawned (only applies to `--agent` main thread)
+- Omitting `Agent` from `tools` prevents spawning any subagents
+
+### Invocation Methods
+
+| Method | Behavior |
+|:-------|:---------|
+| Natural language (name the agent) | Claude decides whether to delegate |
+| `@"agent-name (agent)"` mention | Guarantees the subagent runs for one task |
+| `claude --agent <name>` | Whole session uses the subagent's config |
+| `agent` in `.claude/settings.json` | Default agent for all sessions in a project |
+
+### Foreground vs Background
+
+- **Foreground**: Blocks main conversation; permission prompts pass through to user
+- **Background**: Runs concurrently; permissions pre-approved before launch; auto-denies unapproved tools
+- Claude decides automatically, or user can say "run in the background" or press **Ctrl+B**
+- Disable background tasks: `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1`
+
+### Disabling Subagents
+
+Add to `permissions.deny` in settings or use CLI flag:
+
+```json
+{ "permissions": { "deny": ["Agent(Explore)", "Agent(my-custom-agent)"] } }
+```
+
+```bash
+claude --disallowedTools "Agent(Explore)"
+```
+
+### Subagent Context Management
+
+- Subagents cannot spawn other subagents
+- Each invocation creates a new instance with fresh context
+- Resume via `SendMessage` tool (requires agent teams: `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`)
+- Transcripts stored at `~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl`
+- Auto-compaction triggers at ~95% capacity (override with `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`)
+- Transcripts persist independently of main conversation compaction
+
+### Plugin Subagent Restrictions
+
+Plugin subagents do **not** support `hooks`, `mcpServers`, or `permissionMode` frontmatter fields. These fields are ignored when loading agents from a plugin. Copy the agent file to `.claude/agents/` or `~/.claude/agents/` if needed.
 
 ### CLI-Defined Subagents
 
@@ -169,40 +179,13 @@ claude --agents '{
 }'
 ```
 
-### Disabling Subagents
-
-Add to `permissions.deny` in settings: `"Agent(Explore)"`, `"Agent(my-custom-agent)"`
-
-Or via CLI: `claude --disallowedTools "Agent(Explore)"`
-
-### Plugin Subagent Restrictions
-
-Plugin subagents do NOT support `hooks`, `mcpServers`, or `permissionMode` frontmatter fields (ignored when loading). Copy agent file to `.claude/agents/` or `~/.claude/agents/` if needed.
-
-### Subagent Context Management
-
-- Subagents cannot spawn other subagents
-- Resume subagents by asking Claude to continue previous work (uses `SendMessage` with agent ID when agent teams enabled)
-- Transcripts stored at `~/.claude/projects/{project}/{sessionId}/subagents/agent-{agentId}.jsonl`
-- Auto-compaction at ~95% capacity (override with `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`)
-- Main conversation compaction does not affect subagent transcripts
-- Transcripts cleaned up per `cleanupPeriodDays` setting (default: 30 days)
-
-### Key Design Guidelines
-
-- Design focused subagents that excel at one specific task
-- Write detailed descriptions so Claude knows when to delegate
-- Limit tool access to only necessary permissions
-- Check project subagents into version control for team sharing
-- Use subagents for verbose output, enforced restrictions, or self-contained work
-- Use main conversation for iterative refinement, shared context, or quick changes
-- Use `/btw` for quick questions (sees full context, no tools, answer discarded)
+The `--agents` flag accepts JSON with the same frontmatter fields. Use `prompt` for the system prompt (equivalent to the markdown body in file-based subagents).
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Create Custom Subagents](references/claude-code-sub-agents.md) -- Built-in subagents, creating custom subagents, configuration options, tool control, permission modes, hooks, memory, invocation patterns, and example subagents
+- [Create Custom Subagents](references/claude-code-sub-agents.md) -- Full guide covering built-in subagents, configuration, frontmatter fields, tool control, hooks, memory, invocation patterns, and example subagents
 
 ## Sources
 

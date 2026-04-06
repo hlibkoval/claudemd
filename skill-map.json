@@ -54,7 +54,8 @@
     ],
     "best-practices-doc": [
       {"url": "https://code.claude.com/docs/en/best-practices.md", "file": "claude-code-best-practices.md"},
-      {"url": "https://code.claude.com/docs/en/common-workflows.md", "file": "claude-code-common-workflows.md"}
+      {"url": "https://code.claude.com/docs/en/common-workflows.md", "file": "claude-code-common-workflows.md"},
+      {"url": "https://code.claude.com/docs/en/ultraplan.md", "file": "claude-code-ultraplan.md"}
     ],
     "ide-doc": [
       {"url": "https://code.claude.com/docs/en/desktop.md", "file": "claude-code-desktop.md"},
@@ -92,7 +93,10 @@
       {"url": "https://code.claude.com/docs/en/costs.md", "file": "claude-code-costs.md"},
       {"url": "https://code.claude.com/docs/en/monitoring-usage.md", "file": "claude-code-monitoring-usage.md"},
       {"url": "https://code.claude.com/docs/en/troubleshooting.md", "file": "claude-code-troubleshooting.md"},
-      {"url": "https://code.claude.com/docs/en/changelog.md", "file": "claude-code-changelog.md"}
+      {"url": "https://code.claude.com/docs/en/changelog.md", "file": "claude-code-changelog.md"},
+      {"url": "https://code.claude.com/docs/en/whats-new/index.md", "file": "claude-code-whats-new-index.md"},
+      {"url": "https://code.claude.com/docs/en/whats-new/2026-w13.md", "file": "claude-code-whats-new-2026-w13.md"},
+      {"url": "https://code.claude.com/docs/en/whats-new/2026-w14.md", "file": "claude-code-whats-new-2026-w14.md"}
     ],
     "features-doc": [
       {"url": "https://code.claude.com/docs/en/fast-mode.md", "file": "claude-code-fast-mode.md"},
@@ -107,6 +111,7 @@
       {"url": "https://code.claude.com/docs/en/channels.md", "file": "claude-code-channels.md"},
       {"url": "https://code.claude.com/docs/en/channels-reference.md", "file": "claude-code-channels-reference.md"},
       {"url": "https://code.claude.com/docs/en/web-scheduled-tasks.md", "file": "claude-code-web-scheduled-tasks.md"},
+      {"url": "https://code.claude.com/docs/en/desktop-scheduled-tasks.md", "file": "claude-code-desktop-scheduled-tasks.md"},
       {"url": "https://code.claude.com/docs/en/context-window.md", "file": "claude-code-context-window.md"},
       {"url": "https://code.claude.com/docs/en/fullscreen.md", "file": "claude-code-fullscreen.md"}
     ],

@@ -2,6 +2,38 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.6
+
+**30 references updated across 14 skills:** agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, operations-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`forceRemoteSettingsRefresh` managed setting** — blocks CLI startup until remote managed settings are freshly fetched; exits if the fetch fails (fail-closed enforcement) (settings-doc)
+- **Interactive Bedrock setup wizard** — select "3rd-party platform" at the login screen to launch a guided wizard for AWS authentication, region, credential verification, and model pinning; `/setup-bedrock` reopens it later (cloud-providers-doc, cli-doc)
+- **`--remote-control-session-name-prefix` flag and `CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX` env var** — set a prefix for auto-generated Remote Control session names; defaults to your hostname (features-doc, cli-doc, settings-doc)
+- **`/ultraplan` command** — draft a plan in a cloud session, review it in your browser, then execute remotely or send it back to your terminal (cli-doc, features-doc, settings-doc)
+- **Ultraplan disconnects Remote Control** — documented that starting an ultraplan session disconnects any active Remote Control session (features-doc)
+- **Fenced ```` ```! ```` shell blocks in skills** — multi-line shell commands can use a fenced code block opened with ```` ```! ```` in addition to the inline `` !`command` `` syntax (skills-doc)
+- **`/cost` per-model and cache-hit breakdown** — subscription users now see a per-model and cache-hit breakdown in `/cost` output (operations-doc)
+- **`/release-notes` interactive version picker** — replaced the flat changelog view with a version picker (cli-doc)
+- **Bedrock `PutUseCaseForModelAccess` API for AWS Organizations** — submit the use-case form once from a management account and approval extends to child accounts (cloud-providers-doc)
+- **`--permission-mode` in headless mode** — documented passing a permission mode like `acceptEdits` with `-p` for non-interactive runs (headless-doc)
+
+### Changed
+- **Permission modes docs restructured** — rewrote the permission modes page with a summary table up front, collapsed auto mode internals into accordions, added a dedicated "Protected paths" section listing all guarded directories and files, and documented `.claude/worktrees` as an allowed exception (settings-doc)
+- **VS Code mode selector labels renamed** — "Ask permissions" is now "Ask before edits" and "Auto accept edits" is now "Edit automatically" (settings-doc, ide-doc)
+- **VS Code `initialPermissionMode` no longer accepts `auto`** — use `defaultMode` in `settings.json` instead to start in auto mode by default (ide-doc)
+- **Desktop scheduled tasks moved to dedicated page** — the "Schedule recurring tasks" section was removed from the Desktop reference page and links now point to `/en/desktop-scheduled-tasks` (ide-doc, features-doc, getting-started-doc, best-practices-doc)
+- **Agent team subagent definitions clarified** — the definition's body is appended to the teammate's system prompt (not replacing it), `skills` and `mcpServers` frontmatter fields are ignored on teammates, and teammates can message each other by name (agent-teams-doc, sub-agents-doc)
+- **MCP `anthropic/maxResultSizeChars` wording clarified** — raises the persist-to-disk threshold, not a hard limit; does not bypass the global `MAX_MCP_OUTPUT_TOKENS` cap (mcp-doc)
+- **`CLAUDE_CODE_TMPDIR` path convention updated** — appends `/claude-{uid}/` on Unix instead of `/claude/`; default on Linux is `os.tmpdir()` (settings-doc)
+- **OAuth authentication scope broadened** — now described as supporting Team and Enterprise plans alongside Free, Pro, and Max (security-doc)
+- **WSL sandbox limitation documented** — sandboxed commands cannot launch Windows binaries; use `excludedCommands` to run them outside the sandbox (operations-doc)
+- **`CLAUDE_CODE_SKIP_FAST_MODE_NETWORK_ERRORS` env var removed** (settings-doc)
+- **`/vim` command removed** — use `/config` then Editor mode instead (cli-doc)
+- **`/pr-comments` command removed** — ask Claude directly to view pull request comments (cli-doc)
+- **`/tag` command removed** (operations-doc)
+- Minor wording/formatting updates across getting-started-doc, best-practices-doc, security-doc, cli-doc docs
+
 ## 26.4.3
 
 **37 references updated across 16 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
