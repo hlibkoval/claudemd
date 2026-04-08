@@ -2,6 +2,37 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.8
+
+**20 references updated across 13 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
+
+### New
+- **Bedrock Mantle endpoint** — new `CLAUDE_CODE_USE_MANTLE` env var routes requests through the Mantle API shape; supports running alongside the Invoke API, gateway routing with `CLAUDE_CODE_SKIP_MANTLE_AUTH`, and custom URLs via `ANTHROPIC_BEDROCK_MANTLE_BASE_URL` (cloud-providers-doc, settings-doc, features-doc)
+- **`sessionTitle` hook output field** — `UserPromptSubmit` hooks can now set the session title via `hookSpecificOutput.sessionTitle`, equivalent to `/rename` (hooks-doc)
+- **Rate and reply to code review findings** — each review comment ships with thumbs-up/down reactions for one-click rating; reaction data is used to tune the reviewer (ci-cd-doc)
+- **Application data section in `~/.claude` docs** — documents every data file Claude Code writes: transcripts, snapshots, debug logs, caches, and prompt history, with retention behavior and how to clear them (memory-doc)
+- **"Model not found" troubleshooting section** — guides users through diagnosing `ANTHROPIC_MODEL` and settings-level model misconfigurations (operations-doc)
+- **macOS Keychain troubleshooting** — documents login failures when the Keychain is locked or its password is out of sync, with `claude doctor` diagnostics (operations-doc)
+- **`chat:clearInput` keybinding action** — new Chat-context action bound to `Ctrl+L` by default (cli-doc)
+- **Plugins can ship output styles** — plugins may include an `output-styles/` directory (features-doc)
+
+### Changed
+- **`Ctrl+L` repurposed from screen redraw to clear prompt input** — `app:redraw` is now unbound by default; the new `chat:clearInput` action takes `Ctrl+L` (cli-doc)
+- **Default effort level now varies by plan** — Pro and Max subscribers default to medium; API-key, Team, Enterprise, and third-party provider users default to high (features-doc)
+- **"ultrathink" keyword clarified** — has no effect when the session is already at high or max effort (features-doc)
+- **Hook stdout routing changed** — plain stdout on non-zero exit codes now goes to the debug log instead of the verbose-mode transcript; transcript shows only a one-line error notice (hooks-doc)
+- **Exit code 1 does not block hook actions** — added a warning that only exit code 2 blocks, even though 1 is the conventional Unix failure code; `WorktreeCreate` is the exception (hooks-doc)
+- **Debug hooks section rewritten** — `claude --debug` no longer prints to the terminal; use `claude --debug-file <path>` or `/debug` mid-session to write to a known log path (hooks-doc)
+- **`suppressOutput` field updated** — now described as omitting stdout from the debug log rather than from verbose mode (hooks-doc)
+- **Session storage described as plaintext JSONL** — transcripts stored at `~/.claude/projects/` with a link to the new application data reference (getting-started-doc, security-doc)
+- **Cross-worktree session resume** — `/resume` now resumes sessions from other worktrees directly without requiring a directory change (best-practices-doc)
+- **Ultraplan requirements tightened** — requires v2.1.91+; explicitly not available on Bedrock, Vertex AI, or Foundry (best-practices-doc)
+- **Timeout env var defaults documented** — `API_TIMEOUT_MS` (600000, max 2147483647), `BASH_DEFAULT_TIMEOUT_MS` (120000), `BASH_MAX_TIMEOUT_MS` (600000), `MCP_TIMEOUT` (30000), `MCP_TOOL_TIMEOUT` (100000000) now show their default values (settings-doc)
+- **Plugin skill naming uses frontmatter `name`** — skills declared via `"skills": ["./"]` now use the SKILL.md frontmatter `name` field for the invocation name instead of the directory basename (plugins-doc)
+- **Plugin cache orphan cleanup** — previous plugin versions are marked orphaned on update/uninstall and deleted after a 7-day grace period (plugins-doc)
+- **Changelog v2.1.94 added** — upstream changelog now includes the April 7 release notes (operations-doc)
+- Minor wording/formatting updates across features-doc, ide-doc, plugins-doc docs
+
 ## 26.4.6
 
 **30 references updated across 14 skills:** agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, operations-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
