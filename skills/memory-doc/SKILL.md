@@ -1,220 +1,142 @@
 ---
 name: memory-doc
-description: Complete documentation for Claude Code memory systems -- CLAUDE.md files and auto memory. Covers CLAUDE.md file locations and scopes (managed policy, project, user, local), CLAUDE.local.md for personal preferences, .claude/CLAUDE.md alternative location, writing effective instructions (size, structure, specificity, consistency), @path import syntax (relative paths, recursive imports, max depth 5), AGENTS.md interop, CLAUDE.md load order (directory walk-up, subdirectory lazy loading, HTML comment stripping, --add-dir with CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD), .claude/rules/ directory (path-specific rules with paths frontmatter, glob patterns, subdirectory discovery, symlinks, user-level rules at ~/.claude/rules/), organization-wide managed CLAUDE.md deployment (macOS, Linux, Windows locations), claudeMdExcludes setting for monorepos, auto memory (MEMORY.md entrypoint, topic files, ~/.claude/projects/<project>/memory/ storage, autoMemoryEnabled toggle, autoMemoryDirectory setting, 200-line/25KB load limit, /memory command), /init command for generating CLAUDE.md, /memory command for browsing and editing, troubleshooting (instructions not followed, auto memory audit, large CLAUDE.md, /compact behavior), and .claude directory structure (settings.json, settings.local.json, rules/, skills/, commands/, agents/, agent-memory/, output-styles/). Load when discussing CLAUDE.md, memory, auto memory, MEMORY.md, .claude/rules, rules files, path-specific rules, claudeMdExcludes, /memory, /init, CLAUDE.local.md, project instructions, user instructions, managed policy CLAUDE.md, @imports in CLAUDE.md, AGENTS.md, autoMemoryEnabled, autoMemoryDirectory, .claude directory structure, settings.json locations, or any memory and instruction-related topic for Claude Code.
+description: Complete documentation for Claude Code memory — CLAUDE.md files, auto memory, path-scoped rules in .claude/rules/, and the full .claude directory layout (settings, skills, agents, MCP, hooks, memory, application data).
 user-invocable: false
 ---
 
 # Memory Documentation
 
-This skill provides the complete official documentation for how Claude Code remembers your project across sessions, covering both CLAUDE.md instruction files and auto memory.
+This skill provides the complete official documentation for Claude Code memory (CLAUDE.md files, auto memory, rules) and the `.claude` directory layout.
 
 ## Quick Reference
 
-### Memory Systems Overview
+### Two memory systems
 
-| | CLAUDE.md files | Auto memory |
-|:--|:--|:--|
-| **Who writes it** | You | Claude |
-| **What it contains** | Instructions and rules | Learnings and patterns |
-| **Scope** | Project, user, or org | Per working tree |
-| **Loaded into** | Every session | Every session (first 200 lines or 25KB) |
-| **Use for** | Coding standards, workflows, architecture | Build commands, debugging insights, discovered preferences |
+|                      | CLAUDE.md files                      | Auto memory                                        |
+| :------------------- | :----------------------------------- | :------------------------------------------------- |
+| **Who writes it**    | You                                  | Claude                                             |
+| **Contains**         | Instructions and rules               | Learnings and patterns                             |
+| **Scope**            | Project, user, or org                | Per working tree                                   |
+| **Loaded into**      | Every session (in full)              | Every session (first 200 lines or 25KB of MEMORY.md) |
+| **Use for**          | Standards, workflows, architecture   | Build commands, debug insights, discovered prefs   |
 
-### CLAUDE.md File Locations
+### CLAUDE.md locations (most-specific wins)
 
-| Scope | Location | Shared with |
-|:------|:---------|:------------|
-| **Managed policy** | macOS: `/Library/Application Support/ClaudeCode/CLAUDE.md`; Linux/WSL: `/etc/claude-code/CLAUDE.md`; Windows: `C:\Program Files\ClaudeCode\CLAUDE.md` | All users in organization |
-| **Project** | `./CLAUDE.md` or `./.claude/CLAUDE.md` | Team via source control |
-| **User** | `~/.claude/CLAUDE.md` | Just you (all projects) |
-| **Local** | `./CLAUDE.local.md` (add to `.gitignore`) | Just you (current project) |
+| Scope                | Location                                                                                                                                       | Shared with                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| Managed policy       | macOS: `/Library/Application Support/ClaudeCode/CLAUDE.md` · Linux/WSL: `/etc/claude-code/CLAUDE.md` · Windows: `C:\Program Files\ClaudeCode\CLAUDE.md` | All users on the machine        |
+| Project              | `./CLAUDE.md` or `./.claude/CLAUDE.md`                                                                                                         | Team via source control         |
+| User                 | `~/.claude/CLAUDE.md`                                                                                                                          | You, across all projects        |
+| Local (gitignored)   | `./CLAUDE.local.md`                                                                                                                            | You, current project only       |
 
-**Precedence:** More specific locations take precedence. Within each directory, `CLAUDE.local.md` is appended after `CLAUDE.md`.
+All discovered `CLAUDE.md`/`CLAUDE.local.md` files in the ancestor directory chain are concatenated (not overridden); `CLAUDE.local.md` is appended after `CLAUDE.md` within a directory. Subdirectory files load on demand. Block-level HTML comments are stripped before injection.
 
-### CLAUDE.md Loading Behavior
+### Writing effective CLAUDE.md
 
-- Files in the directory hierarchy **above** the working directory are loaded in full at launch
-- Files in **subdirectories** load on demand when Claude reads files in those directories
-- `CLAUDE.md` and `CLAUDE.local.md` are concatenated, not overridden
-- HTML comments (`<!-- ... -->`) are stripped before injection into context (code block comments preserved)
-- `--add-dir` directories do **not** load CLAUDE.md by default; set `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` to enable
-- `/init` generates a starting CLAUDE.md (or suggests improvements if one exists); set `CLAUDE_CODE_NEW_INIT=1` for interactive multi-phase flow
+- Target under 200 lines; longer files reduce adherence.
+- Use markdown headers and bullets for structure.
+- Be specific and verifiable ("Use 2-space indentation", not "format nicely").
+- Remove conflicting instructions; Claude picks arbitrarily between them.
+- Use `@path/to/file` imports (relative or absolute, up to 5 hops deep) to pull in README, package.json, or other docs.
+- `AGENTS.md`: Claude Code reads `CLAUDE.md` only — import it with `@AGENTS.md` if your repo uses both.
+- First-time external imports show an approval dialog; declining disables them permanently.
+- Run `/init` to auto-generate a starter CLAUDE.md. `CLAUDE_CODE_NEW_INIT=1` enables the interactive multi-phase flow.
 
-### Writing Effective Instructions
+### Path-scoped rules (`.claude/rules/`)
 
-| Aspect | Guideline |
-|:-------|:----------|
-| **Size** | Target under 200 lines per file |
-| **Structure** | Use markdown headers and bullets |
-| **Specificity** | Concrete, verifiable rules (e.g., "Use 2-space indentation") |
-| **Consistency** | Avoid contradicting rules across files |
-
-### @Import Syntax
-
-Reference additional files in CLAUDE.md with `@path/to/file`:
-
-- Both relative and absolute paths allowed
-- Relative paths resolve relative to the containing file
-- Recursive imports supported, max depth of 5 hops
-- Expanded and loaded at launch alongside the CLAUDE.md
-- First-time external imports trigger an approval dialog
-
-```text
-See @README for project overview and @package.json for npm commands.
-@docs/git-instructions.md
-```
-
-### AGENTS.md Interop
-
-Import `AGENTS.md` from `CLAUDE.md` so both tools share the same instructions:
-
-```markdown
-@AGENTS.md
-
-## Claude Code
-Use plan mode for changes under `src/billing/`.
-```
-
-### .claude/rules/ Directory
-
-Modular instruction files that can be scoped to specific file paths.
-
-| Feature | Detail |
-|:--------|:-------|
-| **Location** | `.claude/rules/*.md` (project) or `~/.claude/rules/*.md` (user) |
-| **Discovery** | Recursive: subdirectories like `frontend/` work |
-| **Loading** | Without `paths:` frontmatter: loaded at launch; with `paths:`: loaded when matching files enter context |
-| **Symlinks** | Supported; circular symlinks detected and handled |
-| **Priority** | User-level rules load before project rules; project rules have higher priority |
-
-#### Path-Specific Rules Frontmatter
+Split large CLAUDE.md into topic files. Rules without `paths:` frontmatter load at session start; rules with `paths:` load only when Claude reads a matching file.
 
 ```markdown
 ---
 paths:
   - "src/api/**/*.ts"
-  - "**/*.test.{ts,tsx}"
+  - "src/**/*.{ts,tsx}"
 ---
+# API Development Rules
+- All endpoints validate input with Zod
 ```
 
-| Pattern | Matches |
-|:--------|:--------|
-| `**/*.ts` | All TypeScript files in any directory |
-| `src/**/*` | All files under `src/` |
-| `*.md` | Markdown files in the project root |
-| `src/components/*.tsx` | React components in a specific directory |
+| Pattern                | Matches                                  |
+| ---------------------- | ---------------------------------------- |
+| `**/*.ts`              | All TypeScript files anywhere            |
+| `src/**/*`             | All files under `src/`                   |
+| `*.md`                 | Markdown files at project root           |
+| `src/components/*.tsx` | React components in that directory       |
 
-### claudeMdExcludes
+Symlinks in `.claude/rules/` are supported (including circular detection). User-level rules in `~/.claude/rules/` load before project rules (project rules win).
 
-Skip irrelevant CLAUDE.md files in monorepos. Patterns matched against absolute paths using glob syntax:
+### Auto memory
 
-```json
-{
-  "claudeMdExcludes": [
-    "**/monorepo/CLAUDE.md",
-    "/home/user/monorepo/other-team/.claude/rules/**"
-  ]
-}
-```
-
-Configurable at any settings layer (user, project, local, managed policy). Arrays merge across layers. Managed policy CLAUDE.md files cannot be excluded.
-
-### Organization-Wide Managed CLAUDE.md
-
-| Platform | Path |
-|:---------|:-----|
-| macOS | `/Library/Application Support/ClaudeCode/CLAUDE.md` |
-| Linux/WSL | `/etc/claude-code/CLAUDE.md` |
-| Windows | `C:\Program Files\ClaudeCode\CLAUDE.md` |
-
-Deploy with MDM, Group Policy, Ansible, or similar. Cannot be excluded by individual settings. Use for code style guidelines, compliance reminders, and behavioral instructions. For technical enforcement (blocking tools, sandbox isolation), use managed settings instead.
-
-### Auto Memory
-
-| Setting | Detail |
-|:--------|:-------|
-| **Default state** | Enabled (requires v2.1.59+) |
-| **Toggle** | `/memory` command, `autoMemoryEnabled` in settings, or `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` |
-| **Storage** | `~/.claude/projects/<project>/memory/` |
-| **Custom directory** | `autoMemoryDirectory` in user or local settings (not accepted from project settings) |
-| **Load limit** | First 200 lines or 25KB of `MEMORY.md`, whichever comes first |
-| **Topic files** | Read on demand, not at startup |
-| **Scope** | Machine-local; all worktrees in same git repo share one directory |
-
-#### Auto Memory Directory Structure
-
-```text
-~/.claude/projects/<project>/memory/
-+-- MEMORY.md          # Concise index, loaded every session
-+-- debugging.md       # Topic file (read on demand)
-+-- api-conventions.md # Topic file (read on demand)
-```
-
-`MEMORY.md` acts as an index. Claude moves detailed notes into topic files to keep it concise. Topic files are read on demand when the current task relates to them.
-
-### /memory Command
-
-- Lists all loaded CLAUDE.md, CLAUDE.local.md, and rules files
-- Toggle auto memory on/off
-- Link to open the auto memory folder
-- Select any file to open it in your editor
-
-### .claude Directory Structure
-
-#### Project: `your-project/.claude/`
-
-| File/Dir | Purpose | Shared |
-|:---------|:--------|:-------|
-| `CLAUDE.md` | Alternative location for project instructions | Committed |
-| `settings.json` | Permissions, hooks, model, env vars, statusLine, outputStyle | Committed |
-| `settings.local.json` | Personal settings overrides | Gitignored |
-| `rules/` | Topic-scoped instructions, optionally path-gated | Committed |
-| `skills/` | Reusable prompts invoked by name | Committed |
-| `commands/` | Single-file prompts (legacy; prefer skills/) | Committed |
-| `agents/` | Subagents with own context window | Committed |
-| `agent-memory/` | Subagent persistent memory (`memory: project`) | Committed |
-| `output-styles/` | Project-scoped output styles | Committed |
-
-#### Global: `~/.claude/`
-
-| File/Dir | Purpose |
-|:---------|:--------|
-| `CLAUDE.md` | Personal preferences across all projects |
-| `settings.json` | Default settings for all projects |
-| `keybindings.json` | Custom keyboard shortcuts |
-| `rules/` | User-level rules for all projects |
-| `skills/` | Personal skills for all projects |
-| `commands/` | Personal commands for all projects |
-| `agents/` | Personal subagents for all projects |
-| `agent-memory/` | Subagent memory (`memory: user`) |
-| `output-styles/` | Custom output styles |
-| `projects/` | Auto memory, per project |
-
-#### Other Global Files
-
-| File | Purpose |
-|:-----|:--------|
-| `~/.claude.json` | App state, UI preferences, personal MCP servers, per-project trust decisions |
-| `.mcp.json` (project root) | Project-scoped MCP servers, shared with team |
-| `.worktreeinclude` (project root) | Gitignored files to copy into new worktrees |
+- On by default (requires v2.1.59+). Toggle via `/memory`, `autoMemoryEnabled: false` in settings, or `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`.
+- Storage: `~/.claude/projects/<project>/memory/` (project derived from git repo; all worktrees share one). Override with `autoMemoryDirectory` setting (not accepted from project settings for security).
+- `MEMORY.md` is the index; first 200 lines or 25KB loaded every session. Topic files (`debugging.md`, `patterns.md`, etc.) load on demand.
+- Files are plain markdown; edit or delete any time. "Writing memory" / "Recalled memory" indicators show live activity.
 
 ### Troubleshooting
 
-| Issue | Resolution |
-|:------|:-----------|
-| Claude not following CLAUDE.md | Run `/memory` to verify files are loaded. Make instructions specific. Check for conflicts across files |
-| Don't know what auto memory saved | Run `/memory`, select auto memory folder to browse plain markdown files |
-| CLAUDE.md too large | Move content to `@path` imports or `.claude/rules/` files. Target under 200 lines |
-| Instructions lost after `/compact` | CLAUDE.md survives compaction. Conversational instructions do not -- add them to CLAUDE.md |
-| Debugging which files load | Use the `InstructionsLoaded` hook to log instruction file loading |
-| System-prompt-level instructions | Use `--append-system-prompt` (must be passed every invocation) |
+| Problem                              | Fix                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Claude ignores CLAUDE.md             | Run `/memory` to verify it loaded; make instructions specific; remove conflicts              |
+| CLAUDE.md too large                  | Split with `@imports` or move to `.claude/rules/` files                                      |
+| Instructions lost after `/compact`   | Project-root CLAUDE.md re-injects; nested ones reload on next file read in that subdirectory |
+| System-prompt-level instructions     | Use `--append-system-prompt` CLI flag                                                        |
+| Monorepo: unwanted ancestor CLAUDE.md | Set `claudeMdExcludes` glob array in settings (merged across layers)                         |
+| Debug what loaded                    | `/memory`, `/context`, or the `InstructionsLoaded` hook                                      |
+
+Additional directories loaded with `--add-dir` don't load their CLAUDE.md by default. Set `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` to opt in (still skips `CLAUDE.local.md`).
+
+Managed policy CLAUDE.md cannot be excluded by `claudeMdExcludes`.
+
+### The `.claude` directory — file reference
+
+| File                               | Scope              | Commit | Purpose                                                  |
+| ---------------------------------- | ------------------ | :----: | -------------------------------------------------------- |
+| `CLAUDE.md`                        | Project + global   |   Y    | Instructions loaded every session                        |
+| `rules/*.md`                       | Project + global   |   Y    | Topic-scoped instructions, optionally path-gated         |
+| `settings.json`                    | Project + global   |   Y    | Permissions, hooks, env vars, model defaults             |
+| `settings.local.json`              | Project only       |        | Personal overrides, auto-gitignored                      |
+| `.mcp.json`                        | Project only       |   Y    | Team-shared MCP servers (project root, not `.claude/`)   |
+| `.worktreeinclude`                 | Project only       |   Y    | Gitignored files to copy into new git worktrees          |
+| `skills/<name>/SKILL.md`           | Project + global   |   Y    | Reusable prompts (user-invoked or model-invoked)         |
+| `commands/*.md`                    | Project + global   |   Y    | Single-file prompts (same mechanism as skills)           |
+| `output-styles/*.md`               | Project + global   |   Y    | Custom system-prompt sections                            |
+| `agents/*.md`                      | Project + global   |   Y    | Subagent definitions with their own prompt and tools     |
+| `agent-memory/<name>/`             | Project + global   |   Y    | Persistent memory for subagents                          |
+| `~/.claude.json`                   | Global only        |        | App state, OAuth, UI toggles, personal MCP servers       |
+| `projects/<project>/memory/`       | Global only        |        | Auto memory: Claude's notes to itself across sessions    |
+| `keybindings.json`                 | Global only        |        | Custom keyboard shortcuts                                |
+
+Managed policy settings and CLI flags can override these files. Set `CLAUDE_CONFIG_DIR` to relocate every `~/.claude` path.
+
+### Check what loaded in a session
+
+| Command        | Shows                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------- |
+| `/context`     | Token usage by category (system, memory, skills, MCP, messages)                       |
+| `/memory`      | Which CLAUDE.md, CLAUDE.local.md, and rules files loaded, plus auto-memory entries    |
+| `/agents`      | Configured subagents                                                                  |
+| `/hooks`       | Active hook configurations                                                            |
+| `/mcp`         | Connected MCP servers and status                                                      |
+| `/skills`      | Available skills from project, user, and plugin sources                               |
+| `/permissions` | Current allow and deny rules                                                          |
+| `/doctor`      | Installation and configuration diagnostics                                            |
+
+### Application data under `~/.claude/`
+
+**Auto-cleaned** (after `cleanupPeriodDays`, default 30): `projects/<project>/<session>.jsonl` (full transcripts), `projects/<project>/<session>/tool-results/`, `file-history/<session>/`, `plans/`, `debug/`, `paste-cache/`, `image-cache/`, `session-env/`.
+
+**Kept until deleted**: `history.jsonl` (prompt history), `stats-cache.json` (cost totals), `backups/` (`.claude.json` migration backups), `todos/` (legacy).
+
+Plaintext storage: transcripts are **not encrypted**. Tool inputs/outputs (including `.env` reads) land in `session.jsonl`. Mitigations: lower `cleanupPeriodDays`, pass `--no-session-persistence` with `-p` (or `persistSession: false` in the SDK), deny credential reads via permissions.
+
+Do **not** delete `~/.claude.json`, `~/.claude/settings.json`, or `~/.claude/plugins/` (auth, preferences, installed plugins).
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [How Claude remembers your project](references/claude-code-memory.md) -- CLAUDE.md files, auto memory, .claude/rules/, imports, organization deployment, troubleshooting
-- [Explore the .claude directory](references/claude-code-claude-directory.md) -- Interactive directory explorer covering all project and global .claude files and directories
+- [How Claude remembers your project](references/claude-code-memory.md) — CLAUDE.md files, `.claude/rules/`, auto memory, troubleshooting
+- [Explore the .claude directory](references/claude-code-claude-directory.md) — interactive explorer for every file in `.claude/` and `~/.claude/`, plus application data
 
 ## Sources
 

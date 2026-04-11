@@ -117,7 +117,39 @@
     ],
     "headless-doc": [
       {"url": "https://code.claude.com/docs/en/headless.md", "file": "claude-code-headless.md"},
-      {"url": "https://code.claude.com/docs/en/claude-code-on-the-web.md", "file": "claude-code-on-the-web.md"}
+      {"url": "https://code.claude.com/docs/en/claude-code-on-the-web.md", "file": "claude-code-on-the-web.md"},
+      {"url": "https://code.claude.com/docs/en/web-quickstart.md", "file": "claude-code-web-quickstart.md"}
+    ],
+    "agent-sdk-doc": [
+      {"url": "https://code.claude.com/docs/en/agent-sdk/overview.md", "file": "claude-code-agent-sdk-overview.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/quickstart.md", "file": "claude-code-agent-sdk-quickstart.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/agent-loop.md", "file": "claude-code-agent-sdk-agent-loop.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/claude-code-features.md", "file": "claude-code-agent-sdk-claude-code-features.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/cost-tracking.md", "file": "claude-code-agent-sdk-cost-tracking.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/custom-tools.md", "file": "claude-code-agent-sdk-custom-tools.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/file-checkpointing.md", "file": "claude-code-agent-sdk-file-checkpointing.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/hooks.md", "file": "claude-code-agent-sdk-hooks.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/hosting.md", "file": "claude-code-agent-sdk-hosting.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/mcp.md", "file": "claude-code-agent-sdk-mcp.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/migration-guide.md", "file": "claude-code-agent-sdk-migration-guide.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/modifying-system-prompts.md", "file": "claude-code-agent-sdk-modifying-system-prompts.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/observability.md", "file": "claude-code-agent-sdk-observability.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/permissions.md", "file": "claude-code-agent-sdk-permissions.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/plugins.md", "file": "claude-code-agent-sdk-plugins.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/python.md", "file": "claude-code-agent-sdk-python.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/secure-deployment.md", "file": "claude-code-agent-sdk-secure-deployment.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/sessions.md", "file": "claude-code-agent-sdk-sessions.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/skills.md", "file": "claude-code-agent-sdk-skills.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/slash-commands.md", "file": "claude-code-agent-sdk-slash-commands.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/streaming-output.md", "file": "claude-code-agent-sdk-streaming-output.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode.md", "file": "claude-code-agent-sdk-streaming-vs-single-mode.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/structured-outputs.md", "file": "claude-code-agent-sdk-structured-outputs.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/subagents.md", "file": "claude-code-agent-sdk-subagents.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/todo-tracking.md", "file": "claude-code-agent-sdk-todo-tracking.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/tool-search.md", "file": "claude-code-agent-sdk-tool-search.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/typescript.md", "file": "claude-code-agent-sdk-typescript.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/typescript-v2-preview.md", "file": "claude-code-agent-sdk-typescript-v2-preview.md"},
+      {"url": "https://code.claude.com/docs/en/agent-sdk/user-input.md", "file": "claude-code-agent-sdk-user-input.md"}
     ]
   }
 }

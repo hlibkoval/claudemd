@@ -1,155 +1,153 @@
 ---
 name: skills-doc
-description: Complete documentation for Claude Code skills (Agent Skills) -- creating, configuring, sharing, and troubleshooting skills. Covers the Agent Skills open standard (SKILL.md format, frontmatter fields, directory structure, progressive disclosure, file references, validation), Claude Code skill features (bundled skills, skill locations, frontmatter reference with all fields, invocation control, disable-model-invocation, user-invocable, allowed-tools, context fork, subagent execution, argument passing with $ARGUMENTS/$N, string substitutions, dynamic context injection with shell commands, path-based activation, skill hooks, shell selection, supporting files), bundled skills (/batch, /claude-api, /debug, /loop, /simplify), sharing and distribution (project skills, plugins, managed settings), visual output generation, and troubleshooting (skill not triggering, triggers too often, descriptions cut short, SLASH_COMMAND_TOOL_CHAR_BUDGET). Load when discussing skills, SKILL.md, Agent Skills, skill creation, skill frontmatter, skill configuration, bundled skills, /batch, /simplify, /loop, /debug, /claude-api, disable-model-invocation, user-invocable, allowed-tools, context fork, $ARGUMENTS, skill arguments, dynamic context injection, skill shell commands, skill paths, skill hooks, skill sharing, skill troubleshooting, skill description budget, SLASH_COMMAND_TOOL_CHAR_BUDGET, agentskills.io, or any skills-related topic for Claude Code.
+description: Complete documentation for Claude Code skills (Agent Skills) -- creating, configuring, sharing, and troubleshooting skills. Covers the Agent Skills open standard (SKILL.md format, frontmatter fields, directory structure, progressive disclosure, file references). Use when the user asks about authoring skills, bundled skills, slash commands merged into skills, invocation control, context forking, dynamic context injection, or troubleshooting skill activation.
 user-invocable: false
 ---
 
 # Skills Documentation
 
-This skill provides the complete official documentation for Claude Code skills (Agent Skills) -- extending Claude's capabilities with custom instructions, reference material, and task workflows.
+This skill provides the complete official documentation for Claude Code skills and the Agent Skills specification.
 
 ## Quick Reference
 
-### Agent Skills Specification (agentskills.io)
+### What a skill is
 
-#### SKILL.md Frontmatter (Open Standard)
+A skill is a directory with a `SKILL.md` (YAML frontmatter + markdown body). Claude Code skills follow the [Agent Skills](https://agentskills.io) open standard. Custom commands have been merged into skills: a file at `.claude/commands/deploy.md` and a skill at `.claude/skills/deploy/SKILL.md` both create `/deploy`.
 
-| Field | Required | Constraints |
-|:------|:---------|:-----------|
-| `name` | Yes | 1-64 chars, lowercase `a-z`, digits, hyphens; no leading/trailing/consecutive hyphens; must match directory name |
-| `description` | Yes | 1-1024 chars; describe what skill does and when to use it |
-| `license` | No | License name or reference to bundled license file |
-| `compatibility` | No | 1-500 chars; environment requirements (product, packages, network) |
-| `metadata` | No | Arbitrary string key-value map for additional properties |
-| `allowed-tools` | No | Space-delimited list of pre-approved tools (experimental) |
+### Where skills live (precedence: enterprise > personal > project; plugin skills are namespaced)
 
-#### Skill Directory Structure (Open Standard)
+| Location   | Path                                      | Applies to                     |
+| ---------- | ----------------------------------------- | ------------------------------ |
+| Enterprise | Managed settings                          | All users in your organization |
+| Personal   | `~/.claude/skills/<skill-name>/SKILL.md`  | All your projects              |
+| Project    | `.claude/skills/<skill-name>/SKILL.md`    | This project only              |
+| Plugin     | `<plugin>/skills/<skill-name>/SKILL.md`   | Where plugin is enabled        |
+
+Nested `.claude/skills/` directories are auto-discovered when working in subdirectories (monorepo support). `--add-dir` loads `.claude/skills/` from added directories (exception to the usual rule that added dirs only grant file access).
+
+### Directory layout
 
 ```
-skill-name/
-  SKILL.md          # Required: metadata + instructions
-  scripts/          # Optional: executable code
-  references/       # Optional: documentation
-  assets/           # Optional: templates, resources
+my-skill/
+├── SKILL.md           # Required: frontmatter + instructions
+├── scripts/           # Optional: executable code
+├── references/        # Optional: loaded on demand
+├── assets/            # Optional: templates, images, data
+└── ...
 ```
 
-#### Progressive Disclosure
+Keep `SKILL.md` under 500 lines. Move detail into `references/` and link from `SKILL.md` so Claude loads files only when needed.
 
-| Layer | Token Budget | When Loaded |
-|:------|:-------------|:-----------|
-| Metadata (`name`, `description`) | ~100 tokens | Startup, all skills |
-| Instructions (SKILL.md body) | < 5000 recommended | When skill is activated |
-| Resources (scripts/, references/, assets/) | As needed | Only when required |
+### Claude Code frontmatter fields
 
-Keep SKILL.md under 500 lines. Move detailed reference material to separate files.
+All fields optional; `description` is strongly recommended.
 
-#### Validation
+| Field                      | Purpose                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `name`                     | Display name, becomes `/slash-command`. Lowercase, hyphens, max 64 chars. Defaults to directory name. |
+| `description`              | What the skill does and when to use it. First 250 chars are used in the skill listing.   |
+| `argument-hint`            | Hint shown during autocomplete (e.g., `[issue-number]`).                                 |
+| `disable-model-invocation` | `true` = only user can invoke. Skill description is NOT kept in context.                |
+| `user-invocable`           | `false` = hidden from `/` menu. Only Claude can invoke. Description still in context.   |
+| `allowed-tools`            | Tools pre-approved while skill is active. Space-separated or YAML list.                 |
+| `model`                    | Model to use when skill is active.                                                       |
+| `effort`                   | `low` / `medium` / `high` / `max` (Opus 4.6 only).                                       |
+| `context`                  | Set to `fork` to run in a forked subagent context.                                       |
+| `agent`                    | Subagent type when `context: fork` (e.g., `Explore`, `Plan`, `general-purpose`).         |
+| `hooks`                    | Hooks scoped to this skill's lifecycle.                                                  |
+| `paths`                    | Glob patterns that limit auto-activation to matching files.                              |
+| `shell`                    | `bash` (default) or `powershell` for inline shell command syntax.                        |
 
-```bash
-skills-ref validate ./my-skill
-```
+### Agent Skills standard frontmatter fields
 
-### Claude Code Skill Features
+The upstream [agentskills.io](https://agentskills.io) spec defines a smaller core:
 
-#### Where Skills Live
+| Field           | Required | Notes                                                                                                            |
+| --------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `name`          | Yes      | 1-64 chars, lowercase alphanumeric + hyphens, no leading/trailing/consecutive hyphens, must match directory name. |
+| `description`   | Yes      | 1-1024 chars, describes both what the skill does and when to use it.                                             |
+| `license`       | No       | License name or bundled license file reference.                                                                  |
+| `compatibility` | No       | Max 500 chars. Environment requirements (product, system packages, network).                                     |
+| `metadata`      | No       | Arbitrary string key/value map for client-specific data.                                                         |
+| `allowed-tools` | No       | Space-delimited pre-approved tools list (experimental).                                                          |
 
-| Location | Path | Applies to |
-|:---------|:-----|:-----------|
-| Enterprise | Managed settings | All users in organization |
-| Personal | `~/.claude/skills/<name>/SKILL.md` | All your projects |
-| Project | `.claude/skills/<name>/SKILL.md` | This project only |
-| Plugin | `<plugin>/skills/<name>/SKILL.md` | Where plugin is enabled |
+### Invocation control matrix
 
-Priority: enterprise > personal > project. Plugin skills use `plugin-name:skill-name` namespace (no conflicts). Skills in `.claude/commands/` still work; if both exist with same name, skill wins.
+| Frontmatter                      | User invokes | Claude invokes | Context behavior                                              |
+| -------------------------------- | ------------ | -------------- | ------------------------------------------------------------- |
+| (default)                        | Yes          | Yes            | Description always in context; full skill loads when invoked  |
+| `disable-model-invocation: true` | Yes          | No             | Description not in context; full skill loads when you invoke  |
+| `user-invocable: false`          | No           | Yes            | Description always in context; full skill loads when invoked  |
 
-Nested `.claude/skills/` directories are auto-discovered (supports monorepos). Skills from `--add-dir` directories are also loaded and support live change detection.
+Note: `user-invocable` only controls `/` menu visibility. To block programmatic Skill tool access, use `disable-model-invocation: true` or `Skill(name)` deny rules in `/permissions`.
 
-#### Frontmatter Reference (Claude Code Extensions)
+### Argument substitutions
 
-| Field | Required | Description |
-|:------|:---------|:-----------|
-| `name` | No | Display name; defaults to directory name. Lowercase, numbers, hyphens (max 64 chars) |
-| `description` | Recommended | What skill does and when to use it. Front-load key use case; truncated at 250 chars in listings |
-| `argument-hint` | No | Autocomplete hint for expected arguments, e.g. `[issue-number]` |
-| `disable-model-invocation` | No | `true` prevents Claude auto-loading. For manual `/name` only. Default: `false` |
-| `user-invocable` | No | `false` hides from `/` menu. For background knowledge. Default: `true` |
-| `allowed-tools` | No | Tools Claude can use without permission when skill is active. Space-separated or YAML list |
-| `model` | No | Model to use when skill is active |
-| `effort` | No | Effort level override: `low`, `medium`, `high`, `max` (Opus 4.6 only) |
-| `context` | No | `fork` to run in a forked subagent context |
-| `agent` | No | Subagent type when `context: fork` is set (`Explore`, `Plan`, `general-purpose`, or custom) |
-| `hooks` | No | Hooks scoped to skill lifecycle |
-| `paths` | No | Glob patterns limiting when skill auto-activates. Comma-separated or YAML list |
-| `shell` | No | `bash` (default) or `powershell` for inline shell commands |
+| Variable               | Meaning                                                                 |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `$ARGUMENTS`           | Full argument string as typed.                                          |
+| `$ARGUMENTS[N]` / `$N` | 0-indexed positional argument (shell-style quoting for multi-word).    |
+| `${CLAUDE_SESSION_ID}` | Current session ID.                                                     |
+| `${CLAUDE_SKILL_DIR}`  | Directory containing the skill's `SKILL.md`. Use for bundled scripts.   |
 
-#### Invocation Control
+If you pass arguments to a skill that doesn't reference `$ARGUMENTS`, Claude Code appends `ARGUMENTS: <value>` automatically.
 
-| Frontmatter | User can invoke | Claude can invoke | Context behavior |
-|:------------|:---------------|:-----------------|:----------------|
-| (default) | Yes | Yes | Description always in context; full skill loads when invoked |
-| `disable-model-invocation: true` | Yes | No | Description not in context; full skill loads when user invokes |
-| `user-invocable: false` | No | Yes | Description always in context; full skill loads when invoked |
+### Dynamic context injection (preprocessing)
 
-#### String Substitutions
+Inline form: backtick-bang-command-backtick runs a shell command before the skill is sent to Claude, replacing the placeholder with the command output. Multi-line form: open a fenced code block with three backticks followed by a bang.
 
-| Variable | Description |
-|:---------|:-----------|
-| `$ARGUMENTS` | All arguments passed when invoking. Appended as `ARGUMENTS: <value>` if not in content |
-| `$ARGUMENTS[N]` / `$N` | Specific argument by 0-based index |
-| `${CLAUDE_SESSION_ID}` | Current session ID |
-| `${CLAUDE_SKILL_DIR}` | Directory containing the skill's SKILL.md |
+Disable globally with `"disableSkillShellExecution": true` in settings. Bundled and managed skills are not affected. Shell is `bash` by default; set `shell: powershell` and `CLAUDE_CODE_USE_POWERSHELL_TOOL=1` for Windows PowerShell.
 
-#### Dynamic Context Injection
+Tip: include the word `ultrathink` anywhere in skill content to enable extended thinking.
 
-Inline: `` !`command` `` runs shell command before skill content is sent; output replaces placeholder.
+### Running skills in a subagent (`context: fork`)
 
-Multi-line: open fenced block with `` ```! `` for multi-line commands.
+| Approach                     | System prompt                    | Task                        | Also loads                   |
+| ---------------------------- | -------------------------------- | --------------------------- | ---------------------------- |
+| Skill with `context: fork`   | From agent type                  | SKILL.md content            | CLAUDE.md                    |
+| Subagent with `skills` field | Subagent's markdown body         | Claude's delegation message | Preloaded skills + CLAUDE.md |
 
-Disable with `"disableSkillShellExecution": true` in settings.
+`context: fork` only makes sense for skills with explicit task instructions; pure reference skills will return with no output.
 
-#### Subagent Execution (context: fork)
+### Restricting skill access
 
-| Approach | System prompt | Task | Also loads |
-|:---------|:-------------|:-----|:-----------|
-| Skill with `context: fork` | From agent type | SKILL.md content | CLAUDE.md |
-| Subagent with `skills` field | Subagent's markdown body | Delegation message | Preloaded skills + CLAUDE.md |
+- Deny all skills: add `Skill` to deny rules in `/permissions`.
+- Allow/deny specific: `Skill(commit)` (exact), `Skill(review-pr *)` (prefix).
+- Hide individual skills: `disable-model-invocation: true`.
 
-#### Restricting Skill Access
+### Content lifecycle
 
-- **Deny all:** add `Skill` to deny rules in `/permissions`
-- **Allow/deny specific:** `Skill(commit)` for exact match, `Skill(deploy *)` for prefix match
-- **Hide individual:** `disable-model-invocation: true` removes from Claude's context entirely
+Invoked skill content enters the conversation as a single message and stays. Claude Code does not re-read the skill file later -- write guidance as standing instructions. After auto-compaction, the most recent invocation of each skill is re-attached (first 5000 tokens per skill, 25000 combined budget, most-recent-first). Re-invoke large skills after compaction if needed.
 
-### Bundled Skills
+### Sharing scopes
 
-| Skill | Purpose |
-|:------|:--------|
-| `/batch <instruction>` | Large-scale parallel changes across codebase using git worktrees; spawns one agent per unit |
-| `/claude-api` | Claude API/SDK reference (Python, TS, Java, Go, Ruby, C#, PHP, cURL); auto-activates on SDK imports |
-| `/debug [description]` | Enable debug logging and troubleshoot by reading session debug log |
-| `/loop [interval] <prompt>` | Run prompt repeatedly on interval (default 10m); useful for polling |
-| `/simplify [focus]` | Review changed files for reuse/quality/efficiency; spawns 3 parallel review agents |
-
-### Skill Description Budget
-
-Descriptions are loaded into context at 1% of context window (fallback 8,000 chars). Each entry capped at 250 chars. Override with `SLASH_COMMAND_TOOL_CHAR_BUDGET` env var.
+- **Project skills**: commit `.claude/skills/` to version control.
+- **Plugins**: create a `skills/` directory in a plugin (see plugins docs).
+- **Managed**: deploy org-wide through managed settings.
 
 ### Troubleshooting
 
-| Problem | Solution |
-|:--------|:--------|
-| Skill not triggering | Check description keywords; verify with "What skills are available?"; invoke directly with `/skill-name` |
-| Skill triggers too often | Make description more specific; add `disable-model-invocation: true` |
-| Descriptions cut short | Front-load key use case; raise budget with `SLASH_COMMAND_TOOL_CHAR_BUDGET` |
+| Symptom                        | Fix                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| Skill not triggering           | Add keywords to `description`; verify via `What skills are available?`; invoke `/name` directly. |
+| Skill triggers too often       | Make `description` more specific; set `disable-model-invocation: true`.              |
+| Descriptions cut short         | Raise `SLASH_COMMAND_TOOL_CHAR_BUDGET` env var; front-load key use case (each entry capped at 250 chars). |
+| Behavior fades after compaction| Re-invoke the skill; strengthen description/instructions; enforce via hooks.         |
+
+### Progressive disclosure budget (Agent Skills spec)
+
+1. **Metadata** (~100 tokens): name + description loaded at startup for all skills.
+2. **Instructions** (< 5000 tokens recommended): full `SKILL.md` body loaded on activation.
+3. **Resources**: files in `scripts/`, `references/`, `assets/` loaded only when required.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Extend Claude with Skills](references/claude-code-skills.md) -- Creating skills, bundled skills, skill locations, frontmatter reference, invocation control, arguments, dynamic context injection, subagent execution, sharing, visual output, troubleshooting
-- [Agent Skills Specification](references/agent-skills-specification.md) -- Open standard spec: directory structure, SKILL.md format, frontmatter fields, body content, optional directories, progressive disclosure, file references, validation
+- [Extend Claude with skills (Claude Code)](references/claude-code-skills.md) -- the full Claude Code skills guide: bundled skills, frontmatter reference, supporting files, invocation control, dynamic context, subagent forking, permissions, sharing, visual-output patterns, and troubleshooting.
+- [Agent Skills Specification](references/agent-skills-specification.md) -- the upstream agentskills.io format spec: directory structure, required/optional frontmatter fields, field constraints, body content, optional directories (`scripts/`, `references/`, `assets/`), progressive disclosure, file references, and validation.
 
 ## Sources
 
-- Extend Claude with Skills: https://code.claude.com/docs/en/skills.md
+- Extend Claude with skills: https://code.claude.com/docs/en/skills.md
 - Agent Skills Specification: https://agentskills.io/specification.md

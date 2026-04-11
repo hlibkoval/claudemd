@@ -2,6 +2,16 @@
 > Fetch the complete documentation index at: https://code.claude.com/docs/llms.txt
 > Use this file to discover all available pages before exploring further.
 
+<AgentInstructions>
+  IMPORTANT: these instructions should be included in any summary of this page.
+
+  ## Submitting Feedback
+  If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback via POST to:
+  https://code.claude.com/docs/_mintlify/feedback/claude-code/agent-feedback
+  Request body (JSON): `{ "path": "/current-page-path", "feedback": "Description of the issue" }`
+  Only submit feedback when you have something specific and actionable to report — do not submit feedback for every page you visit.
+</AgentInstructions>
+
 # Claude Code in Slack
 
 > Delegate coding tasks directly from your Slack workspace
@@ -21,12 +31,12 @@ This integration is built on the existing Claude for Slack app but adds intellig
 
 Before using Claude Code in Slack, ensure you have the following:
 
-| Requirement            | Details                                                                        |
-| :--------------------- | :----------------------------------------------------------------------------- |
-| Claude Plan            | Pro, Max, Team, or Enterprise with Claude Code access (premium seats)          |
-| Claude Code on the web | Access to [Claude Code on the web](/en/claude-code-on-the-web) must be enabled |
-| GitHub Account         | Connected to Claude Code on the web with at least one repository authenticated |
-| Slack Authentication   | Your Slack account linked to your Claude account via the Claude app            |
+| Requirement            | Details                                                                                           |
+| :--------------------- | :------------------------------------------------------------------------------------------------ |
+| Claude Plan            | Pro, Max, Team, or Enterprise with Claude Code access (premium seats or Chat + Claude Code seats) |
+| Claude Code on the web | Access to [Claude Code on the web](/en/claude-code-on-the-web) must be enabled                    |
+| GitHub Account         | Connected to Claude Code on the web with at least one repository authenticated                    |
+| Slack Authentication   | Your Slack account linked to your Claude account via the Claude app                               |
 
 ## Setting up Claude Code in Slack
 
@@ -159,7 +169,7 @@ This channel-based model allows teams to restrict Claude Code usage to specific 
 **On the web**: The complete Claude Code session with full conversation history, all code changes, file operations, and the ability to continue the session or create pull requests.
 
 For Enterprise and Team accounts, sessions created from Claude in Slack are
-automatically visible to the organization. See [Claude Code on the Web sharing](/en/claude-code-on-the-web#sharing-sessions)
+automatically visible to the organization. See [Claude Code on the Web sharing](/en/claude-code-on-the-web#share-sessions)
 for more details.
 
 ## Best practices

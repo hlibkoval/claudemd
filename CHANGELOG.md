@@ -2,6 +2,71 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.11
+
+**New skill `agent-sdk-doc`** — 29 references covering the Claude Agent SDK (overview, quickstart, agent loop, Claude Code features, cost tracking, custom tools, file checkpointing, hooks, hosting, MCP, migration guide, modifying system prompts, observability, permissions, plugins, python, secure deployment, sessions, skills, slash commands, streaming output, streaming vs single mode, structured outputs, subagents, todo tracking, tool search, typescript, typescript v2 preview, user input).
+
+**80 references updated across 18 existing skills:** agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+**New reference `claude-code-web-quickstart.md`** added to `headless-doc`.
+
+### New
+- **Monitor tool** — streams stdout/stderr from background scripts back to Claude line-by-line; requires v2.1.98+ and is unavailable on Bedrock, Vertex AI, and Foundry (cli-doc, features-doc)
+- **Interactive "Sign in with Bedrock" and "Sign in with Vertex AI" wizards** — new login-screen flows configure AWS/GCP auth, region, credential verification, and model pinning; `/setup-bedrock` and `/setup-vertex` reopen them later (cloud-providers-doc, cli-doc)
+- **Startup model checks on Bedrock and Vertex** — pinned and default models are verified at startup with prompts to update or fall back when unavailable; Foundry has no equivalent check and surfaces errors instead (cloud-providers-doc, features-doc)
+- **`ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION` for Bedrock Mantle** — pin the small/fast model to a specific AWS region (cloud-providers-doc)
+- **Fullscreen focus view** — Ctrl+O in fullscreen now cycles normal → transcript → focus view, which shows the last user prompt plus one-line tool summaries with diffstats and the final response (features-doc, cli-doc)
+- **`Scroll` keybinding context** — new context exposes rebindable `scroll:lineUp/lineDown/pageUp/pageDown/top/bottom/halfPage*/fullPage*` and `selection:copy/clear` actions for fullscreen mode (cli-doc)
+- **Status line `refreshInterval` setting** — re-runs the status line command every N seconds on a timer instead of only on events (features-doc)
+- **Status line `workspace.git_worktree` JSON field** — populated when the cwd lives inside a linked git worktree (features-doc)
+- **`--exclude-dynamic-system-prompt-sections` flag** — moves per-machine sections out of the system prompt into the first user message so the prompt cache can be shared across users and machines (cli-doc)
+- **`claude setup-token` long-lived tokens** — prints a `CLAUDE_CODE_OAUTH_TOKEN` for CI and scripts without saving it; requires a Claude subscription (cli-doc, getting-started-doc)
+- **`/loop` dynamic and maintenance modes** — omit the interval to let Claude pick a cadence between 1m and 1h, omit the prompt to run a built-in maintenance loop, and customize behavior with `.claude/loop.md` or `~/.claude/loop.md` (25,000 byte cap) (features-doc)
+- **Remote Control `--spawn=session` single-session mode** — rejects additional connections once the first client attaches (features-doc)
+- **VS Code Remote Control tab** — `/remote-control` (or `/rc`) in the VS Code extension; requires v2.1.79+ (features-doc)
+- **Bundled skills `/batch`, `/claude-api`, `/debug`, `/loop`, `/simplify`** are now listed in the commands reference (cli-doc)
+- **New built-in commands `/autofix-pr`, `/setup-vertex`, `/teleport`, `/web-setup`** (cli-doc)
+- **`CCR_FORCE_BUNDLE` env var** — force local repo bundling to cloud sessions even when GitHub is connected, with size and branch fallbacks (settings-doc, headless-doc)
+- **`CLAUDE_CODE_CERT_STORE` env var** — `=bundled` opts out of the OS CA store in favor of the bundled Node root certs (settings-doc)
+- **`CLAUDE_CODE_PERFORCE_MODE` env var** — fails on read-only files with a `p4 edit` hint instead of overwriting them (settings-doc, operations-doc)
+- **`CLAUDE_CODE_SCRIPT_CAPS` env var** — caps the number of subprocess script invocations per session (settings-doc)
+- **`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` subprocess sandboxing** — scrubs secrets from child process environments (operations-doc, settings-doc)
+- **`CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR` env var** — disables the new main-session `cd` carry-over behavior inside project and additional directories (cli-doc, settings-doc)
+- **`/team-onboarding` command** — new onboarding flow surfaced in the changelog (operations-doc)
+- **Plugin manifest `skills` field** — declares `<name>/SKILL.md` skill directories alongside the legacy flat `commands/` field (plugins-doc)
+- **Auto-fix pull requests from the terminal** — `/autofix-pr` now works from a local Claude Code session, not just the web (headless-doc)
+- **Local repo bundling to cloud sessions** — non-GitHub repos can be uploaded directly from the terminal via `CCR_FORCE_BUNDLE`, with fallbacks for size and branch state (headless-doc)
+- **"What survives compaction" table** — documents system prompt, CLAUDE.md, rules with `paths:`, nested CLAUDE.md, invoked skills, and hook behavior through compaction, with a 5,000-token-per-skill and 25,000-token total skill budget (features-doc)
+- **"Skill content lifecycle" and "When to create a skill" guidance** — invoked skills are re-attached after compaction, filled from most recent, within the same 5K/25K budgets (skills-doc)
+- **"Build your setup over time" trigger→feature table** — maps common needs to CLAUDE.md, skills, MCP, subagents, hooks, and plugins (features-doc)
+- **"When to add to CLAUDE.md" section** (memory-doc)
+- **`~/.claude/stats-cache.json` and `~/.claude/backups/` documented** alongside a `CLAUDE_CONFIG_DIR` reference (memory-doc)
+- **Bash working-directory carry-over** — main-session `cd` now persists across turns within project and additional directories (cli-doc)
+- **Homebrew `claude-code@latest` cask** — tracks the latest channel alongside the stable `claude-code` cask (getting-started-doc)
+- **Mobile row in the platforms comparison table** (getting-started-doc)
+- **ARM64 added to hardware requirements** (getting-started-doc)
+- **Cedar syntax highlighting** in editors (operations-doc)
+- **macOS microphone permission reset procedure** — `tccutil reset Microphone <bundle-id>` when the terminal is missing from System Settings (features-doc)
+
+### Changed
+- **`allowed-tools` in skills is now pre-approval, not restriction** — the field grants auto-approval for the listed tools instead of limiting which tools the skill can use; section renamed to "Pre-approve tools for a skill" (skills-doc)
+- **Accept-edits mode auto-approves common filesystem commands** — `mkdir`, `touch`, `mv`, and `cp` no longer prompt (headless-doc, getting-started-doc)
+- **Hook matcher pattern rules clarified** — `"*"`, `""`, or omitted matches all; strings containing only letters, digits, `_`, and `|` are exact or pipe-separated exact lists; anything else is a regex; `FileChanged` matcher is always a literal filename list (hooks-doc)
+- **Hook error transcript notices** — now show `<hook name> hook error` plus the first line of stderr instead of full stderr (hooks-doc)
+- **Plugin hooks from force-enabled managed plugins** are exempt from the `allowManagedHooksOnly` restriction (hooks-doc)
+- **MCP scope precedence expanded** — new scope table (Local/Project/User) and precedence list now includes plugin-provided servers and claude.ai connectors (mcp-doc)
+- **MCP `anthropic/maxResultSizeChars` for text** now applies independently of `MAX_MCP_OUTPUT_TOKENS`; images are still bounded by the global cap; section renamed to "Raise the limit for a specific tool" (mcp-doc)
+- **Claude Code on the web docs substantially reorganized** — new sections for GitHub authentication options, the cloud environment and installed tools table, resource limits (4 vCPU / 16 GB / 30 GB), network access levels (None/Trusted/Full/Custom with expanded default allowed-domains list), GitHub and security proxies, setup scripts vs SessionStart hooks (with `CLAUDE_CODE_REMOTE` checks), moving tasks between web and terminal, and session management with `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`, `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` (headless-doc)
+- **Nested CLAUDE.md files are not re-injected after compaction** — they reload only on the next file read in that subdirectory (memory-doc, features-doc)
+- **Plugins docs rename "commands" to "skills"** — terminology updated throughout marketplace and plugin manifest documentation; symlinks are now preserved in the plugin cache rather than dereferenced (plugins-doc)
+- **`/release-notes` picks up 2.1.96–2.1.101** — Apr 8–10 release notes added to the upstream changelog (operations-doc)
+- **`claude setup-token` description updated** to note it prints the token to the terminal without saving it and requires a Claude subscription (cli-doc)
+- **Status line cache example** now keys on `session_id` instead of a stable filename (features-doc)
+- **Fast mode copy** — "extra usage credits" softened to "extra usage" (features-doc)
+- **Web scheduled tasks** now reference `/web-setup` for GitHub authentication and use the updated `the-cloud-environment` anchor (features-doc)
+- **Agent SDK URLs updated** in the headless reference (headless-doc)
+- Minor wording, anchor, and AgentInstructions boilerplate updates across most other skill docs
+
 ## 26.4.8
 
 **20 references updated across 13 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
