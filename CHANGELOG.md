@@ -2,6 +2,44 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.15
+
+**New reference `claude-code-routines.md`** added to `features-doc` — first-class doc for cloud-hosted Claude Code automation, replacing the old `web-scheduled-tasks.md`.
+
+**New reference `claude-code-whats-new-2026-w15.md`** added to `operations-doc` — Week 15 (Apr 6–10) digest covering Ultraplan, the Monitor tool, terminal `/autofix-pr`, and `/team-onboarding`.
+
+**108 references updated across 19 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **Routines** — new cloud-hosted automation page documents saved Claude Code configurations (prompt, repos, connectors) that run on Anthropic-managed cloud infrastructure. Each routine can combine Scheduled, API, and GitHub triggers; managed at `claude.ai/code/routines` or via `/schedule` in the CLI. Research preview on Pro/Max/Team/Enterprise plans with Claude Code on the web enabled. Replaces the removed `web-scheduled-tasks.md` page (features-doc)
+- **`minimumVersion` setting** — prevents the auto-updater from downgrading below a specific version; automatically set when switching to the stable channel and choosing to stay on the current version. Used with `autoUpdatesChannel` (settings-doc)
+- **`viewMode` setting** — default transcript view mode on startup: `"default"`, `"verbose"`, or `"focus"`. Overrides the sticky `Ctrl+O` selection when set (settings-doc)
+- **v2.1.108 release (Apr 14)** — `ENABLE_PROMPT_CACHING_1H` env var opts into 1-hour prompt cache TTL on API key, Bedrock, Vertex, and Foundry (deprecates `ENABLE_PROMPT_CACHING_1H_BEDROCK`); `FORCE_PROMPT_CACHING_5M` forces 5-minute TTL; new `/recap` command provides context when returning to a session (configurable in `/config`, `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` to force with telemetry disabled); model can now discover built-in slash commands like `/init`, `/review`, `/security-review` via the Skill tool; `/undo` is now an alias for `/rewind`; `/model` warns before switching mid-conversation; `/resume` picker defaults to current-directory sessions with `Ctrl+A` to show all; server rate limits now distinguished from plan usage limits; startup warning when prompt caching is disabled via `DISABLE_PROMPT_CACHING*` (operations-doc)
+- **v2.1.105 release (Apr 13)** — `path` parameter added to the `EnterWorktree` tool to switch into an existing worktree; `PreCompact` hook can now block compaction by exiting with code 2 or returning `{"decision":"block"}`; plugins can declare a top-level `monitors` manifest key that auto-arms background monitors at session start or on skill invoke; `/proactive` is now an alias for `/loop`; stalled API streams now abort after 5 minutes of no data and retry non-streaming; skill description listing cap raised from 250 to 1,536 characters with a startup warning for truncation; `WebFetch` strips `<style>`/`<script>` contents; stale agent worktree cleanup now removes worktrees whose PR was squash-merged; MCP large-output truncation prompt gives format-specific recipes (e.g. `jq` for JSON) (operations-doc)
+- **Command hooks `shell` field** — accepts `"bash"` (default) or `"powershell"`; setting `"powershell"` runs the command via PowerShell on Windows without requiring `CLAUDE_CODE_USE_POWERSHELL_TOOL` (hooks-doc)
+- **`PreCompact` hooks can block compaction** — exit 2 or `{"decision":"block"}` now halts compaction; blocking proactive compaction skips it, but blocking a recovery-from-limit compaction surfaces the original context-limit error (hooks-doc)
+- **`SessionEnd` hooks 1.5s default timeout** — automatically raised to the highest per-hook `timeout` configured in settings files, up to 60 seconds; plugin-provided hook timeouts don't raise the budget; override with `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS` (hooks-doc, settings-doc)
+- **Live skill change detection** — adding, editing, or removing a skill under `~/.claude/skills/`, the project `.claude/skills/`, or a `.claude/skills/` inside an `--add-dir` directory now takes effect within the current session without restarting. Creating a top-level skills directory that didn't exist at session start still requires a restart (skills-doc)
+- **`CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD` env var** — set to `1` to load `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/*.md`, and `CLAUDE.local.md` from `--add-dir` directories; off by default (settings-doc)
+- **`CLAUDE_CODE_DISABLE_VIRTUAL_SCROLL` env var** — disables virtual scrolling in fullscreen rendering so every transcript message is rendered. Use when scrolling shows blank regions (settings-doc)
+- **`CLAUDE_CODE_MAX_CONTEXT_TOKENS` env var** — override the context window size for the active model. Only takes effect when `DISABLE_COMPACT` is also set. For routing through `ANTHROPIC_BASE_URL` to a model whose context window doesn't match its built-in size (settings-doc)
+- **`CLAUDE_CODE_SKIP_PROMPT_HISTORY` env var** — set to `1` to skip writing prompt history and session transcripts to disk; sessions don't appear in `--resume`, `--continue`, or up-arrow history. Now the recommended way to disable transcript writes in interactive mode (settings-doc)
+- **Streaming idle watchdogs** — `CLAUDE_ENABLE_BYTE_WATCHDOG` force-enables/disables the byte-level idle watchdog (on by default for Anthropic API, minimum 5 minutes); `CLAUDE_ENABLE_STREAM_WATCHDOG` enables the event-level watchdog (off by default, required for Bedrock/Vertex/Foundry); `CLAUDE_STREAM_IDLE_TIMEOUT_MS` configures the timeout (settings-doc)
+- **`OTEL_LOG_TOOL_DETAILS` env var** — set to `1` to include tool input arguments, MCP server names, and tool details in OpenTelemetry traces and logs; disabled by default to protect PII (settings-doc)
+- **`VERTEX_REGION_CLAUDE_4_5_OPUS` and `VERTEX_REGION_CLAUDE_4_6_OPUS` env vars** — override Vertex AI region for Claude Opus 4.5 and 4.6 (settings-doc, cloud-providers-doc)
+- **`ANTHROPIC_CUSTOM_MODEL_OPTION_SUPPORTED_CAPABILITIES` env var** — declare capabilities for custom model options (see Model configuration) (settings-doc)
+- **`/resume` picker cross-worktree support** — now shows interactive sessions from the same git repository including all worktrees; selecting a session from another worktree resumes it directly without switching directories first. `claude --resume` also accepts custom names set with `--name` or `/rename` in addition to session IDs (best-practices-doc)
+- **MCP `http` transport rename** — `--transport streamable-http` is now `--transport http` in `claude mcp add` examples (mcp-doc)
+
+### Changed
+- **`cleanupPeriodDays` setting description** — updated to recommend the new `CLAUDE_CODE_SKIP_PROMPT_HISTORY` env var for disabling transcript writes in interactive mode; previously only `--no-session-persistence` / `persistSession: false` were suggested and only worked in non-interactive mode (settings-doc)
+- **Scheduling comparison tables** — every "Cloud scheduled tasks" link/reference across docs now points to `/en/routines` instead of the removed `/en/web-scheduled-tasks` page; scheduling-option comparison tables rewritten to use "Routines" as the cloud option (features-doc, best-practices-doc)
+- **Agent SDK examples** — minor wording tweaks in overview/permissions/modifying-system-prompts code samples (agent-sdk-doc)
+- Minor formatting/whitespace updates and removal of the `<AgentInstructions>` feedback block across most reference files (all skills)
+
+### Removed
+- **`web-scheduled-tasks.md` reference** — removed from `features-doc`; superseded by the new `routines.md` page (features-doc)
+
 ## 26.4.11
 
 **New skill `agent-sdk-doc`** — 29 references covering the Claude Agent SDK (overview, quickstart, agent loop, Claude Code features, cost tracking, custom tools, file checkpointing, hooks, hosting, MCP, migration guide, modifying system prompts, observability, permissions, plugins, python, secure deployment, sessions, skills, slash commands, streaming output, streaming vs single mode, structured outputs, subagents, todo tracking, tool search, typescript, typescript v2 preview, user input).
