@@ -2,6 +2,31 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.16
+
+**24 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc
+
+### New
+- **`excludeDynamicSections` option on `claude_code` preset** — moves per-session context (working directory, git status, OS, auto-memory paths) out of the system prompt and into the first user message so identical SDK configurations can share a prompt-cache entry across users and machines. Requires `@anthropic-ai/claude-agent-sdk` v0.2.98+ or `claude-agent-sdk` Python v0.1.58+ (agent-sdk-doc)
+- **v2.1.110 release (Apr 15)** — `/tui` command and `tui` setting switch rendering modes in the current conversation; push notification tool lets Claude send mobile pushes when Remote Control is enabled; new `/focus` command and `autoScrollEnabled` config; `Ctrl+O` now toggles verbose transcript only; `/plugin` Installed tab reorganized; `/doctor` warns on MCP servers defined in multiple scopes with different endpoints; SDK/headless sessions honor `TRACEPARENT`/`TRACESTATE` for distributed tracing; recap now enabled for telemetry-disabled setups (Bedrock/Vertex/Foundry); plus many bug fixes (operations-doc)
+- **v2.1.109 release (Apr 15)** — extended-thinking indicator now shows a rotating progress hint (operations-doc, best-practices-doc)
+- **`CLAUDE_CODE_REMOTE` env var** — set automatically to `true` in cloud sessions; read from hooks/setup scripts to detect cloud environments (settings-doc)
+- **`CLAUDE_CODE_REMOTE_SESSION_ID` env var** — set automatically in cloud sessions to the current session ID; use to construct links back to the session transcript (settings-doc, headless-doc)
+- **`CLAUDE_CODE_TMUX_TRUECOLOR` env var** — set to `1` to allow 24-bit truecolor output inside tmux (bypasses the default 256-color clamp when `$TMUX` is set) (settings-doc)
+- **Pre-fill sessions via query parameters** — `claude.ai/code` URL now accepts `prompt` (aka `q`), `prompt_url`, `repositories` (aka `repo`), and `environment` parameters to prefill a new web session (headless-doc)
+- **Link cloud artifacts to sessions** — documented pattern for constructing `https://claude.ai/code/${CLAUDE_CODE_REMOTE_SESSION_ID}` links in PR bodies, commits, and generated reports (headless-doc)
+- **Spend-cap troubleshooting for Code Review** — new section documenting that reviews are skipped and a comment is posted when the org's monthly spend cap is reached; resumes at next billing period or when admin raises the cap (ci-cd-doc)
+
+### Changed
+- **Cost tracking reframed as client-side estimate** — added a prominent warning that `total_cost_usd` and `costUSD` are local estimates computed from a bundled price table, not authoritative billing data. Direct users to the Usage and Cost API or Claude Console for invoice-accurate spend. Language updated throughout SDK, `/cost`, statusline, and Code Review analytics docs (agent-sdk-doc, features-doc, operations-doc, ci-cd-doc)
+- **`REVIEW.md` significantly expanded** — rewritten to emphasize that `REVIEW.md` is injected as highest-priority instructions into every review agent (vs. `CLAUDE.md` which is treated as project context and flagged as nits). New sections document tunable areas: severity calibration, nit-volume caps, skip rules, repo-specific checks, verification bar, re-review convergence, and summary shape. `@` import syntax is not expanded (ci-cd-doc)
+- **Code Review findings now include summary in review body** — previously documented as inline-only (ci-cd-doc)
+- **Routines GitHub triggers narrowed** — supported event categories reduced from ~17 (push, issues, checks, workflows, etc.) to just Pull request and Release. Added documentation of filter operators (equals, contains, starts with, is one of, is not one of, matches regex) and clarified that `matches regex` tests the entire field, not a substring (features-doc)
+- **JetBrains diff tool config** — `/config` diff tool setting now documented as `auto` for IDE or `terminal` to keep diffs in the terminal (ide-doc)
+- **`network.allowUnixSockets` is macOS-only** — clarified that on Linux/WSL2 the seccomp filter cannot inspect socket paths, so `allowAllUnixSockets` is the only way to permit Unix sockets there (settings-doc)
+- **Install configurator added to overview page** — the interactive install configurator component (previously only on quickstart) is now also on the overview page; default-surface A/B test added; handoff card redesigned with product taglines (getting-started-doc)
+- Minor wording/formatting updates across agent-sdk-doc, best-practices-doc, cloud-providers-doc, operations-doc what's-new digests (link paths updated from `/en/` to `/docs/en/`)
+
 ## 26.4.15
 
 **New reference `claude-code-routines.md`** added to `features-doc` — first-class doc for cloud-hosted Claude Code automation, replacing the old `web-scheduled-tasks.md`.
