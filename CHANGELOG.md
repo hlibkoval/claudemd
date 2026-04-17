@@ -2,6 +2,38 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.17
+
+**62 references updated across 16 skills, 3 new reference pages added.** All skills regenerated.
+
+### New
+- **New reference page: Error reference** — comprehensive lookup table mapping Claude Code runtime error messages to explanations and recovery commands, covering server errors, usage limits, authentication, network, and request errors (operations-doc)
+- **New reference page: Plugin dependencies** — guide for plugin authors to declare semver version constraints on dependencies in `plugin.json`, with resolution semantics, cross-marketplace rules, and marketplace tagging workflow (plugins-doc)
+- **New reference page: Ultrareview** — deep multi-agent code review in the cloud via `/ultrareview`, with pricing table, PR mode, and comparison to local `/review` (best-practices-doc)
+- **Claude Opus 4.7 support (v2.1.111)** — `opus` alias now resolves to Opus 4.7 on the Anthropic API; Bedrock/Vertex/Foundry remain on Opus 4.6 until explicit model name is used (features-doc, agent-sdk-doc)
+- **`xhigh` effort level** — new level between `high` and `max`, available on Opus 4.7 only; other models fall back to `high`. Default effort for Opus 4.7 is `xhigh` for all plans (features-doc)
+- **Auto mode for Max subscribers on Opus 4.7** — no longer requires `--enable-auto-mode` flag (operations-doc)
+- **`/less-permission-prompts` skill** — scans transcripts for common read-only Bash and MCP tool calls and proposes an allowlist for `.claude/settings.json` (operations-doc)
+- **Interactive `/effort` slider** — calling `/effort` without arguments opens an arrow-key picker (operations-doc)
+- **"Auto (match terminal)" theme** — matches terminal dark/light mode, selectable from `/theme` (operations-doc)
+- **`OTEL_LOG_RAW_API_BODIES` env var** — emits full API request/response bodies as OpenTelemetry log events for debugging (operations-doc)
+- **Read-only Bash commands with glob patterns** — `ls *.ts`, `wc -l src/*.py`, and commands starting with `cd <project-dir> &&` no longer trigger permission prompts (settings-doc)
+- **Symlink permission checking** — documented dual-path evaluation: allow rules require both symlink and target to match; deny rules block if either matches (settings-doc)
+- **Agent SDK Opus 4.7 compatibility note** — requires SDK v0.2.111+; troubleshooting section for `thinking.type.enabled` errors (agent-sdk-doc)
+- **v2.1.112 release** — hotfix for "claude-opus-4-7 is temporarily unavailable" in auto mode (operations-doc)
+
+### Changed
+- **Default model updated** — Max and Team Premium now default to Opus 4.7; Pro/Team Standard/Enterprise/API default to Sonnet 4.6; Bedrock/Vertex/Foundry default to Sonnet 4.5 (features-doc)
+- **Enterprise Opus 4.7 default coming April 23** — Enterprise pay-as-you-go and Anthropic API users will switch to Opus 4.7 default; set `ANTHROPIC_MODEL` to keep a different default (features-doc)
+- **Fast mode scoped to Opus 4.6** — explicitly documented as not available on Opus 4.7 or other models (features-doc)
+- **Effort level table expanded** — per-model level availability (Opus 4.7 gets 5 levels, Opus 4.6/Sonnet 4.6 get 4); effort reset on first Opus 4.7 session (features-doc)
+- **SDK setting sources load by default** — SDK now loads settings from `.claude/` and `~/.claude/` with default options; `setting_sources`/`settingSources` restricts which sources load rather than enabling them (agent-sdk-doc)
+- **PermissionRequest hook `allow` respects deny rules** — hook returning `"allow"` no longer overrides matching deny/ask rules; `updatedInput` is re-evaluated against deny/ask rules (hooks-doc)
+- **`bypassPermissions` mode guarded in hooks** — `setMode` with `bypassPermissions` only works if the session was launched with bypass available; never persisted as `defaultMode` (hooks-doc)
+- **Permission dialog format change** — "Yes, don't ask again" now writes space-separated form instead of `:*` form (settings-doc)
+- **v2.1.110 changelog correction** — `/autocompact` removed from list of commands working from Remote Control (operations-doc)
+- Minor wording and formatting updates across all 16 skills
+
 ## 26.4.16
 
 **24 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc
