@@ -2,6 +2,74 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.19
+
+**64 references updated across 17 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **Claude Opus 4.7 model support** — `opus` alias now resolves to Opus 4.7 on the Anthropic API; on Bedrock/Vertex/Foundry the alias stays at Opus 4.6 with instructions to pin `ANTHROPIC_DEFAULT_OPUS_MODEL` for 4.7. Requires Claude Code v2.1.111+. Max and Team Premium plans default to Opus 4.7 (features-doc, cloud-providers-doc, ci-cd-doc)
+- **`xhigh` effort level** — new effort tier between `high` and `max`, available on Opus 4.7 (default) and the recommended level for most coding/agentic tasks. Falls back to `high` on Opus 4.6/Sonnet 4.6. Interactive `/effort` slider added (features-doc, cli-doc, settings-doc, skills-doc, sub-agents-doc)
+- **Auto mode expanded to Max plans** — auto mode now available on Max plans with Opus 4.7; Team/Enterprise/API plans support Sonnet 4.6, Opus 4.6, or Opus 4.7. `--enable-auto-mode` flag removed in v2.1.111; auto mode is now in the `Shift+Tab` cycle by default (settings-doc, cli-doc, ide-doc)
+- **Plugin monitors** — plugins can declare background monitors in `monitors/monitors.json` that start automatically when the plugin is active. Each monitor runs a shell command for the session lifetime and delivers stdout lines to Claude as notifications. Supports `when` trigger (`always` or `on-skill-invoke:<name>`) and variable substitution (plugins-doc)
+- **Plugin dependencies** — `plugin.json` gains a `dependencies` array to declare other plugins a plugin requires, optionally with semver version constraints (plugins-doc)
+- **`plugin list` CLI command** — `claude plugin list` lists installed plugins with version, source marketplace, and enable status; `--json` and `--available` flags for programmatic use (plugins-doc)
+- **OAuth scope pinning for MCP servers** — `oauth.scopes` in `.mcp.json` pins scopes Claude Code requests during authorization, restricting to a security-team-approved subset (mcp-doc)
+- **MCP automatic reconnection** — HTTP/SSE MCP servers that disconnect mid-session are automatically reconnected with exponential backoff (up to 5 attempts). Stdio servers are not reconnected (mcp-doc)
+- **`startup()` function in TypeScript SDK** — pre-warms the CLI subprocess before a prompt is available, moving spawn and initialization out of the critical path (agent-sdk-doc)
+- **`system/init` event reports plugins** — headless `system/init` event now includes `plugins` and `plugin_errors` arrays; `system/plugin_install` events emitted when `CLAUDE_CODE_SYNC_PLUGIN_INSTALL` is set (headless-doc)
+- **Environment caching for cloud sessions** — setup scripts now run once and the filesystem is snapshotted for reuse in later sessions. Cache rebuilds when the setup script or allowed hosts change, or after ~7 days (headless-doc)
+- **Cloud session troubleshooting section** — new troubleshooting guidance for session creation failures, Remote Control expiry, and expired environments (headless-doc)
+- **Mobile push notifications for Remote Control** — Claude can send push notifications to the Claude mobile app when Remote Control is active. Configure via `/config` → "Push when Claude decides" (features-doc)
+- **Session recap** — automatic one-line recap shown when returning to the terminal after a few minutes away. `/recap` command for on-demand summaries. `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` and `awaySummaryEnabled` setting to control (cli-doc, settings-doc)
+- **`OTEL_LOG_RAW_API_BODIES` env var** — emits full Anthropic Messages API request/response JSON as OpenTelemetry log events for debugging (operations-doc, settings-doc)
+- **`ENABLE_PROMPT_CACHING_1H` env var** — replaces Bedrock-only `ENABLE_PROMPT_CACHING_1H_BEDROCK`; now works on API key, Bedrock, Vertex, and Foundry. `FORCE_PROMPT_CACHING_5M` added to override (settings-doc)
+- **`VERTEX_REGION_CLAUDE_4_7_OPUS` env var** — override region for Opus 4.7 on Vertex AI (settings-doc)
+- **`minimumVersion` setting documented** — floor that prevents auto-updates and `claude update` from installing below a version; usable in managed settings for org-wide minimum (getting-started-doc, settings-doc)
+- **`sandbox.network.deniedDomains` setting** — block specific domains even when a broader `allowedDomains` wildcard would otherwise permit them (security-doc, settings-doc)
+- **Read-only commands documentation** — built-in set of Bash commands (`ls`, `cat`, `grep`, `find`, `wc`, `diff`, etc.) that run without a permission prompt in every mode. Unquoted globs permitted for read-only commands (settings-doc)
+- **Symlink permission rule behavior** — documented how allow and deny rules evaluate both the symlink path and its resolved target (settings-doc)
+- **`/fewer-permission-prompts` command** — new skill that scans transcripts and adds an allowlist to project settings (cli-doc)
+- **`/focus` command** — toggles a persistent focus view in fullscreen rendering showing last prompt, tool summary, and response (cli-doc, features-doc)
+- **`/tui` command** — switch between fullscreen and default renderers mid-session with conversation preserved (cli-doc, features-doc, settings-doc)
+- **`/heapdump` command** — writes JS heap snapshot and memory breakdown for diagnosing high memory usage (cli-doc)
+- **`/recap` command** — on-demand session summary (cli-doc)
+- **`/ultrareview` command** — deep multi-agent code review in a cloud sandbox (cli-doc)
+- **`/review` command** — local PR review replacing deprecated plugin-based `/review` (cli-doc)
+- **v2.1.114 release (Apr 18)** — crash fix for agent teams teammate permission dialog (operations-doc)
+- **v2.1.113 release (Apr 17)** — CLI now spawns native binary via per-platform optional dependency; `sandbox.network.deniedDomains`; fullscreen Shift+arrow selection; `Ctrl+A`/`Ctrl+E` readline behavior; Windows `Ctrl+Backspace`; clickable wrapped URLs; improved `/loop` cancel with Esc; `/extra-usage` and `@`-file autocomplete in Remote Control; improved `/ultrareview` launch; subagent stall detection after 10 minutes (operations-doc)
+
+### Changed
+- **Adaptive reasoning generalized** — documentation updated to reference "models that support effort" instead of hardcoding Opus 4.6/Sonnet 4.6. Opus 4.7 always uses adaptive reasoning and does not support a fixed thinking budget. `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` only applies to Opus 4.6 and Sonnet 4.6 (best-practices-doc, features-doc, ide-doc, settings-doc)
+- **`ultrathink` keyword reframed** — no longer described as setting effort to high; now described as an in-context instruction telling the model to reason more on that turn (best-practices-doc, features-doc)
+- **Session picker reworked** — default view scoped to current worktree; keyboard shortcuts changed to `Ctrl+` prefixes (`Ctrl+A` all projects, `Ctrl+W` worktrees, `Ctrl+B` branch filter, `Ctrl+R` rename, `Space` preview). Name resolution across worktrees documented. `/resume <name>` on ambiguity opens picker with pre-filled search (best-practices-doc, getting-started-doc)
+- **`/loop` tasks restored on resume** — `--resume` and `--continue` now restore unexpired `/loop` tasks. "Persistent across restarts" row in the scheduling comparison table updated (features-doc)
+- **`/clear` command clarified** — description now explains it starts a new conversation (previous one stays in `/resume`) rather than just "clearing history" (cli-doc)
+- **`/compact` description enriched** — mentions it frees context by summarizing, links to compaction rules documentation (cli-doc)
+- **`ResultMessage` can have trailing events** — SDK docs now note that `prompt_suggestion` and similar system events can arrive after `ResultMessage`; consumers should iterate to completion rather than breaking on the result (agent-sdk-doc)
+- **SDK `setting_sources` default behavior clarified** — default `query()` now loads user and project sources; passing `[]` opts out (previously `[]` was treated as unset in Python SDK ≤0.1.59). Managed policy settings take precedence over programmatic options (agent-sdk-doc)
+- **SDK `/clear` not available** — documented that `/clear` is not dispatchable through the SDK; each `query()` already starts fresh (agent-sdk-doc)
+- **Bash permission rule `allowed-tools` syntax** — changed from colon-separated `Bash(git:*)` to space-separated `Bash(git *)` form in examples throughout (agent-sdk-doc, settings-doc)
+- **`PermissionRequest` hook `allow` behavior** — documented that deny and ask rules are still evaluated after a hook returns `allow`, so hooks cannot override a matching deny rule (hooks-doc)
+- **`bypassPermissions` guard rails for hooks** — documented that `setMode` with `bypassPermissions` only takes effect if the session was launched with bypass mode already available (hooks-doc)
+- **Auto mode classifier model** — now runs on a server-configured model independent of `/model` selection. Sandbox network requests routed through classifier rather than allowed by default (settings-doc)
+- **Auto mode user-stated boundaries** — classifier now treats boundaries stated in conversation ("don't push", "wait until I review") as block signals until lifted. Lost on compaction; use deny rules for guarantees (settings-doc)
+- **`dontAsk` mode allows read-only commands** — in addition to `permissions.allow` rules, the read-only command set is now permitted (settings-doc)
+- **Subagent `permissionMode` inheritance** — `acceptEdits` now takes precedence like `bypassPermissions` and cannot be overridden by subagent frontmatter (sub-agents-doc)
+- **PowerShell tool availability expanded** — now rolling out progressively on Windows (opt-out with `0`); available on Linux/macOS/WSL with `pwsh` on PATH. Sandboxing limitation narrowed to Windows only (cli-doc, settings-doc)
+- **npm install reinstated** — npm installation section rewritten as a supported method (was deprecated); native binary delivered via per-platform optional dependency (getting-started-doc)
+- **Fast mode scope clarified** — explicitly documented as not available on Opus 4.7 or other models (features-doc)
+- **Cloud provider 1M context** — Opus 4.7 added to 1M context support on Bedrock, Vertex. Setup wizards now offer 1M context option when pinning models (cloud-providers-doc)
+- **Plugin SSH access** — documented that SSH works for private plugin repositories when host is in `known_hosts` and key is loaded in `ssh-agent` (plugins-doc)
+- **Plugin `/plugin` Installed tab** — reorganized with error/dependency plugins first, favorites next, disabled collapsed; `f` to favorite, auto-installed dependencies listed (plugins-doc)
+- **Security doc `static analysis` renamed** — reframed as "command parsing for permissions" to clarify it is a permission gate, not a sandbox (agent-sdk-doc)
+- **`externalEditorContext` config** — `Ctrl+G` can prepend Claude's previous response as commented context in external editor (settings-doc, cli-doc)
+- **`autoScrollEnabled` config** — fullscreen auto-follow can be turned off entirely via `/config` (settings-doc, features-doc)
+- Minor wording/formatting updates across ci-cd-doc, skills-doc, sub-agents-doc, security-doc docs
+
+### Removed
+- **`--enable-auto-mode` flag** — removed in v2.1.111; auto mode is now in the `Shift+Tab` cycle by default. Use `--permission-mode auto` to start in auto mode (cli-doc)
+- **Cowork tab Intel Mac limitation** — removed the note that Cowork requires Apple Silicon; no longer listed as a limitation (ide-doc)
+
 ## 26.4.16
 
 **24 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc
