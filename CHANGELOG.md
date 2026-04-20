@@ -2,6 +2,64 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.20
+
+**64 references updated across 17 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **Opus 4.7 model support** — `opus` alias on the Anthropic API now resolves to Opus 4.7; third-party providers default to Opus 4.6 with instructions to pin `claude-opus-4-7` via `ANTHROPIC_DEFAULT_OPUS_MODEL`. Opus 4.7 requires Agent SDK v0.2.111+ and Claude Code v2.1.111+ (features-doc, cloud-providers-doc, agent-sdk-doc)
+- **`xhigh` effort level** — new effort level between `high` and `max`, available on Opus 4.7; added `xhigh_effort` model capability key. `xhigh` is the default effort on Opus 4.7 for all plans (features-doc, skills-doc, sub-agents-doc)
+- **`startup()` function in TypeScript SDK** — pre-warms the CLI subprocess and completes the initialize handshake before a prompt is available, moving spawn cost out of the critical path (agent-sdk-doc)
+- **`WarmQuery` type in TypeScript SDK** — returned by `startup()`, accepts a prompt later and writes it to the already-ready process (agent-sdk-doc)
+- **Plugin monitors** — new `monitors` component type lets plugins declare background watch commands that start automatically; documented full schema with `name`, `command`, `description`, `when` field, and variable substitution support (plugins-doc)
+- **`plugin list` CLI command** — `claude plugin list` with `--json` and `--available` options to list installed plugins and their status (plugins-doc)
+- **Plugin `dependencies` manifest field** — plugins can declare dependencies on other plugins with optional semver version constraints (plugins-doc)
+- **Mobile push notifications for Remote Control** — Claude can send push notifications to the Claude mobile app when Remote Control is active; documented setup steps and troubleshooting (features-doc)
+- **`system/init` event plugin fields** — `plugins` and `plugin_errors` arrays in the init event for validating plugin load status in CI (headless-doc)
+- **`system/plugin_install` event** — emitted when `CLAUDE_CODE_SYNC_PLUGIN_INSTALL` is set, reporting marketplace plugin install progress (headless-doc)
+- **MCP automatic reconnection** — HTTP/SSE servers that disconnect mid-session are automatically reconnected with exponential backoff up to five attempts (mcp-doc)
+- **`oauth.scopes` for MCP servers** — pin OAuth scopes to a security-team-approved subset in `.mcp.json`; takes precedence over discovered scopes (mcp-doc)
+- **`sandbox.deniedDomains` setting** — block specific domains even when a broader `allowedDomains` wildcard would otherwise permit them (security-doc, operations-doc)
+- **`OTEL_LOG_RAW_API_BODIES` env var** — emits full Anthropic Messages API request/response JSON as log events, truncated at 60 KB (operations-doc)
+- **`request_id` attribute in telemetry events** — API success and error events now include the Anthropic `request-id` header value (operations-doc)
+- **Environment caching for cloud sessions** — setup script output is snapshotted and reused across sessions; cache rebuilds on script/host changes or after ~7 days (headless-doc)
+- **Cloud session troubleshooting section** — new section covering `Session creation failed`, `Remote Control session expired`, and `Environment expired` errors (headless-doc)
+- **`minimumVersion` setting** — prevents auto-updater downgrades below a pinned floor; documented how `/config` channel switching interacts with it (getting-started-doc)
+- **`/resume` picker enhancements** — new keyboard shortcuts `Space` (preview), `Ctrl+R` (rename), `Ctrl+A` (all projects), `Ctrl+W` (all worktrees), `Ctrl+B` (filter by branch); search starts on any printable character (best-practices-doc, getting-started-doc)
+- **v2.1.114 release (Apr 18)** — fixed crash in permission dialog when agent teams teammate requested tool permission (operations-doc)
+- **v2.1.113 release (Apr 17)** — CLI now spawns a native binary instead of bundled JavaScript; `sandbox.network.deniedDomains` setting; fullscreen Shift+arrow scrolling; `Ctrl+A`/`Ctrl+E` readline behavior in multiline input; Windows `Ctrl+Backspace` word-delete; clickable long URLs across wrapped lines; improved `/loop` Esc handling; `/extra-usage` from Remote Control; Remote Control `@`-file autocomplete; improved `/ultrareview`; subagent stall timeout at 10 minutes; plus fixes (operations-doc)
+- **Recommend your plugin from your CLI** — documented `/plugin-hints` for having external CLIs suggest installing your plugin (plugins-doc)
+
+### Changed
+- **Default model for Max and Team Premium changed to Opus 4.7** — previously Opus 4.6 (features-doc)
+- **Enterprise and API default changing Apr 23** — documented upcoming switch from Sonnet 4.6 to Opus 4.7 for Enterprise pay-as-you-go and API users (features-doc)
+- **Effort level documentation restructured** — per-model level tables, new "Choose an effort level" guidance, and separate "Adaptive reasoning and fixed thinking budgets" section. `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` now documented as Opus 4.6/Sonnet 4.6 only; Opus 4.7 always uses adaptive reasoning (features-doc, best-practices-doc)
+- **`ultrathink` keyword reframed** — now described as an in-context instruction to the model rather than an effort-level override (best-practices-doc)
+- **`/clear` command removed from SDK** — each `query()` call already starts a fresh conversation; guidance updated to end the current query and start a new one (agent-sdk-doc)
+- **SDK `setting_sources` default behavior clarified** — default `query()` now loads user and project sources; `setting_sources=[]` explicitly opts out; fixed bug note for Python SDK v0.1.59 where empty list was ignored (agent-sdk-doc)
+- **TypeScript SDK bundles native binary** — SDK now includes a per-platform native Claude Code binary as an optional dependency; separate install no longer needed (agent-sdk-doc)
+- **`ResultMessage` note about trailing events** — a small number of system events like `prompt_suggestion` can arrive after `ResultMessage`; iterate stream to completion (agent-sdk-doc)
+- **Command permission syntax updated** — `Bash(git add:*)` changed to `Bash(git add *)` throughout SDK examples (agent-sdk-doc)
+- **Managed policy precedence clarified** — managed settings now documented as taking precedence over programmatic SDK options (agent-sdk-doc)
+- **Secure deployment `static analysis` reframed** — renamed to "Command parsing for permissions"; clarified it is a permission gate parsing commands into an AST, not a safety analyzer (agent-sdk-doc)
+- **PermissionRequest hook `allow` behavior clarified** — hook returning `"allow"` does not override a matching deny rule; `updatedInput` is re-evaluated against deny/ask rules (hooks-doc)
+- **`bypassPermissions` via hooks restricted** — `setMode` with `bypassPermissions` only takes effect if the session was launched with bypass mode already available (hooks-doc)
+- **`once` hook field scoped to skill frontmatter only** — clarified as ignored in settings files and agent frontmatter (hooks-doc)
+- **Auto mode plan availability expanded** — now available on Max plans (previously Team/Enterprise/API only); Opus 4.7 added as supported model (ide-doc)
+- **Subagent `acceptEdits` takes precedence** — parent `acceptEdits` mode now documented as non-overridable by subagent frontmatter, alongside `bypassPermissions` (sub-agents-doc)
+- **PowerShell tool availability broadened** — rolling out progressively on Windows; opt-in on Linux, macOS, and WSL with PowerShell 7+; sandboxing and WSL limitations now Windows-specific (cli-doc, getting-started-doc)
+- **`dontAsk` mode allows read-only commands** — clarified that `dontAsk` permits the read-only command set, not just `permissions.allow` rules (headless-doc)
+- **npm install documentation reframed** — no longer labeled deprecated; documented as installing the same native binary through a per-platform optional dependency (getting-started-doc)
+- **Cloud setup scripts and caching** — setup scripts now documented as benefiting from environment caching; run only when no cached environment is available (headless-doc)
+- **Docker guidance for cloud sessions expanded** — documented `docker compose pull`/`build` in setup scripts for image caching; clarified that running containers are not cached (headless-doc)
+- **Plugin SSH access for private repos** — SSH access now documented as working when host is in `known_hosts` and key is loaded in `ssh-agent` (plugins-doc)
+- **Plugin installed tab UX** — documented favorites, error-first sorting, `f` to favorite, dependency auto-install output, collapsed disabled plugins (plugins-doc)
+- **VS Code diff editing** — accepting a diff after editing the proposed content now tells Claude you modified it (ide-doc)
+- **`/resume` session name resolution** — documented cross-worktree name resolution and ambiguous-name behavior differences between CLI and interactive (best-practices-doc)
+- **Scheduled task resume behavior** — `--resume`/`--continue` now restores unexpired recurring and one-shot tasks; documented that background Bash and monitor tasks are not restored (features-doc)
+- **`/loop` Esc cancels pending wakeups** — documented Esc as the way to stop a loop while waiting for the next iteration (features-doc)
+- Minor wording/formatting updates across ci-cd-doc, skills-doc, security-doc docs
+
 ## 26.4.16
 
 **24 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc
