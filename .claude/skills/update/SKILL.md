@@ -1,7 +1,7 @@
 ---
 name: update
 description: Run a full update cycle — crawl docs, bump version, commit and push.
-allowed-tools: Bash, Read, Edit, Glob, Grep, Skill, Agent, AskUserQuestion
+allowed-tools: Bash, Read, Edit, Glob, Grep, Skill, Agent
 ---
 
 # Full Update Cycle
@@ -59,18 +59,9 @@ Update the version in both files to match the changelog version:
 
 Use the `Edit` tool to update each file. Both must have the same version string.
 
-### 6. Confirm with user
+### 6. Commit and push
 
-Use `AskUserQuestion` to show the user a summary of what changed and ask whether to commit and push. Include:
-
-- The new version
-- A brief summary of the changelog entry (skills affected, key changes)
-
-If the user declines, stop here.
-
-### 7. Commit and push
-
-Stage all changes and commit. Build the commit message from the changelog entry:
+Proceed **autonomously — do not ask the user to confirm**. Stage all changes and commit. Build the commit message from the changelog entry:
 
 - **Title line:** `Sync upstream docs and bump to <version>`
 - **Body:** The full content of the changelog entry for this version (everything under the `## YY.M.D` header up to the next `## ` header or end of file), verbatim.
@@ -80,3 +71,5 @@ git add -A
 ```
 
 Then push to origin.
+
+After pushing, print a one-line summary of the new version and skills affected so the user can see what shipped.
