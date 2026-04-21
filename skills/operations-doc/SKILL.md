@@ -1,165 +1,163 @@
 ---
 name: operations-doc
-description: Complete official documentation for operating Claude Code — analytics dashboards, cost management, OpenTelemetry monitoring, troubleshooting install and runtime issues, release changelog, and weekly what's-new digests.
 user-invocable: false
 ---
 
 # Operations Documentation
 
-This skill provides the complete official documentation for running Claude Code in production: measuring usage, controlling spend, monitoring fleets with OpenTelemetry, fixing common problems, and tracking what's new across releases.
+This skill provides the complete official documentation for operating Claude Code at scale: analytics, cost management, OpenTelemetry monitoring, troubleshooting, and release notes.
 
 ## Quick Reference
 
 ### Analytics dashboards
 
-| Plan | URL | Includes |
-|---|---|---|
-| Claude for Teams / Enterprise | [claude.ai/analytics/claude-code](https://claude.ai/analytics/claude-code) | Usage metrics, contribution metrics (with GitHub app), leaderboard, CSV export |
-| API (Claude Console) | [platform.claude.com/claude-code](https://platform.claude.com/claude-code) | Usage metrics, spend tracking, team insights |
+| Plan | Dashboard URL | Key metrics |
+|------|--------------|-------------|
+| Teams / Enterprise | claude.ai/analytics/claude-code | Usage, contribution metrics (GitHub), leaderboard, CSV export |
+| API / Console | platform.claude.com/claude-code | Usage, spend, per-user lines/cost |
 
-Contribution metrics are public beta; require GitHub app install and Owner role; unavailable with Zero Data Retention.
+Contribution metrics require GitHub app installation + Owner-level toggle at `claude.ai/admin-settings/claude-code`. Data appears within 24 hours; updated daily. Not available with Zero Data Retention enabled.
 
-### Cost tracking commands
+**Attribution rules:** PRs tagged `claude-code-assisted` if ≥1 line matched; 21-day session window; >20% developer rewrite disqualifies; auto-generated files (lock files, dist/, build/) excluded.
 
-| Command | Purpose |
-|---|---|
-| `/cost` | Token usage + local dollar estimate for the current session (API users) |
-| `/stats` | Usage patterns (for Pro/Max subscribers where `/cost` is not billing-relevant) |
-| Claude Console → Usage | Authoritative billing |
+### Cost management
 
-Enterprise average: ~$13/developer/active day, ~$150–250/developer/month; 90% of users stay under $30/active day.
+| Technique | Command / Setting |
+|-----------|------------------|
+| Check session cost | `/cost` (API users); `/stats` (subscribers) |
+| Clear context | `/clear` or `/compact Focus on X` |
+| Switch model mid-session | `/model` |
+| Set effort level | `/effort` |
+| Limit extended thinking | `MAX_THINKING_TOKENS=8000` |
+| View context breakdown | `/context` |
 
-### Rate limit recommendations (per user)
+**Rate limit recommendations (TPM per user):**
 
-| Team size | TPM | RPM |
-|---|---|---|
+| Team size | TPM/user | RPM/user |
+|-----------|----------|----------|
 | 1–5 | 200k–300k | 5–7 |
-| 6–20 | 150k–250k | 4–6 |
-| 21–50 | 100k–200k | 3–5 |
-| 50+ | 80k–150k | 2–4 |
+| 5–20 | 100k–150k | 2.5–3.5 |
+| 20–50 | 50k–75k | 1.25–1.75 |
+| 50–100 | 25k–35k | 0.62–0.87 |
+| 100–500 | 15k–20k | 0.37–0.47 |
+| 500+ | 10k–15k | 0.25–0.35 |
 
-(See the full doc for exact values; tune based on observed P95.)
+**Cost averages:** ~$13/developer/active day; $150–250/month; 90th percentile under $30/active day.
 
-### Token-reduction levers
+**Agent team note:** ~7x token usage vs standard sessions. Prefer Sonnet for teammates; keep teams small.
 
-| Lever | How |
-|---|---|
-| Manage context proactively | `/clear` between tasks, `/compact <instructions>`, `/btw` for side questions |
-| Choose the right model | Haiku for triage, Sonnet for default, Opus for hard planning; set via `/model` |
-| Reduce MCP overhead | Disable unused servers, tighten tool allowlists, use per-tool result-size overrides |
-| Code-intelligence plugins | Typed-language plugins let Claude jump by symbol instead of re-reading files |
-| Offload to hooks and skills | Deterministic work in hooks; move CLAUDE.md prose into on-demand skills |
-| Tune extended thinking | `/effort` down, `CLAUDE_CODE_EFFORT_LEVEL`, `MAX_THINKING_TOKENS` |
-| Delegate to subagents | Long exploration in a separate context that returns a summary |
-| Agent team costs | Cap participants, use lighter models for reviewers |
+### OpenTelemetry monitoring
 
-### OpenTelemetry quick start
-
+**Enable telemetry (minimum config):**
 ```bash
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
 export OTEL_METRICS_EXPORTER=otlp        # otlp | prometheus | console | none
 export OTEL_LOGS_EXPORTER=otlp           # otlp | console | none
 export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer ..."
 ```
 
-Default export intervals: 60s metrics, 5s logs. Configure for all users via the managed settings file.
+**Key environment variables:**
 
-### Key telemetry env vars
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `CLAUDE_CODE_ENABLE_TELEMETRY` | Enable telemetry (required) | off |
+| `OTEL_METRICS_EXPORTER` | Metrics backend | — |
+| `OTEL_LOGS_EXPORTER` | Events/logs backend | — |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Auth headers | — |
+| `OTEL_METRIC_EXPORT_INTERVAL` | Metrics flush interval (ms) | 60000 |
+| `OTEL_LOGS_EXPORT_INTERVAL` | Logs flush interval (ms) | 5000 |
+| `OTEL_LOG_USER_PROMPTS` | Include prompt text in events | disabled |
+| `OTEL_LOG_TOOL_DETAILS` | Include tool params/args | disabled |
+| `OTEL_LOG_TOOL_CONTENT` | Include tool I/O in spans | disabled |
+| `OTEL_LOG_RAW_API_BODIES` | Log full API request/response JSON | disabled |
+| `OTEL_METRICS_INCLUDE_SESSION_ID` | session.id in metrics | true |
+| `OTEL_METRICS_INCLUDE_ACCOUNT_UUID` | user.account_uuid in metrics | true |
+| `OTEL_METRICS_INCLUDE_VERSION` | app.version in metrics | false |
 
-| Variable | Purpose |
-|---|---|
-| `CLAUDE_CODE_ENABLE_TELEMETRY=1` | Required to enable export |
-| `OTEL_METRICS_EXPORTER` / `OTEL_LOGS_EXPORTER` | Choose exporters (comma-separated) |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` / `_PROTOCOL` | OTLP endpoint and protocol (grpc, http/json, http/protobuf) |
-| `OTEL_EXPORTER_OTLP_HEADERS` | Auth headers (e.g. `Authorization=Bearer ...`) |
-| `OTEL_METRIC_EXPORT_INTERVAL` / `OTEL_LOGS_EXPORT_INTERVAL` | Export cadence in ms |
-| `OTEL_LOG_USER_PROMPTS` / `OTEL_LOG_TOOL_DETAILS` / `OTEL_LOG_TOOL_CONTENT` | Opt-in verbose content logging |
-| `OTEL_METRICS_INCLUDE_SESSION_ID` / `_VERSION` / `_ACCOUNT_UUID` | Cardinality controls |
-| `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` + `OTEL_TRACES_EXPORTER` | Enable distributed tracing (beta) |
-| `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` | `delta` (default) or `cumulative` |
+**Traces (beta):** Set `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` + `OTEL_TRACES_EXPORTER`. Subprocesses inherit `TRACEPARENT` for distributed tracing. Spans redact prompts and tool content by default.
 
-### Core metrics
+**Dynamic headers:** Set `otelHeadersHelper` in `.claude/settings.json` to a script that outputs JSON headers; refreshes every 29 minutes by default.
 
-| Metric | Meaning | Unit |
-|---|---|---|
-| `claude_code.session.count` | CLI sessions started | count |
-| `claude_code.lines_of_code.count` | Lines modified | count |
-| `claude_code.pull_request.count` | PRs created | count |
-| `claude_code.commit.count` | Commits created | count |
-| `claude_code.cost.usage` | Session cost | USD |
-| `claude_code.token.usage` | Token consumption by type | tokens |
-| `claude_code.api.request.count` / `.duration` | API call volume and latency | count / ms |
+**Available metrics:**
 
-Standard attributes: `session.id`, `app.version`, `organization.id`, `user.account_uuid`, `user.account_id`, `user.id`, `user.email`, `terminal.type`.
+| Metric | Unit | Notes |
+|--------|------|-------|
+| `claude_code.session.count` | count | Per session start |
+| `claude_code.token.usage` | tokens | type: input/output/cacheRead/cacheCreation |
+| `claude_code.cost.usage` | USD | Approximate; per API request |
+| `claude_code.lines_of_code.count` | count | type: added/removed |
+| `claude_code.commit.count` | count | Git commits via Claude Code |
+| `claude_code.pull_request.count` | count | PRs created via Claude Code |
+| `claude_code.code_edit_tool.decision` | count | accept/reject for Edit/Write/NotebookEdit |
+| `claude_code.active_time.total` | s | type: user/cli |
 
-### Installation troubleshooting quick lookup
+**Events (via `OTEL_LOGS_EXPORTER`):** `claude_code.user_prompt`, `claude_code.tool_result`, `claude_code.api_request`, `claude_code.api_error`, `claude_code.api_request_body`, `claude_code.api_response_body`, `claude_code.tool_decision`, `claude_code.plugin_installed`, `claude_code.skill_activated`. All events carry a `prompt.id` UUID for correlation within a single user turn.
 
-| Symptom | Fix |
-|---|---|
-| `command not found: claude` | Fix PATH; verify install directory is exported |
-| `syntax error near unexpected token '<'` | Install script returned HTML — retry with correct URL |
-| `curl: (56) Failure writing output` | Download script first, then run it |
-| `Killed` during install on Linux | Add swap space (low-memory host) |
-| `TLS connect error` / `unable to get local issuer certificate` | Update CA certs or configure corporate CA |
-| `Failed to fetch version` | Check network/proxy connectivity to `storage.googleapis.com` |
-| `irm is not recognized` / `'bash' is not recognized` | Use the right shell's install command on Windows |
-| `Claude Code on Windows requires git-bash` | Install/configure Git Bash |
-| `Error loading shared library` | Wrong binary variant (musl vs glibc) |
-| `Illegal instruction` on Linux | Architecture mismatch |
-| `dyld: cannot load` / `Abort trap` on macOS | Binary incompatibility |
-| `App unavailable in region` | Country not supported |
+### Troubleshooting quick-lookup
 
-### Runtime troubleshooting
+| Symptom | Solution |
+|---------|----------|
+| `command not found: claude` | Fix PATH: add `~/.local/bin` to shell profile |
+| HTML instead of install script | Regional block or network issue; try Homebrew/WinGet |
+| `curl: (56) Failure writing output` | Network interruption; retry or use Homebrew/WinGet |
+| TLS/SSL errors | Update CA certs; set `NODE_EXTRA_CA_CERTS` for corporate CA |
+| `Killed` during install (Linux) | Add 2 GB swap; need ≥4 GB RAM |
+| Install hangs in Docker | Set `WORKDIR /tmp` before install |
+| `Illegal instruction` on Linux | CPU/arch mismatch; verify with `uname -m` |
+| `dyld: cannot load` on macOS | macOS <13.0; update or use Homebrew |
+| `command not found` after WSL install | Use Linux npm/node, not Windows paths |
+| OAuth error / 403 Forbidden | `/logout` then re-login; check subscription/role |
+| `This organization has been disabled` | Stale `ANTHROPIC_API_KEY` env var overriding OAuth |
+| High CPU/memory | `/compact` regularly; use subagents for verbose ops |
+| Autocompact thrashing | `/compact keep only X`; read files in chunks; use subagent |
+| Search not working | Install system ripgrep; set `USE_BUILTIN_RIPGREP=0` |
+| JetBrains not detected on WSL2 | Configure Windows Firewall for WSL2 subnet or use mirrored networking |
 
-| Area | Topics covered |
-|---|---|
-| Permissions & auth | Repeated permission prompts, OAuth errors, 403 Forbidden, model not found, disabled org, WSL2 OAuth, expired tokens |
-| Config | `~/.claude/` locations, resetting configuration |
-| Performance | High CPU/memory, auto-compaction thrashing, hangs, slow search (WSL) |
-| IDE | JetBrains detection on WSL2, Escape-key in JetBrains terminals, Windows IDE reports |
-| Formatting | Missing code-block language tags, inconsistent spacing |
+**Config file locations:**
 
-### Release tracking
+| File | Purpose |
+|------|---------|
+| `~/.claude/settings.json` | User settings |
+| `.claude/settings.json` | Project settings (committed) |
+| `.claude/settings.local.json` | Local project settings (not committed) |
+| `~/.claude.json` | Global state (theme, OAuth, MCP) |
+| `.mcp.json` | Project MCP servers |
 
-| Resource | Scope |
-|---|---|
-| Changelog | Full per-version notes, generated from GitHub `CHANGELOG.md`. Run `claude --version` to check your installed version. |
-| What's new index | Weekly digests with demos, code, and feature context |
-| Weekly digests (2026-w13 → w15) | Auto mode, computer use (Desktop + CLI), PR auto-fix, transcript search, PowerShell tool, `/powerup`, flicker-free rendering, Ultraplan, Monitor tool, self-pacing `/loop`, `/team-onboarding`, `/autofix-pr` |
+**Diagnostic commands:** `/doctor` (checks install, settings, MCP, plugins), `/heapdump` (memory snapshot), `claude --version`.
 
-### Interpreting telemetry
+### Recent releases (What's New)
 
-| Goal | Approach |
-|---|---|
-| Usage monitoring | Track `session.count`, active users via `user.id`, per-team segmentation via resource attributes |
-| Cost monitoring | Aggregate `cost.usage` and `token.usage`; alert on spikes |
-| Detect retry exhaustion | Watch API error events and request-duration tails |
-| Alerting | Per-team thresholds, break-out by `terminal.type` or `app.version` |
+| Week | Dates | Highlights |
+|------|-------|-----------|
+| W15 | Apr 6–10, 2026 (v2.1.92–101) | Ultraplan cloud planning, Monitor tool + self-pacing /loop, /autofix-pr CLI, /team-onboarding |
+| W14 | Mar 30 – Apr 3, 2026 (v2.1.86–91) | Computer use in CLI, /powerup lessons, flicker-free rendering, MCP per-tool result-size override, plugin bin/ on PATH |
+| W13 | Mar 23–27, 2026 (v2.1.83–85) | Auto mode (permissions classifier), computer use in Desktop, PR auto-fix on Web, transcript search (/), PowerShell tool, conditional hooks |
+
+Latest release as of docs: **v2.1.116** (April 20, 2026). Run `claude --version` to check your version.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Track team usage with analytics](references/claude-code-analytics.md) — Dashboards for Team/Enterprise and API customers; GitHub-app setup for contribution metrics; CSV export.
-- [Manage costs effectively](references/claude-code-costs.md) — `/cost` command, workspace spend limits, per-user TPM/RPM recommendations, token-reduction strategies, background token usage.
-- [Monitoring](references/claude-code-monitoring-usage.md) — Full OpenTelemetry reference: env vars, metrics, events, traces (beta), cardinality controls, multi-team resource attributes, backend considerations, privacy.
-- [Troubleshooting](references/claude-code-troubleshooting.md) — Symptom-to-fix table plus detailed guides for installation, permissions, auth, configuration, performance, IDE integration, and markdown formatting.
-- [Changelog](references/claude-code-changelog.md) — Per-version release notes for every Claude Code version, generated from the GitHub CHANGELOG.
-- [What's new index](references/claude-code-whats-new-index.md) — Index of weekly dev digests summarizing the features most likely to change how you work.
-- [Week 13 digest (Mar 23–27, 2026)](references/claude-code-whats-new-2026-w13.md) — Auto mode, Desktop computer use, cloud PR auto-fix, transcript search, PowerShell tool, conditional `if` hooks.
-- [Week 14 digest (Mar 30 – Apr 3, 2026)](references/claude-code-whats-new-2026-w14.md) — CLI computer use, `/powerup` lessons, flicker-free rendering, per-tool MCP result-size overrides, plugin executables on PATH.
-- [Week 15 digest (Apr 6–10, 2026)](references/claude-code-whats-new-2026-w15.md) — Ultraplan cloud planning, the Monitor tool, self-pacing `/loop`, `/team-onboarding`, terminal-launched `/autofix-pr`.
+- [Analytics](references/claude-code-analytics.md) — Team/Enterprise and API analytics dashboards, GitHub contribution metrics, PR attribution methodology
+- [Costs](references/claude-code-costs.md) — Cost tracking, team spend limits, rate limit recommendations, token reduction strategies
+- [Monitoring](references/claude-code-monitoring-usage.md) — Full OpenTelemetry configuration reference, all metrics/events schemas, backend recommendations
+- [Troubleshooting](references/claude-code-troubleshooting.md) — Installation, auth, performance, IDE, and markdown issues with step-by-step fixes
+- [Changelog](references/claude-code-changelog.md) — Full version-by-version release notes
+- [What's New Index](references/claude-code-whats-new-index.md) — Weekly digest index linking to recent feature highlights
+- [What's New W13](references/claude-code-whats-new-2026-w13.md) — Auto mode, computer use, PR auto-fix, transcript search, PowerShell tool, conditional hooks
+- [What's New W14](references/claude-code-whats-new-2026-w14.md) — Computer use in CLI, /powerup, flicker-free rendering, MCP result-size override, plugin bin/
+- [What's New W15](references/claude-code-whats-new-2026-w15.md) — Ultraplan, Monitor tool, /autofix-pr, /team-onboarding
 
 ## Sources
 
-- Track team usage with analytics: https://code.claude.com/docs/en/analytics.md
-- Manage costs effectively: https://code.claude.com/docs/en/costs.md
+- Analytics: https://code.claude.com/docs/en/analytics.md
+- Costs: https://code.claude.com/docs/en/costs.md
 - Monitoring: https://code.claude.com/docs/en/monitoring-usage.md
 - Troubleshooting: https://code.claude.com/docs/en/troubleshooting.md
 - Changelog: https://code.claude.com/docs/en/changelog.md
-- What's new index: https://code.claude.com/docs/en/whats-new/index.md
-- What's new Week 13 (2026): https://code.claude.com/docs/en/whats-new/2026-w13.md
-- What's new Week 14 (2026): https://code.claude.com/docs/en/whats-new/2026-w14.md
-- What's new Week 15 (2026): https://code.claude.com/docs/en/whats-new/2026-w15.md
+- What's New Index: https://code.claude.com/docs/en/whats-new/index.md
+- What's New W13: https://code.claude.com/docs/en/whats-new/2026-w13.md
+- What's New W14: https://code.claude.com/docs/en/whats-new/2026-w14.md
+- What's New W15: https://code.claude.com/docs/en/whats-new/2026-w15.md

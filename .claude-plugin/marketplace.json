@@ -9,7 +9,7 @@
     {
       "name": "claudemd",
       "description": "Claude Code documentation as skills — covers skills, hooks, plugins, MCP, sub-agents, settings, CLI, IDE integrations, and more",
-      "version": "26.4.16",
+      "version": "26.4.21",
       "source": "./"
     }
   ]

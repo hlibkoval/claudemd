@@ -1,102 +1,75 @@
 ---
 name: ci-cd-doc
-description: Complete official documentation for integrating Claude Code with CI/CD and team platforms — GitHub Actions, GitLab CI/CD, Slack, managed GitHub Code Review, and GitHub Enterprise Server.
+description: Complete official documentation for Claude Code CI/CD integrations — GitHub Actions, GitLab CI/CD, GitHub Code Review, Claude Code in Slack, and GitHub Enterprise Server support.
 user-invocable: false
 ---
 
 # CI/CD Documentation
 
-This skill provides the complete official documentation for running Claude Code inside CI/CD pipelines and team tools: GitHub Actions, GitLab CI/CD, Slack, the managed Code Review product, and GitHub Enterprise Server.
+This skill provides the complete official documentation for Claude Code CI/CD integrations.
 
 ## Quick Reference
 
-### Integration matrix
+### GitHub Actions
 
-| Integration | Trigger | Where it runs | Auth |
-|---|---|---|---|
-| GitHub Actions | `@claude` mention, PR/issue events, cron | GitHub-hosted runners | `ANTHROPIC_API_KEY` secret, or Bedrock/Vertex via OIDC |
-| GitLab CI/CD (beta) | Manual, MR event, webhook listener on `@claude` notes | Your GitLab runners | `ANTHROPIC_API_KEY` masked variable, or Bedrock/Vertex via OIDC/WIF |
-| Slack | `@Claude` mention in a channel | Claude Code on the web (Anthropic infra) | Claude account linked to Slack + GitHub |
-| Code Review (research preview) | PR open, every push, or `@claude review` | Anthropic infrastructure | Claude GitHub App installed by admin |
-| GitHub Enterprise Server | Same as github.com features | Anthropic infra (GHES must be reachable) | Admin-created GitHub App on GHES |
+Trigger Claude via `@claude` mentions in PR/issue comments, or run automated workflows with a `prompt` parameter.
 
-### GitHub Actions — v1 action inputs
+**Setup options:**
+- Quick: run `/install-github-app` in the Claude terminal (direct API users only)
+- Manual: install [github.com/apps/claude](https://github.com/apps/claude), add `ANTHROPIC_API_KEY` secret, copy workflow from [examples/claude.yml](https://github.com/anthropics/claude-code-action/blob/main/examples/claude.yml)
 
-| Parameter | Description | Required |
-|---|---|---|
-| `prompt` | Instructions for Claude (plain text or a skill name) | No* |
-| `claude_args` | CLI arguments passed to Claude Code | No |
-| `anthropic_api_key` | Claude API key | Yes** |
-| `github_token` | GitHub token for API access | No |
-| `trigger_phrase` | Custom trigger phrase (default `@claude`) | No |
-| `use_bedrock` | Use AWS Bedrock instead of Claude API | No |
-| `use_vertex` | Use Google Vertex AI instead of Claude API | No |
+**Action v1 parameters:**
 
-*Optional for issue/PR comments (responds to trigger phrase); **required only for direct Claude API.
+| Parameter           | Description                                          | Required  |
+| :------------------ | :--------------------------------------------------- | :-------- |
+| `prompt`            | Instructions for Claude (optional — omit for `@claude` trigger mode) | No |
+| `claude_args`       | CLI arguments passed through to Claude Code          | No        |
+| `anthropic_api_key` | Claude API key                                       | Yes (direct API) |
+| `github_token`      | GitHub token for API access                          | No        |
+| `trigger_phrase`    | Custom trigger phrase (default: `@claude`)           | No        |
+| `use_bedrock`       | Use AWS Bedrock instead of Claude API                | No        |
+| `use_vertex`        | Use Google Vertex AI instead of Claude API           | No        |
 
-### Beta → v1 migration
+**Common `claude_args`:** `--max-turns N`, `--model <id>`, `--allowedTools`, `--disallowedTools`, `--append-system-prompt`, `--mcp-config`
 
-| Old beta input | New v1 input |
-|---|---|
-| `mode` | Removed (auto-detected) |
-| `direct_prompt` | `prompt` |
-| `override_prompt` | `prompt` with GitHub variables |
+**Beta → v1 migration:**
+
+| Old Beta Input        | New v1 Input                          |
+| :-------------------- | :------------------------------------ |
+| `mode`                | *(removed — auto-detected)*           |
+| `direct_prompt`       | `prompt`                              |
 | `custom_instructions` | `claude_args: --append-system-prompt` |
-| `max_turns` | `claude_args: --max-turns` |
-| `model` | `claude_args: --model` |
-| `allowed_tools` | `claude_args: --allowedTools` |
-| `disallowed_tools` | `claude_args: --disallowedTools` |
-| `claude_env` | `settings` JSON format |
+| `max_turns`           | `claude_args: --max-turns`            |
+| `model`               | `claude_args: --model`                |
+| `allowed_tools`       | `claude_args: --allowedTools`         |
+| `claude_env`          | `settings` JSON format                |
 
-Update `@beta` to `@v1` in your workflow. Defaults to Sonnet — set `--model claude-opus-4-6` in `claude_args` to use Opus.
-
-### Common `claude_args` CLI flags
-
-| Flag | Purpose |
-|---|---|
-| `--max-turns` | Maximum conversation turns (default 10) |
-| `--model` | Model to use (e.g. `claude-sonnet-4-6`) |
-| `--mcp-config` | Path to MCP configuration |
-| `--allowedTools` | Comma-separated allowed tools (alias: `--allowed-tools`) |
-| `--append-system-prompt` | Append custom instructions |
-| `--debug` | Enable debug output |
-
-### Minimal GitHub Actions workflow
-
+**Minimal workflow:**
 ```yaml
-name: Claude Code
-on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-jobs:
-  claude:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+- uses: anthropics/claude-code-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    # prompt: "optional instructions"
+    # claude_args: "--max-turns 5"
 ```
 
-Fastest setup: run `/install-github-app` in the terminal (admin-only, Claude API users only).
+**Cloud provider secrets:**
 
-### GitHub Actions — Bedrock / Vertex secrets
+| Provider         | Required secrets                                          |
+| :--------------- | :-------------------------------------------------------- |
+| Direct API       | `ANTHROPIC_API_KEY`                                       |
+| AWS Bedrock      | `AWS_ROLE_TO_ASSUME` (OIDC); Bedrock model IDs use region prefix e.g. `us.anthropic.claude-sonnet-4-6` |
+| Google Vertex AI | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`   |
+| Custom GitHub App| `APP_ID`, `APP_PRIVATE_KEY`                               |
 
-| Provider | Required secrets |
-|---|---|
-| Claude API | `ANTHROPIC_API_KEY` (+ optional `APP_ID`, `APP_PRIVATE_KEY` for a custom app) |
-| AWS Bedrock | `AWS_ROLE_TO_ASSUME`, `APP_ID`, `APP_PRIVATE_KEY`; set `use_bedrock: "true"` |
-| Google Vertex AI | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `APP_ID`, `APP_PRIVATE_KEY`; set `use_vertex: "true"` |
+---
 
-Bedrock model IDs include a region prefix (e.g. `us.anthropic.claude-sonnet-4-6`). For Vertex, set `CLOUD_ML_REGION` and `VERTEX_REGION_CLAUDE_4_5_SONNET`.
+### GitLab CI/CD (Beta)
 
-### GitLab CI/CD — minimal job
+Claude Code runs in GitLab CI jobs and commits results back via MRs. Maintained by GitLab.
 
+**Quick setup — add to `.gitlab-ci.yml`:**
 ```yaml
-stages:
-  - ai
-
 claude:
   stage: ai
   image: node:24-alpine3.21
@@ -104,155 +77,156 @@ claude:
     - if: '$CI_PIPELINE_SOURCE == "web"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   before_script:
-    - apk update && apk add --no-cache git curl bash
+    - apk add --no-cache git curl bash
     - curl -fsSL https://claude.ai/install.sh | bash
   script:
     - /bin/gitlab-mcp-server || true
     - >
-      claude
-      -p "${AI_FLOW_INPUT:-'Review this MR and implement the requested changes'}"
+      claude -p "${AI_FLOW_INPUT:-'Review this MR'}"
       --permission-mode acceptEdits
       --allowedTools "Bash Read Edit Write mcp__gitlab"
-      --debug
 ```
 
-Set `ANTHROPIC_API_KEY` as a masked CI/CD variable. Use `CI_JOB_TOKEN` (or a Project Access Token with `api` scope stored as `GITLAB_ACCESS_TOKEN`) for GitLab API operations. `AI_FLOW_INPUT` / `AI_FLOW_CONTEXT` / `AI_FLOW_EVENT` carry the mention payload when triggered via webhook.
+**Key CI/CD variables:**
 
-### GitLab CI/CD — provider variables
+| Variable                         | Purpose                                      |
+| :------------------------------- | :------------------------------------------- |
+| `ANTHROPIC_API_KEY`              | Direct Claude API (masked)                   |
+| `AWS_ROLE_TO_ASSUME`, `AWS_REGION` | AWS Bedrock (OIDC, no static keys)         |
+| `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT` | Google Vertex AI (WIF) |
+| `AI_FLOW_INPUT`                  | Prompt from mention trigger                  |
+| `AI_FLOW_CONTEXT`                | Context from thread/issue                    |
+| `AI_FLOW_EVENT`                  | Trigger event type                           |
 
-| Provider | Required CI/CD variables |
-|---|---|
-| Claude API | `ANTHROPIC_API_KEY` |
-| AWS Bedrock | `AWS_ROLE_TO_ASSUME`, `AWS_REGION` (via `sts assume-role-with-web-identity` using `CI_JOB_JWT_V2`) |
-| Google Vertex AI | `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `CLOUD_ML_REGION` (via WIF) |
+**Mention triggers:** configure a webhook that fires the pipeline trigger API with `AI_FLOW_*` variables when a comment contains `@claude`.
 
-### Slack
+---
 
-| Prereq | Details |
-|---|---|
-| Claude plan | Pro, Max, Team, or Enterprise with Claude Code access |
-| Claude Code on the web | Must be enabled and have a GitHub repo connected |
-| Slack account | Linked to your Claude account via the Claude app |
+### Code Review (Team/Enterprise)
 
-| Routing mode | Behavior |
-|---|---|
-| **Code only** | All `@Claude` mentions route to Claude Code sessions |
-| **Code + Chat** | Claude auto-routes between Code and Chat based on intent; "Retry as Code" button available |
+Automated PR reviews posted as inline comments on specific diff lines. Uses a fleet of specialized agents.
 
-Slack integration works in channels only (public or private), not DMs. Add Claude with `/invite @Claude`. Message actions: **View Session**, **Create PR**, **Retry as Code**, **Change Repo**. Each session creates one PR max; uses the individual user's plan limits.
+**Setup:** admin enables at [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code), installs Claude GitHub App (Contents/Issues/Pull requests: read+write), selects repositories, sets per-repo trigger.
 
-### Code Review (managed, research preview)
+**Review triggers:**
 
-Team and Enterprise only; not available with Zero Data Retention.
+| Trigger                   | Behavior                                              |
+| :------------------------ | :---------------------------------------------------- |
+| Once after PR creation    | Runs once on open/ready-for-review                    |
+| After every push          | Runs on each push; auto-resolves fixed threads        |
+| Manual                    | Runs only when `@claude review` is commented          |
 
-| Review Behavior | When reviews run |
-|---|---|
-| **Once after PR creation** | Once when the PR is opened or marked ready |
-| **After every push** | On every push; auto-resolves fixed threads |
-| **Manual** | Only when someone comments `@claude review` or `@claude review once` |
+**Manual trigger commands (top-level PR comment only):**
 
-| Severity marker | Meaning |
-|---|---|
-| Red circle | Important — a bug that should be fixed before merging |
-| Yellow circle | Nit — minor, worth fixing but not blocking |
-| Purple circle | Pre-existing — bug that existed before this PR |
+| Command               | Effect                                                        |
+| :-------------------- | :------------------------------------------------------------ |
+| `@claude review`      | Start review + subscribe PR to push-triggered reviews         |
+| `@claude review once` | Start one review without subscribing to future pushes         |
 
-| Manual trigger | What it does |
-|---|---|
-| `@claude review` | Starts a review and subscribes the PR to push-triggered reviews |
-| `@claude review once` | Single review without subscribing to future pushes |
+**Severity levels:**
 
-Post as a top-level PR comment (not inline), at the start of the comment; caller needs owner/member/collaborator access. Check run is always neutral — never blocks merge. Parse severity counts from the last line of the check-run Details text:
+| Marker | Level        | Meaning                                              |
+| :----- | :----------- | :--------------------------------------------------- |
+| 🔴     | Important    | Bug that should be fixed before merging              |
+| 🟡     | Nit          | Minor issue, not blocking                            |
+| 🟣     | Pre-existing | Bug not introduced by this PR                        |
 
+**Customization files:**
+
+| File         | Priority           | Use for                                                      |
+| :----------- | :----------------- | :----------------------------------------------------------- |
+| `CLAUDE.md`  | Project context    | Standards/conventions; violations flagged as nits            |
+| `REVIEW.md`  | Highest (injected) | Severity redefinition, nit caps, skip rules, repo-specific checks |
+
+**Pricing:** ~$15–25 per review, billed as extra usage separate from plan limits. Set cap at [claude.ai/admin-settings/usage](https://claude.ai/admin-settings/usage). Monitor at [claude.ai/analytics/code-review](https://claude.ai/analytics/code-review).
+
+**Parse severity from check run:**
 ```bash
 gh api repos/OWNER/REPO/check-runs/CHECK_RUN_ID \
   --jq '.output.text | split("bughunter-severity: ")[1] | split(" -->")[0] | fromjson'
+# Returns e.g. {"normal": 2, "nit": 1, "pre_existing": 0}
 ```
 
-Returns JSON like `{"normal": 2, "nit": 1, "pre_existing": 0}` (`normal` = Important count).
+---
 
-### Code Review — customization files
+### Claude Code in Slack
 
-| File | Scope | Influence |
-|---|---|---|
-| `CLAUDE.md` | All Claude Code tasks (also read hierarchically) | New violations flagged as nits |
-| `REVIEW.md` | Review-only | Injected as highest-priority system prompt in every agent |
+`@Claude` mentions in Slack channels auto-route coding requests to Claude Code on the web.
 
-`REVIEW.md` uses plain markdown — `@` imports are not expanded. Use it to redefine Important, cap nit volume, skip paths/categories, add repo-specific checks, set verification bars, tune re-review convergence, and shape the summary.
+**Requirements:** Pro/Max/Team/Enterprise with Claude Code access; Claude Code on the web enabled; GitHub account connected; Slack account linked to Claude account.
 
-Pricing: ~$15–25 per review, billed as extra usage (separate from plan allotments). Set a spend cap at `claude.ai/admin-settings/usage`. The **Re-run** button in the Checks tab does NOT retrigger Code Review — comment `@claude review once` or push a new commit.
+**Setup steps:**
+1. Workspace admin installs Claude app from Slack Marketplace
+2. Each user connects their Claude account in App Home
+3. Configure GitHub in Claude Code on the web ([claude.ai/code](https://claude.ai/code))
+4. Choose routing mode; invite Claude to channels with `/invite @Claude`
 
-### GitHub Enterprise Server feature support
+**Routing modes:**
 
-| Feature | GHES | Notes |
-|---|---|---|
-| Claude Code on the web | Supported | Admin connects instance once; `claude --remote` works as usual |
-| Code Review | Supported | Same as github.com |
-| Teleport sessions | Supported | `claude --teleport` between web and terminal |
-| Plugin marketplaces | Supported | Use full git URL, not `owner/repo` shorthand |
-| Contribution metrics | Supported | Webhook-delivered |
-| GitHub Actions | Supported | Manual workflow setup only; `/install-github-app` is github.com only |
-| GitHub MCP server | Not supported | Use the `gh` CLI configured for your GHES host instead |
+| Mode          | Behavior                                                         |
+| :------------ | :--------------------------------------------------------------- |
+| Code only     | All @mentions go to Claude Code sessions                         |
+| Code + Chat   | Claude intelligently routes between Code and Chat per message    |
 
-### GHES GitHub App permissions
+**Session flow:** mention → detect intent → create session at claude.ai/code → post Slack status updates → @mention with summary + "View Session" / "Create PR" buttons.
 
-| Permission | Access | Used for |
-|---|---|---|
-| Contents | Read & write | Cloning and pushing branches |
-| Pull requests | Read & write | Creating PRs and review comments |
-| Issues | Read & write | Responding to issue mentions |
-| Checks | Read & write | Posting Code Review check runs |
-| Actions | Read | Reading CI status for auto-fix |
-| Repository hooks | Read & write | Receiving webhooks for contribution metrics |
-| Metadata | Read | Required by GitHub |
+**Limitations:** GitHub only; channels only (not DMs); one PR per session; requires individual plan with Claude Code access.
 
-Events subscribed: `pull_request`, `issue_comment`, `pull_request_review_comment`, `pull_request_review`, `check_run`. GHES instance must be reachable from Anthropic infrastructure — allowlist Anthropic API IPs in any firewall.
+---
 
-### GHES plugin marketplaces
+### GitHub Enterprise Server (Team/Enterprise)
 
+Connect Claude Code to a self-managed GHES instance. Admin setup is one-time; developers use it transparently.
+
+**Feature support:**
+
+| Feature                | GHES support    | Notes                                                          |
+| :--------------------- | :-------------- | :------------------------------------------------------------- |
+| Claude Code on the web | Supported       | `claude --remote` detects GHES host from git remote            |
+| Code Review            | Supported       | Same as github.com                                             |
+| Teleport sessions      | Supported       | `claude --teleport`                                            |
+| Plugin marketplaces    | Supported       | Use full git URLs, not `owner/repo` shorthand                  |
+| Contribution metrics   | Supported       | Via webhooks to analytics dashboard                            |
+| GitHub Actions         | Supported       | Manual workflow setup required; `/install-github-app` is github.com only |
+| GitHub MCP server      | Not supported   | Use `gh` CLI configured with `gh auth login --hostname <host>` |
+
+**Admin setup:** [claude.ai/admin-settings/claude-code](https://claude.ai/admin-settings/claude-code) → Connect → enter GHES hostname (+ optional CA cert) → Create GitHub App on GHES instance → install app on repositories → enable Code Review/metrics.
+
+**Developer workflow:** no extra config needed after admin setup. Claude detects the GHES host from the git remote automatically.
+
+**GHES plugin marketplace:**
 ```bash
+# Full URL required (owner/repo resolves to github.com)
 /plugin marketplace add git@github.example.com:platform/claude-plugins.git
 ```
 
-Allowlist via managed settings using a host pattern:
-
+**Allowlist GHES in managed settings:**
 ```json
 {
   "strictKnownMarketplaces": [
-    {
-      "source": "hostPattern",
-      "hostPattern": "^github\\.example\\.com$"
-    }
+    { "source": "hostPattern", "hostPattern": "^github\\.example\\.com$" }
   ]
 }
 ```
 
-### Troubleshooting checklist
+**Network requirement:** GHES must be reachable from Anthropic infrastructure. Allowlist [Anthropic API IP addresses](https://platform.claude.com/docs/en/api/ip-addresses) if behind a firewall.
 
-| Symptom | Likely cause |
-|---|---|
-| `@claude` not responding (Actions) | App not installed, workflows disabled, secret missing, or comment uses `/claude` instead of `@claude` |
-| CI not running on Claude's commits | Using Actions user token instead of GitHub App |
-| GitLab job can't write comments/MRs | `CI_JOB_TOKEN` lacks scope, `mcp__gitlab` missing from `--allowedTools`, or MR context unavailable |
-| Code Review failed/timed out | Comment `@claude review once` — the Checks tab Re-run button does not retrigger Code Review |
-| Code Review didn't run | Monthly spend cap reached — raise at `claude.ai/admin-settings/usage` |
-| Findings missing from diff | Check the check-run Details table, Files-changed annotations, and "Additional findings" in the review body |
-| GHES session fails to clone | Instance not reachable from Anthropic infra, or hostname mismatch in admin settings |
+---
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Claude Code GitHub Actions](references/claude-code-github-actions.md) — Running Claude in GitHub Actions: quick and manual setup, v1 action inputs, beta-to-v1 migration, Bedrock/Vertex workflows via OIDC/WIF, example workflows, cost controls, and troubleshooting.
-- [Claude Code GitLab CI/CD](references/claude-code-gitlab-ci-cd.md) — Beta GitLab integration maintained by GitLab: `.gitlab-ci.yml` job template, `AI_FLOW_*` webhook variables, Bedrock and Vertex examples, provider abstraction, security and governance.
-- [Claude Code in Slack](references/claude-code-slack.md) — Delegating coding tasks from Slack channels: routing modes, context gathering, session flow, message actions, access control, and limitations.
-- [Code Review](references/claude-code-code-review.md) — Managed PR review product: multi-agent analysis, severity levels, review triggers, `@claude review` commands, `CLAUDE.md` and `REVIEW.md` customization, check-run parsing, pricing, and spend caps.
-- [Claude Code with GitHub Enterprise Server](references/claude-code-github-enterprise-server.md) — Connecting a self-hosted GHES instance: guided and manual admin setup, GitHub App permissions, supported features, plugin marketplace URLs, managed-settings allowlists, and limitations.
+- [Claude Code GitHub Actions](references/claude-code-github-actions.md) — setup, workflow examples, cloud provider auth (Bedrock/Vertex), action parameters, best practices, troubleshooting
+- [Claude Code GitLab CI/CD](references/claude-code-gitlab-ci-cd.md) — beta integration, job configuration, OIDC/WIF auth, use cases, security, troubleshooting
+- [Code Review](references/claude-code-code-review.md) — automated PR reviews, severity levels, REVIEW.md customization, pricing, usage analytics
+- [Claude Code in Slack](references/claude-code-slack.md) — setup, routing modes, session flow, access controls, limitations
+- [Claude Code with GitHub Enterprise Server](references/claude-code-github-enterprise-server.md) — admin setup, GitHub App permissions, developer workflow, GHES marketplaces, limitations
 
 ## Sources
 
 - Claude Code GitHub Actions: https://code.claude.com/docs/en/github-actions.md
 - Claude Code GitLab CI/CD: https://code.claude.com/docs/en/gitlab-ci-cd.md
-- Claude Code in Slack: https://code.claude.com/docs/en/slack.md
 - Code Review: https://code.claude.com/docs/en/code-review.md
+- Claude Code in Slack: https://code.claude.com/docs/en/slack.md
 - Claude Code with GitHub Enterprise Server: https://code.claude.com/docs/en/github-enterprise-server.md

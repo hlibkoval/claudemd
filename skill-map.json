@@ -44,6 +44,10 @@
       {
         "url": "https://code.claude.com/docs/en/plugin-marketplaces.md",
         "file": "claude-code-plugin-marketplaces.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/plugin-dependencies.md",
+        "file": "claude-code-plugin-dependencies.md"
       }
     ],
     "mcp-doc": [
@@ -154,6 +158,10 @@
       {
         "url": "https://code.claude.com/docs/en/ultraplan.md",
         "file": "claude-code-ultraplan.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/ultrareview.md",
+        "file": "claude-code-ultrareview.md"
       }
     ],
     "ide-doc": [
@@ -354,6 +362,12 @@
       {
         "url": "https://code.claude.com/docs/en/routines.md",
         "file": "claude-code-routines.md"
+      }
+    ],
+    "errors-doc": [
+      {
+        "url": "https://code.claude.com/docs/en/errors.md",
+        "file": "claude-code-errors.md"
       }
     ],
     "headless-doc": [
