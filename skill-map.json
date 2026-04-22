@@ -278,6 +278,10 @@
         "file": "claude-code-monitoring-usage.md"
       },
       {
+        "url": "https://code.claude.com/docs/en/debug-your-config.md",
+        "file": "claude-code-debug-your-config.md"
+      },
+      {
         "url": "https://code.claude.com/docs/en/troubleshooting.md",
         "file": "claude-code-troubleshooting.md"
       },
