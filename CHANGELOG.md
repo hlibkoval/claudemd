@@ -2,6 +2,53 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.22
+
+**30 references updated across 10 skills:** agent-sdk-doc, best-practices-doc, cli-doc, getting-started-doc, hooks-doc, memory-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+- **`UserPromptExpansion` hook event** — fires when a slash command expands into a prompt before reaching Claude; can block the expansion; matches on `command_name`; stdout is added to Claude's context; supported by all four hook types (hooks-doc, plugins-doc)
+- **`CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT` env var** — use the minimal system prompt from simple mode without disabling tool discovery, hooks, MCP servers, or CLAUDE.md (settings-doc)
+- **`skipWebFetchPreflight` setting** — skip the WebFetch domain safety hostname check sent to `api.anthropic.com`; useful for Bedrock/Vertex/Foundry deployments with restrictive egress (settings-doc, security-doc)
+- **WebFetch domain safety check** — before fetching a URL the WebFetch tool sends the hostname to `api.anthropic.com` against a safety blocklist; runs regardless of provider; results cached per hostname for five minutes; opt out with `skipWebFetchPreflight: true` (security-doc)
+- **`sessionStore` SDK option** — mirror session transcripts to an external backend so any host can resume them; available in both TypeScript and Python SDKs (agent-sdk-doc)
+- **`AgentDefinition` expanded fields** — `disallowedTools`, `initialPrompt`, `maxTurns`, `background`, `effort`, and `permissionMode` are now documented in both TypeScript and Python SDKs (agent-sdk-doc)
+- **W3C trace context auto-propagation** — Agent SDK injects `TRACEPARENT`/`TRACESTATE` from an active span into the CLI subprocess so Claude Code spans appear as children of your application's trace; also forwarded to Bash/PowerShell subprocesses (agent-sdk-doc, operations-doc)
+- **OTel span hierarchy documentation** — full schema for `claude_code.interaction`, `llm_request`, `tool`, `tool.blocked_on_user`, `tool.execution`, and `hook` spans with per-attribute gating details (operations-doc)
+- **New OTel log events** — `permission_mode_changed`, `auth`, `mcp_server_connection`, `internal_error`, `api_retries_exhausted`, `hook_execution_start`, `hook_execution_complete`, `compaction` (operations-doc)
+- **`allowCrossMarketplaceDependenciesOn` marketplace field** — allowlist other marketplaces from which plugins in this marketplace may pull dependencies; cross-marketplace dependencies are otherwise blocked at install (plugins-doc)
+- **`userConfig` schema expanded** — `type`, `title`, `required`, `default`, `multiple`, `min`/`max` fields now documented for plugin user-config options; `type` and `title` are required (plugins-doc)
+- **`start_type` metric attribute** — `session_start` metric now includes `start_type` (`fresh`, `resume`, or `continue`) (operations-doc)
+- **`query_source` and `speed` metric attributes** — `api_request` counter and token counter now include `query_source` (`main`, `subagent`, or `auxiliary`) and `speed` (`fast`) (operations-doc)
+- **Named skill arguments (`arguments` frontmatter)** — declare named positional arguments in skill frontmatter; use `$name` placeholders in skill content instead of `$ARGUMENTS[N]` (skills-doc)
+- **Debug your configuration page** — new dedicated doc linked from settings, memory, skills, and hooks docs (settings-doc, memory-doc, skills-doc, hooks-doc)
+- **`claude_code.hook` span requires beta tracing** — hook spans now require `ENABLE_BETA_TRACING_DETAILED=1` and `BETA_TRACING_ENDPOINT` in addition to standard trace variables (agent-sdk-doc, operations-doc)
+
+### Changed
+- **`OTEL_LOG_RAW_API_BODIES` file mode** — now accepts `file:<dir>` to write untruncated request/response bodies to disk with a `body_ref` path in the event instead of the inline truncated `body`; affects env vars doc, monitoring doc, and agent SDK observability doc (settings-doc, operations-doc, agent-sdk-doc)
+- **`OTEL_LOG_TOOL_DETAILS` adds raw error strings** — tool failure error messages are now included when this flag is set (settings-doc)
+- **`tool_result` event `error` field split** — `error` is now split into `error_type` (always present on failure) and `error` gated on `OTEL_LOG_TOOL_DETAILS=1` (operations-doc)
+- **`plugin_installed` and `skill_activated` event redaction** — `plugin.name`, `plugin.version`, `marketplace.name`, and `skill.name` for third-party sources are now redacted unless `OTEL_LOG_TOOL_DETAILS=1` (operations-doc)
+- **Subagent frontmatter hooks fire in main-session `--agent` mode** — previously documented as not firing for `--agent`; now fires alongside `settings.json` hooks in that case (sub-agents-doc)
+- **Task list display reduced from 10 to 5 tasks** — `Ctrl+T` task list now shows up to 5 tasks at a time instead of 10 (cli-doc)
+- **`/terminal-setup` sets mouse wheel scroll sensitivity** — in VS Code, Cursor, and Windsurf it now also writes `terminal.integrated.mouseWheelScrollSensitivity` for smoother fullscreen scrolling; conflict messaging updated (cli-doc)
+- **Session recap `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` env var removed from docs** — override via env var no longer documented; toggle via `/config` only (cli-doc)
+- **Auto mode classifier guidance updated** — CLAUDE.md now recommended for project-level classifier steering; `autoMode` settings block positioned for cross-project infrastructure rules (settings-doc)
+- **`/status` now shows `HKCU` settings origin** — Windows user-level registry source `Enterprise managed settings (HKCU)` added to `/status` output (settings-doc)
+- **macOS MDM settings plist format documented** — top-level keys mirror `managed-settings.json`; nested settings are dictionaries; arrays are plist arrays (settings-doc)
+- **Sandboxing `failIfUnavailable` wording** — "platform restrictions" removed from failure triggers; only missing dependencies or unsupported platform apply (settings-doc, security-doc)
+- **Sandbox auto-allow protects critical paths** — `rm`/`rmdir` targeting `/`, home directory, or critical system paths still trigger a permission prompt even in auto-allow sandbox mode (settings-doc, security-doc)
+- **Download host updated to `downloads.claude.ai`** — network config, troubleshooting, and setup docs updated; `storage.googleapis.com` is now the legacy host used only by older clients (getting-started-doc, security-doc, operations-doc)
+- **MCP connectors URL changed** — `claude.ai/settings/connectors` updated to `claude.ai/customize/connectors` (mcp-doc)
+- **Troubleshooting content moved to debug-your-config page** — symptom table and `/context` inspection commands removed from claude-directory doc and replaced with a link (memory-doc)
+- **`model` field in `AgentDefinition` accepts full model IDs** — previously only aliases (`sonnet`, `opus`, `haiku`, `inherit`); now accepts any full model ID string (agent-sdk-doc)
+- **`effort` type in Python `ClaudeAgentOptions` dropped `xhigh`** — `effort` literal type is now `"low" | "medium" | "high" | "max"` (agent-sdk-doc)
+- **Extended thinking spinner text updated** — "progress hints appear below the indicator" replaced with specific inline spinner text "still thinking" / "almost done thinking" (best-practices-doc)
+- **`CwdChanged` and `FileChanged` hooks support all hook types** — "Only `type: command` hooks" restriction removed from docs (hooks-doc)
+
+### Removed
+- **`Experiment` A/B testing component removed from quickstart and overview** — client-side experiment bucketing code deleted from reference docs (getting-started-doc)
+
 ## 26.4.21
 
 **67 references updated across 19 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
