@@ -2,6 +2,22 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.23
+
+**5 new reference docs added; 77 reference files updated across all 18 skills; all SKILL.md files regenerated.**
+
+### New reference docs
+
+- **Auto mode configuration** (`settings-doc`) — `autoMode` settings block for telling the auto mode classifier which repos, buckets, and domains your organization trusts; `autoMode.environment`, override block/allow rules, `claude auto-mode` CLI subcommands, and how scopes compose (user, project-local, managed)
+- **Debug your configuration** (`operations-doc`) — guide for diagnosing why CLAUDE.md, settings, hooks, MCP servers, or skills aren't taking effect; covers `/context`, `/memory`, `/skills`, `/hooks`, `/mcp`, `/permissions`, `/doctor`, and `/status` commands
+- **Error reference** (`operations-doc`) — runtime error lookup table mapping terminal messages to causes and recovery steps; covers server errors, usage limits, auth errors, network errors, and request errors
+- **Plugin dependency version constraints** (`plugins-doc`) — declare `version` constraints in `plugin.json` `dependencies` array using semver ranges (`~`, `^`, exact); cross-marketplace dependency syntax and constraint intersection behavior
+- **Ultrareview** (`best-practices-doc`) — `/ultrareview` launches a fleet of remote reviewer agents that independently reproduce and verify findings before reporting; pricing, free-run limits, PR mode, and comparison to local `/review`
+
+### Changed
+
+- Widespread reference doc updates across all skills (77 files, ~2500 insertions) reflecting ongoing upstream doc evolution throughout the `26.4.16` → `26.4.23` window
+
 ## 26.4.22
 
 **30 references updated across 10 skills:** agent-sdk-doc, best-practices-doc, cli-doc, getting-started-doc, hooks-doc, memory-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
