@@ -2,6 +2,58 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.24
+
+**42 references updated across 13 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`PostToolBatch` hook event** — fires once after a full batch of parallel tool calls resolves, before the next model call; supports all five hook types; can block the agentic loop via `decision: "block"`; TypeScript-only in the SDK (hooks-doc, agent-sdk-doc, plugins-doc)
+- **`mcp_tool` hook type** — call a tool on an already-connected MCP server as a hook handler; `server`, `tool`, and `input` fields with `${path}` substitution; available on all events except those that only support `command` (hooks-doc, agent-sdk-doc, plugins-doc)
+- **Forked subagents (`CLAUDE_CODE_FORK_SUBAGENT`)** — a fork inherits the full conversation context from the main session; `/fork` spawns a fork when enabled; panel UI with `↑/↓/Enter/x/Esc` controls for observing and steering running forks; fork mode runs all subagents in the background; experimental, v2.1.117+ (sub-agents-doc, settings-doc)
+- **`ENABLE_PROMPT_CACHING_1H` env var** — request a 1-hour prompt cache TTL instead of the default 5-minute TTL on API key, Bedrock, Vertex AI, and Foundry; billed at a higher rate; documented with examples in SDK cost-tracking guide (agent-sdk-doc, cloud-providers-doc, settings-doc)
+- **`DISABLE_UPDATES` env var** — blocks all update paths including manual `claude update` and `claude install`; stricter than `DISABLE_AUTOUPDATER` (settings-doc, getting-started-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT` env var** — enables forked subagents and changes `/fork` behavior; interactive mode only (settings-doc)
+- **`CLAUDE_CODE_HIDE_CWD` env var** — hides the working directory in the startup logo (operations-doc changelog)
+- **`wslInheritsWindowsSettings` managed setting** — WSL reads managed settings from the Windows policy chain when set in HKLM registry or `C:\Program Files\ClaudeCode\managed-settings.json`; Windows admin required (settings-doc)
+- **Custom themes (`~/.claude/themes/`)** — JSON files with `name`, `base`, and `overrides` fields; hot-reloaded on change; listed in `/theme` alongside built-in presets; selectable interactively via **New custom theme…**; plugins can ship themes in a `themes/` directory (cli-doc, memory-doc, plugins-doc)
+- **`claude install [version]` CLI command** — install or reinstall the native binary; accepts a version string, `stable`, or `latest` (cli-doc)
+- **`claude plugin tag` CLI command** — create a release git tag for the plugin in the current directory; `--push`, `--dry-run`, `--force` options; validates manifest and requires clean working tree (plugins-doc)
+- **One-off schedule triggers for routines** — schedule a routine to fire once at a specific future time; auto-disables after firing; exempt from the daily run cap; create via `/schedule` with natural-language time descriptions (features-doc)
+- **`$defaults` placeholder in `autoMode` arrays** — include `"$defaults"` in `environment`, `allow`, or `soft_deny` to splice in the built-in rules at that position instead of replacing them (settings-doc)
+- **`prUrlTemplate` setting** — point the footer PR badge at a custom code-review URL (operations-doc changelog)
+- **Vim visual mode** — `v` (character-wise) and `V` (line-wise) selection in the prompt input; operators `d`/`y`/`c`/`p`/`r`/`~`/`>`/`<`/`J`/`o` act on the selection; statusline reports `VISUAL` and `VISUAL LINE` modes (cli-doc, features-doc)
+- **`Hook vs Skill` comparison tab** — new section in features overview explaining when to use hooks vs skills and how to put guardrails in hooks (features-doc)
+
+### Changed
+
+- **`/usage` consolidates `/cost` and `/stats`** — both remain as typing aliases; command reference updated throughout; `SDKLocalCommandOutputMessage` example updated (cli-doc, agent-sdk-doc, operations-doc)
+- **Plugin version management rewritten** — explicit `version` pins the plugin; omitting `version` uses the git commit SHA so every commit is a new version; `plugin.json` wins over `marketplace.json` when both are set; semver still recommended when using explicit versions (plugins-doc)
+- **`--continue` and `--resume` include `/add-dir` sessions** — sessions that added the current directory with `/add-dir` are now included in the session picker and `--continue` (cli-doc, best-practices-doc)
+- **`DISABLE_AUTOUPDATER` clarified** — only stops background checks; `claude update` and `claude install` still work; use `DISABLE_UPDATES` to block everything (settings-doc, getting-started-doc)
+- **Filesystem hook type table adds `mcp_tool`** — "four other types" updated to "five"; `SessionStart` and `Setup` now support `mcp_tool` in addition to `command` (hooks-doc, agent-sdk-doc)
+- **`/branch` / `/fork` disambiguation** — when `CLAUDE_CODE_FORK_SUBAGENT` is set, `/fork` is no longer an alias for `/branch` (cli-doc)
+- **`/color` syncs to Remote Control** — color change now syncs to claude.ai/code when Remote Control is connected (cli-doc)
+- **`/theme` lists custom and plugin themes** — updated description includes local and plugin themes and the **New custom theme…** option (cli-doc)
+- **`availableModels` Config tool reference removed** — `/model`, `--model`, and `ANTHROPIC_MODEL` remain; Config tool no longer listed as a way to switch models (settings-doc, features-doc)
+- **Auto mode `$defaults` replaces `claude auto-mode defaults` copy-paste workflow** — documentation restructured around the `"$defaults"` placeholder; danger block moved to warn about omitting it (settings-doc)
+- **`PostToolUse` / `PostToolUseFailure` gain `duration_ms`** — tool execution time (excluding permission prompts and PreToolUse hooks) now included in hook inputs (operations-doc changelog)
+- **`if` field on hooks now applies to `PermissionDenied`** — previously only `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest` (hooks-doc)
+- **Model config companion env vars apply to LLM gateways** — `_NAME` and `_DESCRIPTION` variables now take effect when `ANTHROPIC_BASE_URL` points to an LLM gateway (features-doc)
+- **`autoMode` setting description updated** — now mentions `"$defaults"` in example value (settings-doc)
+- **Agent teams broadcast removed** — `broadcast` to all teammates replaced by sending one message per recipient (agent-teams-doc)
+- **Data usage encryption-at-rest table** — per-provider AES-256 details added; TLS version clarified to 1.2+ (security-doc)
+- **Context window advice updated** — CLAUDE.md trimming guidance now recommends path-scoped rules instead of imports (errors-doc)
+- **Effort level advice simplified** — "defaults vary by model and plan" changed to "defaults vary by model" (errors-doc)
+- **Plugin dependency `claude plugin tag` shortcut** — `git tag` manually still works but `claude plugin tag --push` is now the recommended workflow (plugins-doc)
+- **Plugin dependency skip message now surfaces in `/doctor`** — auto-update constraint skip now listed in `/doctor` and the `/plugin` Errors tab (plugins-doc)
+- **Version resolution priority documented in plugins** — precedence: `plugin.json` → `marketplace.json` → git SHA → `unknown` (plugins-doc)
+- **`/usage` progress bar fix noted in upstream changelog** — overlapping "Resets …" labels fixed in v2.1.119 (operations-doc)
+
+### Removed
+
+- **`Config` tool removed from TypeScript SDK** — `ConfigInput`, `ConfigOutput`, and `Config` tool documentation removed from SDK reference; `ToolInputSchemas` and `ToolOutputSchemas` types updated (agent-sdk-doc)
+
 ## 26.4.23
 
 **5 new reference docs added; 77 reference files updated across all 18 skills; all SKILL.md files regenerated.**
