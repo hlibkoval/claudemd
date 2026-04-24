@@ -78,6 +78,10 @@
         "file": "claude-code-settings.md"
       },
       {
+        "url": "https://code.claude.com/docs/en/admin-setup.md",
+        "file": "claude-code-admin-setup.md"
+      },
+      {
         "url": "https://code.claude.com/docs/en/permissions.md",
         "file": "claude-code-permissions.md"
       },

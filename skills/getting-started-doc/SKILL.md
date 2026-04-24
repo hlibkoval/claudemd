@@ -1,158 +1,216 @@
 ---
 name: getting-started-doc
-description: Complete official documentation for getting started with Claude Code — overview, quickstart, setup and installation, authentication, how the agentic loop works, and available platforms and integrations.
+description: Complete official documentation for getting started with Claude Code — overview of capabilities, quickstart walkthrough, system requirements and all installation methods, authentication and credential management, the agentic loop and built-in tools, session management, context window handling, and platform/integration comparison.
 user-invocable: false
 ---
 
-# Getting Started with Claude Code Documentation
+# Getting Started Documentation
 
 This skill provides the complete official documentation for getting started with Claude Code.
 
 ## Quick Reference
 
-Claude Code is an AI-powered agentic coding assistant. It reads your codebase, edits files, runs commands, and integrates with your development tools. Available in the terminal, IDE extensions, a desktop app, and the browser.
+Claude Code is an AI-powered agentic coding assistant that reads your codebase, edits files, runs commands, and integrates with your development tools. It is available in the terminal, IDEs, desktop app, and browser.
 
 ### Installation
 
-| Platform | Command / Method |
-| :--- | :--- |
-| macOS / Linux / WSL | `curl -fsSL https://claude.ai/install.sh \| bash` |
-| Windows PowerShell | `irm https://claude.ai/install.ps1 \| iex` |
-| Windows CMD | `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd` |
-| Homebrew (stable) | `brew install --cask claude-code` |
-| Homebrew (latest) | `brew install --cask claude-code@latest` |
-| WinGet | `winget install Anthropic.ClaudeCode` |
-| npm | `npm install -g @anthropic-ai/claude-code` |
-| apt (Debian/Ubuntu) | Add signed repo, then `sudo apt install claude-code` |
-| dnf (Fedora/RHEL) | Add signed repo, then `sudo dnf install claude-code` |
-| apk (Alpine) | Add signed repo, then `apk add claude-code` |
+| Platform | Method | Command |
+| :--- | :--- | :--- |
+| macOS / Linux / WSL | Native (recommended, auto-updates) | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| Windows PowerShell | Native (recommended, auto-updates) | `irm https://claude.ai/install.ps1 \| iex` |
+| Windows CMD | Native | `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd` |
+| macOS | Homebrew stable (no auto-update) | `brew install --cask claude-code` |
+| macOS | Homebrew latest (no auto-update) | `brew install --cask claude-code@latest` |
+| Any | WinGet (no auto-update) | `winget install Anthropic.ClaudeCode` |
+| Any | npm (Node 18+) | `npm install -g @anthropic-ai/claude-code` |
+| Debian/Ubuntu | apt (no auto-update) | Add signed repo, then `sudo apt install claude-code` |
+| Fedora/RHEL | dnf (no auto-update) | Add signed repo, then `sudo dnf install claude-code` |
+| Alpine | apk (no auto-update) | Add signed repo, then `apk add claude-code` |
 
-Native installer installations auto-update in the background. Homebrew, WinGet, and Linux package manager installations require manual upgrades.
+Native installs auto-update in the background. Homebrew, WinGet, and Linux package manager installs require manual upgrades. Do NOT use `sudo npm install -g`.
 
 ### System requirements
 
-| Requirement | Details |
+| Component | Requirement |
 | :--- | :--- |
 | OS | macOS 13+, Windows 10 1809+ / Server 2019+, Ubuntu 20.04+, Debian 10+, Alpine 3.19+ |
 | Hardware | 4 GB+ RAM, x64 or ARM64 |
-| Shell | Bash, Zsh, PowerShell, or CMD. Native Windows requires Git for Windows. |
+| Shell | Bash, Zsh, PowerShell, or CMD (native Windows requires Git for Windows) |
 | Network | Internet connection required |
 
-### Authentication
+### Quickstart steps
 
-Supported account types (in order of precedence):
-
-| Method | How to configure |
-| :--- | :--- |
-| Cloud providers (Bedrock, Vertex, Foundry) | Set `CLAUDE_CODE_USE_BEDROCK`, `CLAUDE_CODE_USE_VERTEX`, or `CLAUDE_CODE_USE_FOUNDRY` |
-| `ANTHROPIC_AUTH_TOKEN` env var | Bearer token for LLM gateways/proxies |
-| `ANTHROPIC_API_KEY` env var | Direct Anthropic API key from the Console |
-| `apiKeyHelper` script | Dynamic/rotating credentials from a vault |
-| `CLAUDE_CODE_OAUTH_TOKEN` env var | Long-lived token from `claude setup-token` (for CI) |
-| Subscription OAuth (`/login`) | Default for Pro, Max, Team, and Enterprise users |
-
-Generate a long-lived CI token: `claude setup-token` (valid one year, scoped to inference only).
-
-Credential storage: macOS Keychain on macOS; `~/.claude/.credentials.json` (mode 0600) on Linux/Windows.
+1. Install Claude Code (see table above)
+2. `cd your-project && claude`
+3. Log in on first launch — browser opens automatically; press `c` to copy the URL if it does not
+4. Ask questions or give tasks in plain language
 
 ### Essential CLI commands
 
 | Command | What it does |
 | :--- | :--- |
-| `claude` | Start interactive mode |
+| `claude` | Start interactive session |
 | `claude "task"` | Run a one-time task |
-| `claude -p "query"` | Run a one-off query and exit |
+| `claude -p "query"` | One-off query, then exit |
 | `claude -c` | Continue most recent conversation in current directory |
 | `claude -r` | Resume a previous conversation |
+| `claude --continue --fork-session` | Fork a session to try a different approach |
 | `claude --model <name>` | Start with a specific model |
-| `claude update` | Apply a pending update immediately |
-| `claude --version` | Print installed version |
+| `claude --version` | Show installed version |
 | `claude doctor` | Diagnose installation issues |
+| `claude update` | Apply update immediately |
 | `claude setup-token` | Generate a long-lived OAuth token for CI |
-| `/help` | Show available commands in interactive mode |
 | `/login` | Log in or switch accounts |
 | `/logout` | Log out |
 | `/clear` | Clear conversation history |
-| `/model` | Switch model mid-session |
+| `/compact` | Summarize context to free space |
 | `/context` | Show what is consuming context |
-| `/compact` | Manually compact the context window |
-| `/init` | Walk through creating a CLAUDE.md |
+| `/help` | Show available commands |
+| `/model` | Switch model mid-session |
+| `/init` | Create a CLAUDE.md for your project |
 | `exit` or Ctrl+D | Exit Claude Code |
+
+### Authentication precedence (highest wins)
+
+| Priority | Method | When to use |
+| :--- | :--- | :--- |
+| 1 | Cloud provider env vars (`CLAUDE_CODE_USE_BEDROCK`, `CLAUDE_CODE_USE_VERTEX`, `CLAUDE_CODE_USE_FOUNDRY`) | AWS Bedrock, Google Vertex AI, Microsoft Foundry |
+| 2 | `ANTHROPIC_AUTH_TOKEN` env var | LLM gateways / proxies (bearer token) |
+| 3 | `ANTHROPIC_API_KEY` env var | Direct Anthropic API with Console key |
+| 4 | `apiKeyHelper` script | Dynamic / rotating credentials |
+| 5 | `CLAUDE_CODE_OAUTH_TOKEN` env var | CI pipelines (`claude setup-token` generates this) |
+| 6 | Subscription OAuth from `/login` | Default for Pro, Max, Team, Enterprise |
+
+Credentials are stored in the macOS Keychain (macOS) or `~/.claude/.credentials.json` (Linux/Windows, mode 0600 on Linux).
+
+### Account types for teams
+
+| Type | Notes |
+| :--- | :--- |
+| Claude Pro / Max | Individual subscription |
+| Claude for Teams | Self-service, admin tools, centralized billing |
+| Claude for Enterprise | Adds SSO, domain capture, RBAC, compliance API, managed policy |
+| Claude Console | API billing; users need Console invite; assign Claude Code or Developer role |
+| Bedrock / Vertex / Foundry | Set provider env vars; no browser login needed |
+
+### Version / update management
+
+| Setting / env | Purpose |
+| :--- | :--- |
+| `"autoUpdatesChannel": "latest"` | Receive updates immediately (default) |
+| `"autoUpdatesChannel": "stable"` | ~1 week behind; skips major regressions |
+| `"minimumVersion": "2.x.y"` | Floor; prevents downgrading below this build |
+| `DISABLE_AUTOUPDATER=1` | Stop background checks (manual `claude update` still works) |
+| `DISABLE_UPDATES` | Block all update paths including manual |
 
 ### The agentic loop
 
-Claude Code works through three phases that blend together: **gather context** → **take action** → **verify results**, then repeats. You can interrupt at any point to steer.
+Claude Code operates in three phases that blend and repeat until the task is done:
 
-Built-in tool categories:
+1. **Gather context** — reads files, searches codebase, understands current state
+2. **Take action** — edits files, runs commands, calls tools
+3. **Verify results** — runs tests, checks output, course-corrects
+
+Each tool call feeds new information back into the loop. You can interrupt at any point to steer Claude.
+
+### Built-in tool categories
 
 | Category | What Claude can do |
 | :--- | :--- |
-| File operations | Read files, edit code, create files, rename and reorganize |
-| Search | Find files by pattern, search content with regex, explore codebases |
+| File operations | Read, edit, create, rename, reorganize files |
+| Search | Find files by pattern, search content with regex |
 | Execution | Run shell commands, start servers, run tests, use git |
-| Web | Search the web, fetch documentation, look up errors |
-| Code intelligence | Type errors, jump to definitions, find references (requires plugin) |
+| Web | Search the web, fetch documentation |
+| Code intelligence | See type errors, jump to definitions, find references (requires code intelligence plugins) |
 
-### Permission modes (cycle with Shift+Tab)
+### Permission modes (Shift+Tab to cycle)
 
 | Mode | Behavior |
 | :--- | :--- |
 | Default | Asks before file edits and shell commands |
-| Auto-accept edits | Edits files and runs common filesystem commands without asking |
-| Plan mode | Read-only tools only; creates a plan for you to approve |
-| Auto mode | Evaluates all actions with background safety checks (research preview) |
+| Auto-accept edits | Edits files and common filesystem commands without asking |
+| Plan mode | Read-only tools only; creates a plan for your approval |
+| Auto mode | Claude evaluates all actions with background safety checks (research preview) |
 
-### Available surfaces
+Every file edit is checkpointed before it happens — press Esc twice to rewind to any previous state.
 
-| Surface | Best for |
+### Session management
+
+- Sessions are saved locally to `~/.claude/projects/` as JSONL files
+- Each session starts with a fresh context window — use CLAUDE.md and auto memory for persistence
+- `/resume` picker shows sessions for the current worktree; keyboard shortcuts widen the scope
+- `--fork-session` branches the conversation without affecting the original
+- Multiple terminals resuming the same session interleave messages — use `--fork-session` for parallel work
+
+### Context window tips
+
+- Put persistent rules in `CLAUDE.md` — they survive `/compact`
+- Run `/compact focus on <area>` to control what is preserved during compaction
+- Use subagents for long tasks — they run in a fresh, isolated context
+- Run `/context` to see what is consuming space; `/mcp` for per-server MCP costs
+- MCP tool definitions are deferred by default — only names load at startup
+
+### Platforms at a glance
+
+| Platform | Best for | Notable features |
+| :--- | :--- | :--- |
+| CLI | Terminal workflows, scripting, remote servers | Full feature set, Agent SDK, third-party providers |
+| Desktop | Visual review, parallel sessions | Diff viewer, computer use, Dispatch from mobile |
+| VS Code | Working inside VS Code | Inline diffs, integrated terminal, file context |
+| JetBrains | IntelliJ, PyCharm, WebStorm, etc. | Diff viewer, selection sharing |
+| Web | Long-running cloud tasks, offline continuation | Keeps running after you disconnect |
+| Mobile (iOS/Android) | Starting and monitoring tasks remotely | Remote Control, Dispatch to Desktop (Pro/Max) |
+
+CLAUDE.md files, settings, and MCP servers are shared across all local surfaces.
+
+### Integrations
+
+| Integration | What it does |
 | :--- | :--- |
-| CLI (Terminal) | Full feature set, scripting, third-party providers, Agent SDK |
-| Desktop app | Visual diff review, parallel sessions, computer use (Pro/Max) |
-| VS Code extension | Inline diffs, integrated terminal, file context inside VS Code |
-| JetBrains plugin | Diff viewer, selection sharing in IntelliJ/PyCharm/WebStorm |
-| Web (claude.ai/code) | Cloud sessions that keep running after you disconnect |
-| Mobile (iOS/Android) | Start and monitor cloud sessions; Remote Control for local sessions |
+| Chrome | Controls browser with your logged-in sessions |
+| GitHub Actions | Runs Claude in CI pipeline for PR reviews and issue triage |
+| GitLab CI/CD | Same for GitLab |
+| Code Review | Reviews every PR automatically |
+| Slack | Turns `@Claude` mentions into pull requests |
+| MCP servers | Connect to Linear, Notion, Google Drive, custom APIs, etc. |
 
-### Release channel settings
+### Work when away from terminal
 
-```json
-{
-  "autoUpdatesChannel": "stable",
-  "minimumVersion": "2.1.100"
-}
-```
+| Option | Claude runs on | Best for |
+| :--- | :--- | :--- |
+| Dispatch | Your machine (Desktop) | Delegating tasks from your phone, minimal setup |
+| Remote Control | Your machine (CLI or VS Code) | Steering in-progress work from another device |
+| Channels | Your machine (CLI) | Reacting to events from Telegram, Discord, or webhooks |
+| Slack | Anthropic cloud | PRs and code review from team chat |
+| Scheduled tasks | CLI, Desktop, or cloud | Recurring automation (daily reviews, overnight CI analysis) |
 
-`autoUpdatesChannel` values: `"latest"` (default) or `"stable"` (approx. one week behind). Set `DISABLE_AUTOUPDATER=1` in `env` to disable auto-updates entirely.
+### Uninstall
 
-### Integrations at a glance
-
-| Integration | Use for |
+| Method | Command |
 | :--- | :--- |
-| GitHub Actions | Automated PR reviews, issue triage, CI maintenance |
-| GitLab CI/CD | Same as GitHub Actions for GitLab |
-| Code Review | Automatic review on every pull request |
-| Slack | `@Claude` in a channel → get a PR back |
-| Chrome | Control your browser for testing and automation |
-| Remote Control | Drive a running local session from any browser or phone |
-| Channels | Push events from Telegram, Discord, or webhooks into a session |
-| Routines | Recurring tasks on Anthropic-managed cloud infrastructure |
+| Native (macOS/Linux) | `rm -f ~/.local/bin/claude && rm -rf ~/.local/share/claude` |
+| Native (Windows) | `Remove-Item "$env:USERPROFILE\.local\bin\claude.exe" -Force` |
+| Homebrew | `brew uninstall --cask claude-code` |
+| WinGet | `winget uninstall Anthropic.ClaudeCode` |
+| npm | `npm uninstall -g @anthropic-ai/claude-code` |
+| Config files | `rm -rf ~/.claude && rm ~/.claude.json` (deletes all settings and history) |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Claude Code overview](references/claude-code-overview.md) — what Claude Code is, all supported surfaces, available integrations, and what you can do with it
-- [Quickstart](references/claude-code-quickstart.md) — step-by-step guide from installation through your first code change, git operations, and common workflows
-- [Advanced setup](references/claude-code-setup.md) — system requirements, platform-specific installation, Linux package managers, npm, binary integrity verification, update management, and uninstallation
-- [Authentication](references/claude-code-authentication.md) — individual and team authentication, credential management, authentication precedence, and long-lived CI tokens
-- [How Claude Code works](references/claude-code-how-it-works.md) — the agentic loop, built-in tools, what Claude can access, session management, context window, checkpoints, and permission modes
-- [Platforms and integrations](references/claude-code-platforms.md) — comparison of all surfaces (CLI, Desktop, VS Code, JetBrains, web, mobile), integrations (Chrome, GitHub Actions, GitLab, Code Review, Slack), and remote access options
+- [Claude Code Overview](references/claude-code-overview.md) — what Claude Code is, all surfaces, capabilities, and next steps
+- [Quickstart](references/claude-code-quickstart.md) — step-by-step walkthrough of your first session in the terminal
+- [Advanced Setup](references/claude-code-setup.md) — system requirements, all install methods, version management, binary verification, and uninstall
+- [Authentication](references/claude-code-authentication.md) — login flows, team authentication, credential storage, precedence, and long-lived tokens
+- [How Claude Code Works](references/claude-code-how-it-works.md) — the agentic loop, built-in tools, sessions, context management, checkpoints, permissions, and effective prompting tips
+- [Platforms and Integrations](references/claude-code-platforms.md) — platform comparison table, integrations, and remote-access options
 
 ## Sources
 
-- Claude Code overview: https://code.claude.com/docs/en/overview.md
+- Claude Code Overview: https://code.claude.com/docs/en/overview.md
 - Quickstart: https://code.claude.com/docs/en/quickstart.md
-- Advanced setup: https://code.claude.com/docs/en/setup.md
+- Advanced Setup: https://code.claude.com/docs/en/setup.md
 - Authentication: https://code.claude.com/docs/en/authentication.md
-- How Claude Code works: https://code.claude.com/docs/en/how-claude-code-works.md
-- Platforms and integrations: https://code.claude.com/docs/en/platforms.md
+- How Claude Code Works: https://code.claude.com/docs/en/how-claude-code-works.md
+- Platforms and Integrations: https://code.claude.com/docs/en/platforms.md
