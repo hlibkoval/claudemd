@@ -1,119 +1,131 @@
 ---
 name: plugins-doc
-description: Complete official documentation for the Claude Code plugin system — creating plugins, plugin manifest schema, plugin components (skills, agents, hooks, MCP servers, LSP servers, monitors, themes), discovering and installing plugins from marketplaces, creating and distributing marketplaces, plugin dependency version constraints, CLI commands, and debugging.
+description: Complete official documentation for Claude Code plugins — creating plugins, plugin manifest schema, plugin components (skills, agents, hooks, MCP/LSP servers, monitors, themes), discovering and installing plugins, creating and distributing marketplaces, plugin dependencies, and CLI reference.
 user-invocable: false
 ---
 
 # Plugins Documentation
 
-This skill provides the complete official documentation for the Claude Code plugin system.
+This skill provides the complete official documentation for Claude Code plugins.
 
 ## Quick Reference
 
-Plugins extend Claude Code with custom skills, agents, hooks, MCP servers, LSP servers, monitors, and themes. A plugin is a directory with a `.claude-plugin/plugin.json` manifest and component subdirectories at the plugin root.
+Plugins are self-contained directories that extend Claude Code with skills, agents, hooks, MCP servers, LSP servers, monitors, and themes. They can be shared via marketplaces.
 
-### Standalone configuration vs. plugins
+### Standalone vs plugin
 
 | Approach | Skill names | Best for |
 | :--- | :--- | :--- |
-| **Standalone** (`.claude/` directory) | `/hello` | Personal workflows, project-specific customizations, quick experiments |
-| **Plugins** (`.claude-plugin/plugin.json` directory) | `/plugin-name:hello` | Sharing with teammates, distributing to community, versioned releases, reusable across projects |
+| **Standalone** (`.claude/` dir) | `/hello` | Personal, project-specific, short names |
+| **Plugin** (dir with `.claude-plugin/plugin.json`) | `/plugin-name:hello` | Sharing, versioned releases, multi-project reuse |
 
 ### Plugin directory structure
 
 ```
 my-plugin/
-├── .claude-plugin/
-│   └── plugin.json         # Manifest (optional; name is only required field)
-├── skills/                 # Skills: <name>/SKILL.md directories
-├── commands/               # Skills as flat .md files (legacy; prefer skills/)
-├── agents/                 # Subagent Markdown definitions
-├── hooks/
-│   └── hooks.json          # Hook event handlers
-├── monitors/
-│   └── monitors.json       # Background monitors
-├── themes/                 # Color theme JSON files
-├── output-styles/          # Output style definitions
-├── bin/                    # Executables added to Bash tool's PATH
-├── settings.json           # Default settings (agent, subagentStatusLine only)
-├── .mcp.json               # MCP server configurations
-└── .lsp.json               # LSP server configurations
+├── .claude-plugin/plugin.json   ← manifest (optional; only file here)
+├── skills/<name>/SKILL.md       ← skills (new style)
+├── commands/<name>.md           ← skills (flat legacy style)
+├── agents/<name>.md             ← subagent definitions
+├── hooks/hooks.json             ← event handlers
+├── .mcp.json                    ← MCP server configs
+├── .lsp.json                    ← LSP server configs
+├── monitors/monitors.json       ← background monitors
+├── themes/<name>.json           ← color themes
+├── output-styles/               ← output style definitions
+├── bin/                         ← executables added to PATH
+└── settings.json                ← default settings (agent, subagentStatusLine only)
 ```
 
 ### plugin.json manifest schema
 
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `name` | string | Required. Kebab-case unique identifier; sets skill namespace (`/name:skill`) |
-| `version` | string | Semantic version. If set, users only receive updates when bumped. If omitted, git commit SHA is used |
-| `description` | string | Brief explanation of plugin purpose |
-| `author` | object | `{name, email, url}` |
+| `name` | string | **Required if manifest present.** Kebab-case unique identifier; used as skill namespace |
+| `version` | string | Optional semver. If set, users only get updates when bumped. Omit to use git commit SHA |
+| `description` | string | Shown in plugin manager |
+| `author` | object | `name`, `email`, `url` |
 | `homepage` | string | Documentation URL |
 | `repository` | string | Source code URL |
-| `license` | string | SPDX license identifier |
+| `license` | string | SPDX identifier (e.g. `"MIT"`) |
 | `keywords` | array | Discovery tags |
-| `skills` | string/array | Custom path(s) to skill directories (replaces default `skills/`) |
-| `commands` | string/array | Custom path(s) to flat .md skill files (replaces default `commands/`) |
-| `agents` | string/array | Custom path(s) to agent files |
-| `hooks` | string/array/object | Hook config paths or inline config |
-| `mcpServers` | string/array/object | MCP config paths or inline config |
-| `lspServers` | string/array/object | LSP config paths or inline config |
-| `outputStyles` | string/array | Output style files/directories |
-| `themes` | string/array | Color theme files/directories |
-| `monitors` | string/array | Background monitor configurations |
-| `userConfig` | object | User-configurable values prompted at enable time |
-| `channels` | array | Channel declarations (Telegram/Slack/Discord message injection) |
-| `dependencies` | array | Other plugins this plugin requires, with optional semver constraints |
+| `skills` | string\|array | Custom skill directories (replaces default `skills/`) |
+| `commands` | string\|array | Custom flat .md skill files/dirs (replaces default `commands/`) |
+| `agents` | string\|array | Custom agent files (replaces default `agents/`) |
+| `hooks` | string\|array\|object | Hook config paths or inline config |
+| `mcpServers` | string\|array\|object | MCP config paths or inline config |
+| `lspServers` | string\|array\|object | LSP server configs |
+| `monitors` | string\|array | Monitor configs path or inline array |
+| `outputStyles` | string\|array | Output style files/dirs |
+| `themes` | string\|array | Color theme files/dirs |
+| `userConfig` | object | Values prompted at enable time (see below) |
+| `channels` | array | Message channel declarations (Telegram, Slack, Discord) |
+| `dependencies` | array | Other plugins this plugin requires; supports semver constraints |
 
-### userConfig field schema
+### userConfig fields
+
+Declare values Claude Code prompts for at plugin enable time:
+
+```json
+{
+  "userConfig": {
+    "api_token": {
+      "type": "string",
+      "title": "API token",
+      "description": "Authentication token",
+      "sensitive": true,
+      "required": true
+    }
+  }
+}
+```
 
 | Field | Required | Description |
 | :--- | :--- | :--- |
-| `type` | Yes | One of `string`, `number`, `boolean`, `directory`, `file` |
-| `title` | Yes | Label shown in the configuration dialog |
-| `description` | Yes | Help text shown beneath the field |
-| `sensitive` | No | If `true`, masks input and stores in secure storage |
-| `required` | No | If `true`, validation fails when field is empty |
-| `default` | No | Value used when user provides nothing |
-| `multiple` | No | For `string` type, allow an array of strings |
-| `min`/`max` | No | Bounds for `number` type |
+| `type` | Yes | `string`, `number`, `boolean`, `directory`, or `file` |
+| `title` | Yes | Label in dialog |
+| `description` | Yes | Help text |
+| `sensitive` | No | Masks input; stores in keychain (~2 KB limit) |
+| `required` | No | Fails validation if empty |
+| `default` | No | Used when user provides nothing |
+| `multiple` | No | Allow array of strings (string type) |
+| `min`/`max` | No | Bounds for number type |
 
-Values are available as `${user_config.KEY}` in MCP/LSP/hook/monitor configs and exported as `CLAUDE_PLUGIN_OPTION_<KEY>` to subprocesses.
+Values available as `${user_config.KEY}` in hooks/MCP/LSP/monitor configs, and as `CLAUDE_PLUGIN_OPTION_<KEY>` env vars.
 
-### Plugin environment variables
+### Environment variables
 
-| Variable | Description |
+| Variable | Points to |
 | :--- | :--- |
-| `${CLAUDE_PLUGIN_ROOT}` | Absolute path to the plugin's installation directory. Changes on update |
-| `${CLAUDE_PLUGIN_DATA}` | Persistent directory for plugin state that survives updates (`~/.claude/plugins/data/{id}/`) |
+| `${CLAUDE_PLUGIN_ROOT}` | Plugin installation directory (changes on update) |
+| `${CLAUDE_PLUGIN_DATA}` | Persistent plugin data dir (`~/.claude/plugins/data/{id}/`); survives updates |
 
-### Hook events (plugin hooks)
+Use `${CLAUDE_PLUGIN_ROOT}` for bundled scripts/configs; use `${CLAUDE_PLUGIN_DATA}` for installed deps and generated files.
 
-Plugin hooks use the same events as user-defined hooks, declared in `hooks/hooks.json` or inline in `plugin.json`:
+### Plugin hook events
+
+Plugin hooks use the same events as user hooks:
 
 | Event | When it fires |
 | :--- | :--- |
-| `SessionStart` / `SessionEnd` | Session begins/terminates |
-| `UserPromptSubmit` | Before Claude processes a prompt |
-| `PreToolUse` / `PostToolUse` | Before/after a tool call |
+| `SessionStart` | Session begins or resumes |
+| `UserPromptSubmit` | Prompt submitted before Claude processes it |
+| `PreToolUse` | Before a tool call executes |
+| `PostToolUse` | After a tool call succeeds |
 | `PostToolBatch` | After a full batch of parallel tool calls |
-| `SubagentStart` / `SubagentStop` | When a subagent is spawned/finishes |
-| `Stop` / `StopFailure` | When Claude finishes responding / turn ends on API error |
-| `FileChanged` | When a watched file changes (`matcher` specifies filenames) |
-| `ConfigChange` | When a configuration file changes during a session |
-| `CwdChanged` | When the working directory changes |
+| `Stop` | When Claude finishes responding |
+| `SubagentStart` / `SubagentStop` | Subagent spawned/finished |
+| `FileChanged` | Watched file changes |
+| `WorktreeCreate` / `WorktreeRemove` | Worktree created/removed |
 | `PreCompact` / `PostCompact` | Before/after context compaction |
-| `WorktreeCreate` / `WorktreeRemove` | Worktree lifecycle |
-| `InstructionsLoaded` | When a CLAUDE.md or rules file is loaded |
-| `Elicitation` / `ElicitationResult` | MCP server user input request lifecycle |
-| `TaskCreated` / `TaskCompleted` | Task lifecycle |
-| `TeammateIdle` | Agent team teammate about to go idle |
+| `SessionEnd` | Session terminates |
+| (and others — see hooks-doc skill) | |
 
 Hook types: `command`, `http`, `mcp_tool`, `prompt`, `agent`
 
 ### Monitors
 
-Background monitors start automatically when the plugin is active. Defined in `monitors/monitors.json` (or inline in `plugin.json`):
+Background monitors run a shell command for the session lifetime and deliver each stdout line to Claude as a notification.
 
 ```json
 [
@@ -128,96 +140,95 @@ Background monitors start automatically when the plugin is active. Defined in `m
 
 | Field | Required | Description |
 | :--- | :--- | :--- |
-| `name` | Yes | Unique identifier within the plugin |
-| `command` | Yes | Shell command run as a persistent background process |
-| `description` | Yes | Short summary of what is being watched |
+| `name` | Yes | Unique within plugin |
+| `command` | Yes | Shell command run as persistent background process |
+| `description` | Yes | Summary shown in task panel |
 | `when` | No | `"always"` (default) or `"on-skill-invoke:<skill-name>"` |
 
-Requires Claude Code v2.1.105 or later.
+Requires Claude Code v2.1.105+. Only runs in interactive CLI sessions.
 
-### LSP server schema
-
-Configured in `.lsp.json` or inline in `plugin.json` under `lspServers`:
+### LSP server fields
 
 | Field | Required | Description |
 | :--- | :--- | :--- |
 | `command` | Yes | LSP binary to execute (must be in PATH) |
-| `extensionToLanguage` | Yes | Maps file extensions to language identifiers |
-| `args` | No | Command-line arguments |
+| `extensionToLanguage` | Yes | Maps file extensions to language IDs |
+| `args` | No | CLI arguments |
 | `transport` | No | `stdio` (default) or `socket` |
 | `env` | No | Environment variables |
-| `initializationOptions` | No | Options passed during initialization |
+| `initializationOptions` | No | Passed at server init |
 | `settings` | No | Passed via `workspace/didChangeConfiguration` |
-| `restartOnCrash` | No | Whether to auto-restart if server crashes |
-| `maxRestarts` | No | Maximum restart attempts |
+| `startupTimeout` | No | Max ms to wait for startup |
+| `restartOnCrash` | No | Auto-restart on crash |
+| `maxRestarts` | No | Max restart attempts |
 
-### Official LSP plugins (from official marketplace)
+Official LSP plugins (install binary separately):
 
 | Plugin | Language server | Binary required |
 | :--- | :--- | :--- |
 | `pyright-lsp` | Pyright | `pyright-langserver` |
-| `typescript-lsp` | TypeScript LS | `typescript-language-server` |
+| `typescript-lsp` | TypeScript Language Server | `typescript-language-server` |
 | `rust-analyzer-lsp` | rust-analyzer | `rust-analyzer` |
 | `gopls-lsp` | gopls | `gopls` |
 | `clangd-lsp` | clangd | `clangd` |
-| `csharp-lsp` | csharp-ls | `csharp-ls` |
-| `kotlin-lsp` | kotlin-language-server | `kotlin-language-server` |
-| `jdtls-lsp` | jdtls | `jdtls` |
 
 ### Plugin installation scopes
 
 | Scope | Settings file | Use case |
 | :--- | :--- | :--- |
-| `user` | `~/.claude/settings.json` | Personal plugins across all projects (default) |
-| `project` | `.claude/settings.json` | Team plugins shared via version control |
+| `user` | `~/.claude/settings.json` | Personal, all projects (default) |
+| `project` | `.claude/settings.json` | Team plugins via version control |
 | `local` | `.claude/settings.local.json` | Project-specific, gitignored |
 | `managed` | Managed settings | Read-only, admin-controlled |
 
-### CLI commands
+### CLI commands reference
 
 ```bash
-# Plugin management
 claude plugin install <plugin>[@marketplace] [--scope user|project|local]
-claude plugin uninstall <plugin>[@marketplace] [--scope] [--keep-data]
-claude plugin enable <plugin>[@marketplace] [--scope]
-claude plugin disable <plugin>[@marketplace] [--scope]
-claude plugin update <plugin>[@marketplace] [--scope]
+claude plugin uninstall <plugin> [--scope] [--keep-data]
+claude plugin enable <plugin> [--scope]
+claude plugin disable <plugin> [--scope]
+claude plugin update <plugin> [--scope]
 claude plugin list [--json] [--available]
-claude plugin tag [--push] [--dry-run] [--force]
-
-# Marketplace management
+claude plugin tag [--push] [--dry-run] [-f]
+claude plugin validate .
 claude plugin marketplace add <source> [--scope] [--sparse <paths...>]
 claude plugin marketplace list [--json]
 claude plugin marketplace remove <name>
 claude plugin marketplace update [name]
 ```
 
-In-session equivalents: `/plugin install`, `/plugin marketplace add`, `/reload-plugins`, `/plugin validate`, etc.
+In-session commands: `/plugin`, `/plugin install`, `/plugin disable`, `/reload-plugins`, `/plugin marketplace add`
 
-### Marketplace sources (plugin.json / marketplace.json)
+### Plugin version resolution
+
+Version resolved from first match:
+1. `version` in plugin's `plugin.json`
+2. `version` in marketplace entry
+3. Git commit SHA (for git-backed sources)
+4. `"unknown"` (npm or non-git local)
+
+### Marketplace plugin sources
 
 | Source type | Format | Notes |
 | :--- | :--- | :--- |
-| Relative path | `"./plugins/my-plugin"` | Only works in git-hosted marketplaces |
-| `github` | `{source, repo, ref?, sha?}` | GitHub `owner/repo` format |
-| `url` | `{source, url, ref?, sha?}` | Any git URL |
-| `git-subdir` | `{source, url, path, ref?, sha?}` | Subdirectory of a git repo (sparse clone) |
-| `npm` | `{source, package, version?, registry?}` | npm package |
+| Relative path | `"./plugins/my-plugin"` | Within marketplace repo; requires git-based marketplace |
+| `github` | `{ "source": "github", "repo": "owner/repo", "ref"?, "sha"? }` | |
+| `url` | `{ "source": "url", "url": "https://...", "ref"?, "sha"? }` | Any git host |
+| `git-subdir` | `{ "source": "git-subdir", "url": "...", "path": "subdir", "ref"?, "sha"? }` | Sparse clone |
+| `npm` | `{ "source": "npm", "package": "@org/pkg", "version"?, "registry"? }` | |
 
-### Version management
+### Marketplace schema (marketplace.json)
 
-Version resolution order (first match wins):
-1. `version` in `plugin.json`
-2. `version` in the marketplace entry
-3. Git commit SHA (for git-backed sources)
-4. `unknown` (npm or non-git local)
+Required fields: `name` (kebab-case, unique), `owner.name`, `plugins` array.
 
-If `version` is set, bump it on every release or users won't receive updates.
+Each plugin entry: `name` + `source` required; optional: `description`, `version`, `author`, `homepage`, `repository`, `license`, `keywords`, `category`, `tags`, `strict`, component path fields.
 
-### Plugin dependency constraints
+`strict: false` — marketplace entry is the entire definition; plugin repo need not have `plugin.json`.
 
-Declare in `dependencies` array in `plugin.json`:
+### Plugin dependencies
 
+Declare in `plugin.json`:
 ```json
 {
   "dependencies": [
@@ -227,65 +238,46 @@ Declare in `dependencies` array in `plugin.json`:
 }
 ```
 
-Accepts Node semver ranges (`~2.1.0`, `^2.0`, `>=1.4`, `=2.1.0`). Version resolution uses git tags in the format `{plugin-name}--v{version}`. Use `claude plugin tag --push` to create release tags.
+Supports semver ranges (`~2.1.0`, `^2.0`, `>=1.4`, `=2.1.0`). Resolved against git tags `{plugin-name}--v{version}`. Create tags with `claude plugin tag --push`.
 
-Cross-marketplace dependencies require the root marketplace to declare `allowCrossMarketplaceDependenciesOn` in `marketplace.json`.
+Cross-marketplace deps require `allowCrossMarketplaceDependenciesOn` in root `marketplace.json`.
 
-### Managed marketplace restrictions (strictKnownMarketplaces)
+### Common debugging
 
-| Value | Behavior |
+| Issue | Solution |
 | :--- | :--- |
-| Undefined (default) | No restrictions |
-| Empty array `[]` | Complete lockdown — no new marketplaces |
-| List of sources | Only listed marketplaces allowed |
+| Plugin not loading | Run `/plugin validate` or `claude plugin validate .` |
+| Skills missing | Ensure `skills/` is at plugin root, not inside `.claude-plugin/` |
+| Hooks not firing | Check script is executable (`chmod +x`); event names are case-sensitive |
+| MCP server fails | Use `${CLAUDE_PLUGIN_ROOT}` for all plugin paths |
+| LSP binary not found | Install binary; check `/plugin` Errors tab |
+| Path errors | All custom paths must be relative, start with `./` |
 
-Supports `github`, `url`, `hostPattern` (regex on host), and `pathPattern` (regex on filesystem path) source types.
+`claude --debug` shows plugin loading details. `/plugin` → Errors tab shows load errors.
 
-### Common debugging issues
+### Official marketplace plugins (categories)
 
-| Issue | Cause | Solution |
-| :--- | :--- | :--- |
-| Plugin not loading | Invalid `plugin.json` | Run `claude plugin validate` or `/plugin validate` |
-| Skills not appearing | Wrong directory structure | Ensure `skills/` is at plugin root, not inside `.claude-plugin/` |
-| Hooks not firing | Script not executable | Run `chmod +x script.sh` |
-| MCP server fails | Missing `${CLAUDE_PLUGIN_ROOT}` | Use variable for all plugin paths |
-| LSP `Executable not found` | Language server not installed | Install the required binary |
-| Path errors | Absolute paths used | All paths must be relative and start with `./` |
+- **Code intelligence**: `pyright-lsp`, `typescript-lsp`, `rust-analyzer-lsp`, `gopls-lsp`, `clangd-lsp`, `csharp-lsp`, `jdtls-lsp`, `kotlin-lsp`, `lua-lsp`, `php-lsp`, `swift-lsp`
+- **External integrations**: `github`, `gitlab`, `atlassian`, `asana`, `linear`, `notion`, `figma`, `vercel`, `firebase`, `supabase`, `slack`, `sentry`
+- **Development workflows**: `commit-commands`, `pr-review-toolkit`, `agent-sdk-dev`, `plugin-dev`
+- **Output styles**: `explanatory-output-style`, `learning-output-style`
 
-### Testing plugins locally
-
-```bash
-# Load a plugin for a session
-claude --plugin-dir ./my-plugin
-
-# Load multiple plugins
-claude --plugin-dir ./plugin-one --plugin-dir ./plugin-two
-```
-
-Use `/reload-plugins` after making changes to pick up updates without restarting.
-
-### Convert standalone configuration to a plugin
-
-| Standalone (`.claude/`) | Plugin |
-| :--- | :--- |
-| Files in `.claude/commands/` | Files in `plugin-name/commands/` |
-| Hooks in `settings.json` | Hooks in `hooks/hooks.json` |
-| Only available in one project | Can be shared via marketplaces |
+Add official marketplace: auto-available as `claude-plugins-official`. Demo marketplace: `/plugin marketplace add anthropics/claude-code`
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Create plugins](references/claude-code-plugins.md) — guide to creating plugins: quickstart, plugin structure, adding skills/LSP servers/monitors/settings, testing locally, debugging, converting from standalone configuration
-- [Plugins reference](references/claude-code-plugins-reference.md) — complete technical reference: all component schemas, CLI commands, manifest schema, environment variables, plugin caching, directory structure, version management, debugging tools
-- [Discover and install plugins](references/claude-code-discover-plugins.md) — finding and installing plugins from marketplaces, official Anthropic marketplace, managing installed plugins, marketplace management, auto-updates, team configuration
-- [Create and distribute a marketplace](references/claude-code-plugin-marketplaces.md) — creating marketplace.json, hosting on GitHub/git services, private repositories, managed marketplace restrictions, release channels, container pre-population, troubleshooting
-- [Constrain plugin dependency versions](references/claude-code-plugin-dependencies.md) — declaring version constraints, cross-marketplace dependencies, tagging releases, constraint intersection, resolving dependency errors
+- [Create plugins](references/claude-code-plugins.md) — quickstart, plugin structure, skills, LSP servers, monitors, default settings, testing locally, migrating from standalone config, submitting to the official marketplace
+- [Plugins reference](references/claude-code-plugins-reference.md) — complete component schemas, plugin manifest schema, environment variables, plugin caching, directory structure, CLI commands, debugging tools, version management
+- [Discover and install plugins](references/claude-code-discover-plugins.md) — official marketplace, adding marketplaces (GitHub, git, local, URL), installing plugins, managing installed plugins, team marketplace configuration, auto-updates, security, troubleshooting
+- [Create and distribute a plugin marketplace](references/claude-code-plugin-marketplaces.md) — marketplace.json schema, plugin sources, hosting on GitHub/git services, private repos, team configuration, container pre-population, managed marketplace restrictions, release channels, validation
+- [Constrain plugin dependency versions](references/claude-code-plugin-dependencies.md) — declaring dependencies with semver ranges, cross-marketplace deps, tagging releases, constraint resolution, dependency error codes
 
 ## Sources
 
 - Create plugins: https://code.claude.com/docs/en/plugins.md
 - Plugins reference: https://code.claude.com/docs/en/plugins-reference.md
 - Discover and install plugins: https://code.claude.com/docs/en/discover-plugins.md
-- Create and distribute a marketplace: https://code.claude.com/docs/en/plugin-marketplaces.md
+- Create and distribute a plugin marketplace: https://code.claude.com/docs/en/plugin-marketplaces.md
 - Constrain plugin dependency versions: https://code.claude.com/docs/en/plugin-dependencies.md

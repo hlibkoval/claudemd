@@ -2,6 +2,42 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.27
+
+**22 references updated across 11 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc
+
+### New
+
+- **`aliases` field on `SlashCommand` type** — optional string array for slash command aliases in the TypeScript SDK (agent-sdk-doc)
+- **Color token reference for custom themes** — full list of named override tokens grouped by category (text/accent, status, input/mode, diff, fullscreen, shimmer/subagent colors) added to terminal configuration docs (cli-doc)
+- **`effort.level` and `thinking.enabled` statusline fields** — statusline JSON now includes current reasoning effort level and whether extended thinking is enabled; `effort` only present when the model supports the effort parameter (features-doc)
+- **`autoScrollEnabled`, `editorMode`, `showTurnDuration`, `terminalProgressBarEnabled` moved to `settings.json`** — these four keys are now documented as `settings.json` settings rather than `~/.claude.json` global config; old location still works on versions before v2.1.119 (settings-doc)
+- **`teammateMode` and `prUrlTemplate` added to `settings.json` available settings** — both keys previously undocumented or changelog-only are now in the main settings table (settings-doc)
+- **`CLAUDE_CODE_HIDE_CWD` env var** — set to `1` to hide the working directory in the startup logo; useful for screenshares (settings-doc)
+- **`tool_use_id` and `tool_input_size_bytes` OTel fields** — tool execution and permission decision events now include `tool_use_id` (for correlating with hook data) and `tool_input_size_bytes` (operations-doc)
+- **Routines Permissions tab** — "Allow unrestricted branch pushes" moved from the repository selection step to a new Permissions tab; Connectors tab behavior clarified (features-doc)
+- **Desktop Cowork tab** — Desktop app now described as having three tabs: Chat, Cowork (for Dispatch and longer agentic work), and Code (ide-doc)
+
+### Changed
+
+- **`--from-pr` accepts GitLab and Bitbucket URLs** — flag now accepts GitHub PR URLs, GitHub Enterprise PR URLs, GitLab MR URLs, and Bitbucket PR URLs in addition to PR numbers (cli-doc)
+- **`/claude-api` skill gains `migrate` and `managed-agents-onboard` subcommands** — `migrate` scans files and updates model IDs/parameters to a target version; `managed-agents-onboard` walks through creating a new Managed Agent (cli-doc)
+- **MCP tool search disabled by default on Vertex AI** — `ENABLE_TOOL_SEARCH` table and `ENABLE_TOOL_SEARCH` env var description updated to reflect Vertex AI as a second disabled-by-default case alongside non-first-party `ANTHROPIC_BASE_URL` (cloud-providers-doc, mcp-doc, settings-doc)
+- **Auto mode drops `PowerShell(*)` blanket allow rules** — entering auto mode now strips `PowerShell(*)` wildcards alongside the existing `Bash(*)` rules (settings-doc)
+- **Desktop scheduled tasks UI renamed to Routines** — "Schedule" page → "Routines"; "New local task" → "Local"; field "Prompt" → "Instructions"; "Frequency" → "Schedule"; skipped run hover now shows reason (features-doc)
+- **SSH sessions auto-install Claude Code on remote machine** — Desktop installs Claude Code on the remote machine automatically the first time you connect; no manual pre-installation required (ide-doc)
+- **Plugin auto-update fetches highest satisfying tag** — constrained dependencies now receive updates within their allowed range (highest matching git tag) rather than being skipped entirely when the marketplace moves to a newer version (plugins-doc)
+- **`PostToolUse` and `PostToolUseFailure` `duration_ms` field documented with table** — field description table added alongside the existing JSON example in the hooks reference (hooks-doc)
+- **`duration_ms` added to SDK hook input types** — `PostToolUseHookInput` and `PostToolUseFailureHookInput` gain optional `duration_ms?: number` (agent-sdk-doc)
+- **`~/.claude.json` description updated** — "preferences" removed from description; affected keys are now documented in `settings.json` (settings-doc)
+- **Desktop preview pane supports video files** — video paths open in the preview pane alongside HTML, PDF, and image files (ide-doc)
+- **`--allowedTools`/`--disallowedTools` Desktop CLI comparison updated** — noted that permission rules in settings files still apply even without a per-session equivalent (ide-doc)
+- **Desktop managed settings deployment clarified** — managed settings on disk apply to Desktop; remote console settings reach CLI and IDE only (ide-doc)
+
+### Removed
+
+- **Windows `cmd /c` MCP workaround removed** — the `cmd /c npx` wrapper requirement for Windows native MCP servers is no longer documented (mcp-doc)
+
 ## 26.4.24
 
 **42 references updated across 13 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
