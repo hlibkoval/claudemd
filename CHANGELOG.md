@@ -2,6 +2,49 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.28
+
+**35 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`claude ultrareview [target]` subcommand** — runs `/ultrareview` non-interactively from CI or scripts; blocks until done, prints findings to stdout, exits 0 on success or 1 on failure; `--json` and `--timeout` flags available (best-practices-doc, cli-doc)
+- **`claude plugin prune` command** — removes auto-installed plugin dependencies that no installed plugin requires; supports `--dry-run`, `-y`, `--scope`; `--prune` flag also added to `claude plugin uninstall` (plugins-doc)
+- **`updatedToolOutput` field in PostToolUse hooks** — replaces tool output for all built-in and MCP tools before Claude sees it; `updatedMCPToolOutput` is now deprecated in favor of this field (hooks-doc, agent-sdk-doc)
+- **`alwaysLoad` MCP server config option** — set to `true` to skip tool-search deferral for a server; individual tools can also opt in via `"anthropic/alwaysLoad": true` in their `_meta` object; requires v2.1.121 (mcp-doc)
+- **`hideVimModeIndicator` statusline field** — suppresses the built-in `-- INSERT --` text when a custom script renders `vim.mode` itself (features-doc)
+- **`${CLAUDE_EFFORT}` skill placeholder** — expands to the current effort level (`low`, `medium`, `high`, `xhigh`, or `max`) so skills can adapt instructions to the active setting (skills-doc)
+- **`bedrock:GetInferenceProfile` IAM permission** — lets Claude Code resolve application inference profile ARNs to backing models; without it Claude Code retries with the alternate shape, adding a round-trip (cloud-providers-doc)
+- **X.509 certificate-based Workload Identity Federation for Vertex AI** — supported via Application Default Credentials in v2.1.121 or later; set `GOOGLE_APPLICATION_CREDENTIALS` to the credential config file (cloud-providers-doc)
+- **MCP initial connection auto-retry** — HTTP/SSE servers that hit transient errors at startup are retried up to 3 times before being marked failed; auth and not-found errors are not retried (mcp-doc)
+- **`stop_reason` and `gen_ai.response.finish_reasons` OTel attributes** — added to `claude_code.llm_request` spans on the LLM request span table (operations-doc)
+- **`user_system_prompt` OTel attribute** — emitted once per session on the LLM request span, gated behind `OTEL_LOG_USER_PROMPTS=1`; carries the system prompt from `--system-prompt`/`--append-system-prompt`, truncated at 60 KB (operations-doc)
+- **Organization IP allowlist constraint for cloud sessions** — documented that cloud sessions, Code Review, and Routines call the API from Anthropic infrastructure, causing auth failures when org IP allowlisting is enabled (headless-doc)
+- **Dev container page fully rewritten** — now covers the Claude Code Dev Container Feature, persistent auth volumes, organization policy enforcement, network egress restrictions, and running without permission prompts; replaces the old reference-only overview (security-doc)
+- **Session transcript upload follow-up** — after the session quality rating prompt, users may see an optional "Can Anthropic look at your session transcript?" step; upload details, retention period, and org opt-out conditions documented (security-doc)
+- **v2.1.120 and v2.1.121 upstream changelog entries** — two new release entries added to the operations changelog reference (operations-doc)
+- **Week 16 and Week 17 "What's New" digest entries** — two new weekly digest summaries added to the whats-new index (operations-doc)
+
+### Changed
+
+- **`!` prefix renamed from "Bash mode" to "Shell mode"** — all references in the interactive mode docs updated to reflect the more accurate name (cli-doc)
+- **Git for Windows downgraded from required to recommended on Windows** — docs now say PowerShell is used as a fallback shell when Git Bash is absent; `--dangerously-skip-permissions` note in tools reference and setup comparison table updated accordingly (cli-doc, getting-started-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT` now works in SDK and `claude -p`** — previously documented as interactive-only; forked subagents are no longer limited to interactive sessions (settings-doc, sub-agents-doc)
+- **`CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT` scoped to Opus 4.7** — description updated: the shorter system prompt and abbreviated tool descriptions now apply only when using Opus 4.7; no effect on other models (settings-doc)
+- **Server-managed settings bypass now enumerates all third-party provider vars** — lists `CLAUDE_CODE_USE_BEDROCK`, `CLAUDE_CODE_USE_MANTLE`, `CLAUDE_CODE_USE_VERTEX`, `CLAUDE_CODE_USE_FOUNDRY`, and `ANTHROPIC_BASE_URL` explicitly instead of just the base URL (settings-doc)
+- **`/terminal-setup` enables iTerm2 clipboard access** — now configures "Applications in terminal may access clipboard" in iTerm2 settings, enabling `/copy` to write to the system clipboard even from inside tmux (cli-doc, features-doc)
+- **Mouse capture bypass modifier documented** — holding `Option` in iTerm2 or `Shift` on Linux/Windows lets you make native terminal selections without disabling mouse capture (features-doc)
+- **Voice dictation in VS Code uses `accessibility.voice.speechLanguage` as fallback** — when the Claude Code `language` setting is empty, the VS Code extension now checks VS Code's speech language setting before defaulting to English (features-doc)
+- **Windows shell error message updated in troubleshooting** — error string changed from `Claude Code on Windows requires git-bash` to `Claude Code on Windows requires either Git for Windows (for bash) or PowerShell`; troubleshooting section updated to match (operations-doc)
+- **Marketplace manifest top-level fields restructured** — `description` and `version` promoted to top level (with `metadata.*` kept for backward compatibility); `$schema` field added to both `plugin.json` and `marketplace.json` manifests (plugins-doc)
+- **Network config adds telemetry note** — brief callout added pointing to the data-usage page for optional telemetry domains and how to disable them before finalizing an allowlist (security-doc)
+- **HackerOne vulnerability report URL updated** — both security.md and legal-and-compliance.md now point to the new embedded submission URL (security-doc)
+
+### Removed
+
+- **Windows "Git Bash required" limitation removed from PowerShell tool docs** — the bullet stating Git Bash is still required to start Claude Code on Windows was removed from the known limitations list (cli-doc)
+- **Homebrew workaround suggestions removed from troubleshooting** — "try Homebrew" was removed as an alternative for both the `Illegal instruction` and `dyld: cannot load` errors; docs now clarify Homebrew downloads the same binary and won't resolve architecture or macOS version issues (operations-doc)
+
 ## 26.4.27
 
 **22 references updated across 11 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc
