@@ -2,6 +2,53 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.29
+
+**34 references updated across 13 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
+
+### New
+
+- **`Setup` hook event** — fires when you launch with `--init-only` or with `--init`/`--maintenance` in `-p` mode; matches on `init` or `maintenance`; supports `additionalContext` and `CLAUDE_ENV_FILE`; cannot block (hooks-doc, plugins-doc, agent-sdk-doc)
+- **`additionalContext` field documented with full delivery semantics** — new dedicated section explains how context is wrapped and injected per event, stale-on-resume behavior, and formatting guidance for avoiding prompt-injection defenses (hooks-doc)
+- **`updatedToolOutput` for PostToolUse hooks in Agent SDK** — `hookSpecificOutput` now accepts `updatedToolOutput` to replace tool output entirely before Claude sees it (agent-sdk-doc)
+- **Agent SDK vs Managed Agents comparison tab** — new tab in the SDK overview compares infrastructure ownership, interface, session state, and use cases; suggests prototyping with SDK then moving to Managed Agents for production (agent-sdk-doc)
+- **`ANTHROPIC_BEDROCK_SERVICE_TIER` env var** — selects Bedrock service tier (`default`, `flex`, `priority`); sent as `X-Amzn-Bedrock-Service-Tier` header; full section added to Bedrock docs (cloud-providers-doc, settings-doc)
+- **`CLAUDE_CODE_ATTRIBUTION_HEADER` env var** — set to `0` to omit the system-prompt attribution block prepended by Claude Code; improves prompt-cache hit rates when routing through an LLM gateway (settings-doc)
+- **`CLAUDE_CODE_DISABLE_POLICY_SKILLS` env var** — set to `1` to skip loading skills from the system-wide managed skills directory; useful in CI/container sessions (settings-doc)
+- **`CLAUDE_CODE_EXTRA_BODY` env var** — merges a JSON object into every API request body; useful for provider-specific parameters (settings-doc)
+- **`CLAUDE_CODE_MCP_ALLOWLIST_ENV` env var** — spawns stdio MCP servers with only a safe baseline environment plus their configured `env`, rather than inheriting the full shell environment (settings-doc)
+- **`CLAUDE_CODE_USE_NATIVE_FILE_SEARCH` env var** — uses Node.js file APIs instead of ripgrep for discovering custom commands, subagents, and output styles (settings-doc)
+- **`claude_code.at_mention` OTel event** — logged when Claude Code resolves an `@`-mention; includes `mention_type` and `success` attributes (operations-doc)
+- **LLM gateway attribution block note** — documents that Claude Code prepends a version/fingerprint block to the system prompt; Anthropic API strips it before processing; gateway operators can disable it with `CLAUDE_CODE_ATTRIBUTION_HEADER=0` (cloud-providers-doc)
+- **`elicitation_complete` and `elicitation_response` notification matchers** — two new Notification hook matcher values added for MCP elicitation lifecycle events (hooks-doc, best-practices-doc)
+- **WSL1 sandboxing limitation and WSL2 Windows-binary restriction** — documented that WSL1 lacks namespace primitives for sandboxing, and sandboxed WSL2 commands cannot invoke Windows binaries under `/mnt/c/` (security-doc)
+- **JetBrains WSL2 firewall fix steps** — full step-by-step instructions for Windows Firewall rule and mirrored-networking alternatives moved from troubleshooting into the JetBrains IDE page (ide-doc)
+- **`chat:clearScreen` keybinding action** — new `Cmd+K` binding in fullscreen rendering that double-presses to run `/clear` (cli-doc)
+- **Caps Lock added to non-rebindable keys** — Caps Lock is not delivered to terminal applications and is now listed in the hardcoded shortcuts table (cli-doc, memory-doc)
+- **Fullscreen "clear the conversation" section** — `Ctrl+L` double-press (and `Cmd+K` on macOS) runs `/clear`; documented in new fullscreen section (features-doc)
+- **Private plugin repository note** — plugins.md now mentions hosting a marketplace in a private repository to keep a plugin internal to a team (plugins-doc)
+- **MCP duplicate-server visibility** — `/mcp` now shows claude.ai connectors hidden by a same-URL manually-added server, with a hint to remove the duplicate (mcp-doc)
+- **v2.1.122 and v2.1.123 upstream changelog entries** — two new release entries added (operations-doc)
+- **Troubleshooting page refactored into symptom-routing table** — installation/auth content moved to a new `/en/troubleshoot-install` page; remaining page covers performance, stability, and search only (operations-doc)
+
+### Changed
+
+- **`--init` and `--maintenance` flags clarified as print-mode-only** — docs now specify both flags only fire Setup hooks when combined with `-p`; interactive-mode behavior unchanged (cli-doc)
+- **PowerShell tool auto-enables on Windows without Git Bash** — tool is now enabled automatically when Git Bash is absent; rolling-out behavior limited to Windows installs that have Git Bash (cli-doc, settings-doc, getting-started-doc, features-doc)
+- **`SubagentStart` agent type renamed** — built-in agent name changed from `"Bash"` to `"general-purpose"` in matcher examples and input docs (hooks-doc)
+- **Exit code 2 clarified: non-blockable events** — docs now explain that `SessionStart`, `Setup`, `Notification`, and similar events show stderr but continue regardless of exit 2; link to per-event table added (hooks-doc)
+- **Notification hooks no longer accept `additionalContext`** — Notification hooks are now described as side-effect-only; `additionalContext` field removed from their output table (hooks-doc)
+- **`/heapdump` writes to home directory on Linux without Desktop** — behavior on Linux systems without `~/Desktop` now documented (cli-doc, operations-doc)
+- **OTel `status_code` changed from string to number** — `api_error` and `api_retries_exhausted` events now emit `status_code` as a number, absent for non-HTTP errors (operations-doc)
+- **`CLAUDE_ENV_FILE` updated to include `Setup` hooks** — env var description now lists Setup alongside SessionStart, CwdChanged, and FileChanged as hooks that populate this variable (settings-doc)
+- **Ultrareview billing: early-exit run still counts** — clarified that a run counts once the remote session starts; a paid review only bills for the portion that ran (best-practices-doc)
+- **`/resume` picker search accepts PR URLs** — pasting a GitHub, GitHub Enterprise, GitLab, or Bitbucket PR URL into the search box finds the session that created it (best-practices-doc, cli-doc)
+- **iTerm2 clipboard note updated** — running `/terminal-setup` in iTerm2 now enables the clipboard access permission automatically (features-doc)
+- **`CLAUDE_CODE_USE_POWERSHELL_TOOL` description updated** — entry now reflects that on Windows without Git Bash the tool auto-enables, and the opt-in/opt-out behavior only applies when Git Bash is present (settings-doc)
+- **Troubleshoot links updated from `/en/troubleshooting` to `/en/troubleshoot-install`** — auth, login, and installation links across errors-doc, getting-started-doc, settings-doc, and ide-doc updated to point to the new dedicated page (errors-doc, getting-started-doc, settings-doc, ide-doc)
+- **Windows status line docs updated** — clarified that on Windows without Git Bash, commands run through PowerShell; "Git Bash only" caveat added to Bash script example (features-doc)
+- **SDK plugin loading requires `type: "local"`** — docs now state `"local"` is the only accepted value for `type`; guidance added for marketplace plugins (agent-sdk-doc)
+
 ## 26.4.28
 
 **35 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc

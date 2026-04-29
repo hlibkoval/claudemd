@@ -152,6 +152,18 @@
       {
         "url": "https://code.claude.com/docs/en/platforms.md",
         "file": "claude-code-platforms.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/champion-kit.md",
+        "file": "claude-code-champion-kit.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/communications-kit.md",
+        "file": "claude-code-communications-kit.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/glossary.md",
+        "file": "claude-code-glossary.md"
       }
     ],
     "best-practices-doc": [
@@ -292,6 +304,10 @@
       {
         "url": "https://code.claude.com/docs/en/troubleshooting.md",
         "file": "claude-code-troubleshooting.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/troubleshoot-install.md",
+        "file": "claude-code-troubleshoot-install.md"
       },
       {
         "url": "https://code.claude.com/docs/en/debug-your-config.md",
