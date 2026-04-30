@@ -2,6 +2,28 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.4.30
+
+**7 references updated across 5 skills:** agent-sdk-doc, best-practices-doc, operations-doc, security-doc, skills-doc
+
+### New
+
+- **`allowedDomains` and `deniedDomains` fields in `SandboxNetworkConfig`** — allow/deny domain lists for sandbox network filtering; `deniedDomains` takes precedence over `allowedDomains` (agent-sdk-doc)
+- **`allowManagedDomainsOnly` field in `SandboxNetworkConfig`** — managed-settings-only flag that ignores `allowedDomains` from non-managed sources (agent-sdk-doc)
+- **`allowMachLookup` field in `SandboxNetworkConfig`** — macOS-only list of XPC/Mach service names to allow, supports trailing wildcard (agent-sdk-doc)
+- **Windows file-lock error troubleshooting section** — covers `The process cannot access the file ... because it is being used by another process`; fix is to delete `%USERPROFILE%\.claude\downloads` and rerun the installer (operations-doc)
+- **Code Review integration note in ultrareview docs** — points to the Code Review product for automatic inline PR comments on GitHub without a CLI step (best-practices-doc)
+
+### Changed
+
+- **`SandboxNetworkConfig` TLS inspection warning** — new note clarifies the built-in proxy enforces `allowedDomains` by hostname only and does not inspect TLS, so domain fronting can bypass it; links to sandboxing security limitations and secure deployment docs (agent-sdk-doc)
+- **Security limitations warning expanded** — domain fronting risk now explicitly documented with link to Wikipedia; guidance added to configure a TLS-terminating custom proxy as a mitigation; stronger TLS-aware isolation noted as an active development area (security-doc)
+- **`name` field removed from SKILL.md frontmatter** — the directory name is now the slash-command; the `name` frontmatter key is no longer used or shown in the quickstart example (skills-doc)
+- **fish and Nushell PATH note added** — troubleshooting guide now mentions that fish/Nushell users should add `~/.local/bin` to PATH using their shell's own syntax (operations-doc)
+- **Windows install error routing table updated** — new row for the file-lock error added to the symptom quick-reference table (operations-doc)
+- **"No TLS inspection" secure deployment limitation expanded** — now explicitly mentions domain fronting as a bypass vector and links to the TLS-terminating proxy configuration section (agent-sdk-doc)
+- **`SandboxSettings` filesystem/network note removed from Python SDK** — note directing users to permission rules for filesystem/network access was removed from the `SandboxSettings` section (agent-sdk-doc)
+
 ## 26.4.29
 
 **34 references updated across 13 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
