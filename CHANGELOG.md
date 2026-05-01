@@ -2,6 +2,36 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.1
+
+**28 references updated across 12 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, memory-doc, operations-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`SDKMessageOrigin` type** — new type tagging the provenance of a user-role message (`human`, `channel`, `peer`, `task-notification`, `coordinator`); appears as `origin` on `SDKUserMessage` and is forwarded onto the corresponding `SDKResultMessage` (agent-sdk-doc)
+- **`claude project purge` command** — deletes all local Claude Code state for a project (transcripts, task lists, debug logs, file-edit history, prompt history lines, `~/.claude.json` entry); flags: `--dry-run`, `-y`/`--yes`, `-i`/`--interactive`, `--all` (cli-doc, memory-doc)
+- **LLM gateway `/v1/models` auto-discovery** — when `ANTHROPIC_BASE_URL` points at an Anthropic-format gateway, Claude Code queries `/v1/models` at startup and adds returned models to the `/model` picker; requires v2.1.126+; results cached to `~/.claude/cache/gateway-models.json` (cloud-providers-doc, features-doc)
+- **PowerShell permission rules** — `permissions.allow`/`deny` now accept `PowerShell(...)` entries with wildcard matching; aliases are canonicalized; AST-based parsing checks each subcommand in a pipeline independently (settings-doc)
+- **`preferredNotifChannel` setting** — controls notification method: `auto`, `terminal_bell`, `iterm2`, `iterm2_with_bell`, `kitty`, `ghostty`, or `notifications_disabled`; exposed in `/config` as **Notifications** (settings-doc, cli-doc)
+- **`CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` env var** — set by host platforms to prevent user settings from overriding provider routing; also skips the automatic telemetry opt-out for Bedrock/Vertex/Foundry (settings-doc, security-doc)
+- **`DISABLE_GROWTHBOOK` env var** — set to `1` to disable GrowthBook feature-flag fetching and use code defaults (settings-doc)
+- **`oauth_org_not_allowed` error type** — added to `SDKAssistantMessageError`, `system/api_retry` `error` field, and `StopFailure` hook `error` field (agent-sdk-doc, headless-doc, hooks-doc)
+- **`historySearch:cycleScope` keybinding (`Ctrl+S`)** — cycles history search scope between session, project, and all projects (cli-doc)
+- **`invocation_trigger` attribute on `claude_code.skill_activated` OTel event** — values: `"user-slash"`, `"claude-proactive"`, or `"nested-skill"` (operations-doc)
+
+### Changed
+
+- **`bypassPermissions` mode now skips all protected paths** — as of v2.1.126 writes to `.git`, `.claude`, `.vscode`, `.idea`, `.husky` no longer prompt; only root/home directory removals (`rm -rf /`) still prompt as a circuit breaker (settings-doc, sub-agents-doc)
+- **`Ctrl+L` behavior corrected** — now only forces a screen redraw and preserves input; it no longer clears the prompt box (cli-doc, features-doc)
+- **CLAUDE.md load order clarified** — files are ordered from filesystem root down to working directory, so instructions closer to where Claude is launched are read last (memory-doc)
+- **OAuth login guidance expanded for WSL2/SSH/containers** — explains that the browser redirect can't reach the local callback server in these environments; `claude auth login` reads the pasted code from stdin as a fallback (getting-started-doc, operations-doc)
+- **PowerShell is primary shell on Windows when tool is enabled** — Bash tool remains available for POSIX scripts when Git Bash is installed (cli-doc)
+- **`CLAUDE_STREAM_IDLE_TIMEOUT_MS` unified** — byte-level and event-level watchdogs now share the same 300000ms default and minimum (settings-doc)
+- **`ANTHROPIC_CUSTOM_MODEL_OPTION` guidance updated** — now notes that manual entry is only needed when gateway auto-discovery doesn't return the desired model (features-doc)
+- **Analytics dashboard note** — cross-references OpenTelemetry export for per-user token counts and cost estimates (operations-doc)
+- **`acceptEdits` mode auto-approves PowerShell write cmdlets** — `Set-Content`, `Add-Content`, `Clear-Content`, and `Remove-Item` on in-scope paths are now auto-approved (settings-doc)
+- **`permissionMode`, `mcpServers`, and `hooks` frontmatter fields** — documented as ignored for plugin subagents (sub-agents-doc)
+
 ## 26.4.30
 
 **7 references updated across 5 skills:** agent-sdk-doc, best-practices-doc, operations-doc, security-doc, skills-doc
