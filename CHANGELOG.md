@@ -2,6 +2,54 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.4
+
+**51 references updated across 16 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`SDKMessageOrigin` type** — new type tracking the provenance of user-role messages; values: `human`, `channel`, `peer`, `task-notification`, `coordinator`; appears as `origin` field on `SDKUserMessage`, `SDKUserMessageReplay`, and `SDKResultMessage`; use it to distinguish results triggered by your prompt from results emitted for background-task follow-ups (agent-sdk-doc)
+- **`oauth_org_not_allowed` error category** — new error value added to `SDKAssistantMessageError`, the `error` field in `system/api_retry` events, `StopFailure` hook matcher, and the hooks reference; surfaces when OAuth login is blocked for the user's organization (agent-sdk-doc, headless-doc, hooks-doc)
+- **LLM gateway model auto-discovery** — when `ANTHROPIC_BASE_URL` points at an Anthropic-compatible gateway, Claude Code v2.1.126+ queries the gateway's `/v1/models` endpoint at startup and adds discovered models to the `/model` picker, labeled "From gateway"; results are cached to `~/.claude/cache/gateway-models.json` (cloud-providers-doc, features-doc)
+- **`claude project purge [path]` CLI command** — deletes all Claude Code state for a project: transcripts, tasks, file history, config entry; supports `--dry-run`, `-y/--yes`, `-i/--interactive`, and `--all`; added to CLI reference and `.claude/` directory docs (cli-doc, memory-doc)
+- **Extended thinking dedicated section** — new `#extended-thinking` anchor on the model config page covers toggle controls, `showThinkingSummaries`, redacted thinking behavior, and token charging; replaces scattered `common-workflows` links across all docs (features-doc)
+- **`ultrathink` keyword clarification** — `ultrathink` is the only recognized keyword for one-off deep reasoning; `think`, `think hard`, and similar phrases are passed through as plain text and are not recognized keywords (features-doc, skills-doc)
+- **`historySearch:cycleScope` keybinding action** — new `Ctrl+S` binding cycles history search scope between session, project, and everywhere (cli-doc)
+- **Notification hook matcher values documented** — table of matcher values for `Notification` hooks added to the hooks guide: `permission_prompt`, `idle_prompt`, `auth_success`, `elicitation_dialog`, `elicitation_complete`, `elicitation_response` (hooks-doc)
+- **LLM hook `ok: false` behavior clarified** — for `Stop`/`SubagentStop`, an `ok: false` reason is fed back to Claude as its next instruction; for all other events, the turn ends and the reason appears as a warning line that Claude does not see (hooks-doc)
+- **PowerShell permission rules** — new section documents PowerShell permission rule syntax: wildcard matching, alias canonicalization, case-insensitivity, and AST-level compound-command splitting (settings-doc)
+- **`acceptEdits` PowerShell auto-approval** — when the PowerShell tool is enabled, `acceptEdits` mode auto-approves `Set-Content`, `Add-Content`, `Clear-Content`, and `Remove-Item` on in-scope paths (settings-doc)
+- **Plan mode "Review and approve a plan" and "Set plan mode as default" sections** — `Ctrl+G` to edit plan in text editor documented; `showClearContextOnPlanAccept` setting described; plan-accepting auto-names the session; JSON snippet for `defaultMode: "plan"` added (settings-doc)
+- **`CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST` env var** — documented with full semantics: disables provider-selection and endpoint override from settings files, skips automatic telemetry opt-out for Bedrock/Vertex/Foundry (settings-doc)
+- **`DISABLE_GROWTHBOOK` env var** — set to `1` to disable GrowthBook feature-flag fetching and use code defaults (settings-doc)
+- **`invocation_trigger` attribute on `claude_code.skill_activated` OTel event** — values: `"user-slash"`, `"claude-proactive"`, or `"nested-skill"`; the event now also fires for user-typed `/` commands (operations-doc)
+- **Headless pipe and build-script examples** — new "Pipe data through Claude" and "Add Claude to a build script" sections in headless docs with concrete stdin/stdout and `package.json` script patterns (headless-doc)
+- **VS Code URI handler Linux and Windows examples** — `xdg-open` and `Start-Process`/`start ""` examples added alongside the existing macOS `open` snippet (ide-doc)
+- **`autoMemoryDirectory` scope restrictions tightened** — now requires an absolute path or `~/`-prefixed path; accepted from policy settings, user settings, and `--settings` flag only; not accepted from project or local settings (memory-doc, settings-doc)
+- **CLAUDE.md load order clarified** — content is ordered from filesystem root down to working directory; `foo/CLAUDE.md` appears before `foo/bar/CLAUDE.md` so instructions closer to the launch directory are read last (memory-doc)
+- **Auto mode plan note** — note added clarifying auto mode is not available on Pro or on Bedrock/Vertex/Foundry (settings-doc)
+- **v2.1.126 upstream changelog entry** — new release entry covering 30+ fixes and features (operations-doc)
+
+### Changed
+
+- **`bypassPermissions` mode now skips all protected-path prompts** — as of v2.1.126 writes to `.git`, `.claude`, `.vscode`, etc. no longer prompt; only catastrophic removals like `rm -rf /` still show a circuit-breaker prompt (settings-doc)
+- **`Ctrl+L` behavior corrected** — no longer clears prompt input; it only forces a screen redraw while preserving input and conversation history; documentation updated across interactive mode, keybindings, and fullscreen docs (cli-doc, features-doc)
+- **`preferredNotifChannel` setting surfaced** — terminal bell now documented as an option for non-Ghostty/Kitty/iTerm2 terminals via `preferredNotifChannel: "terminal_bell"`; VS Code integrated terminal explicitly mentioned as needing a hook or bell (cli-doc)
+- **Windows PowerShell tool is now the primary shell** — when the PowerShell tool is enabled, Claude treats PowerShell as the primary shell; Bash tool remains available for POSIX scripts when Git Bash is installed (cli-doc)
+- **"AWS Bedrock" renamed to "Amazon Bedrock"** — consistent renaming across ci-cd-doc, monitoring-usage, legal-and-compliance, zero-data-retention, and plugins reference (ci-cd-doc, operations-doc, security-doc)
+- **Worktrees moved to dedicated `/en/worktrees` URL** — all references to `/en/common-workflows#run-parallel-claude-code-sessions-with-git-worktrees` and related anchors updated to `/en/worktrees` across 10+ skills (agent-teams-doc, best-practices-doc, cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, settings-doc, sub-agents-doc)
+- **Extended thinking links updated** — cross-skill links from `/en/common-workflows#use-extended-thinking-thinking-mode` updated to `/en/model-config#extended-thinking` (errors-doc, features-doc, ide-doc, operations-doc, settings-doc)
+- **Plan mode links updated** — references from `/en/common-workflows#use-plan-mode-for-safe-code-analysis` updated to `/en/permission-modes#analyze-before-you-edit-with-plan-mode` (best-practices-doc, operations-doc, sub-agents-doc)
+- **`subagent permissionMode` field note added** — now documented as ignored for plugin subagents; same for `mcpServers` and `hooks` fields (sub-agents-doc)
+- **`CLAUDE_CODE_SHELL_PREFIX` scope expanded** — now documented as wrapping hook commands and stdio MCP server startup commands in addition to Bash tool calls (settings-doc)
+- **`CLAUDE_STREAM_IDLE_TIMEOUT_MS` default unified** — both byte-level and event-level watchdogs now share the same 300,000 ms default and minimum (settings-doc)
+- **`npm install -g` recommended over `npm update -g`** — plugins docs now recommend `npm install -g @anthropic-ai/claude-code@latest` for updating via npm (plugins-doc)
+- **OAuth login failure guidance expanded** — troubleshooting section title broadened to "WSL2, SSH, or containers"; explains that the browser redirect can't reach the local callback server and instructs users to paste the login code (getting-started-doc, operations-doc)
+- **Skill `allowed-tools` workspace trust note** — clarifies that `allowed-tools` in project skills takes effect only after accepting the workspace trust dialog (skills-doc)
+- **Bundled skill example updated** — "Create your first skill" walkthrough replaced with a `summarize-changes` example using `git diff HEAD` dynamic context injection; `codebase-visualizer` example updated to use `python3` and `${CLAUDE_SKILL_DIR}` (skills-doc)
+- **Common workflows page restructured** — page reorganized with new section headings and links; Plan Mode section removed and moved to `/en/permission-modes`; subagent workflow section removed (best-practices-doc)
+- **`plugins/agents` manifest field now accepts an array** — example updated from a directory string to `["./custom/agents/reviewer.md"]` (plugins-doc)
+
 ## 26.4.30
 
 **7 references updated across 5 skills:** agent-sdk-doc, best-practices-doc, operations-doc, security-doc, skills-doc
