@@ -406,6 +406,10 @@
       {
         "url": "https://code.claude.com/docs/en/routines.md",
         "file": "claude-code-routines.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/deep-links.md",
+        "file": "claude-code-deep-links.md"
       }
     ],
     "errors-doc": [
