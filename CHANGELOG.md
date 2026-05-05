@@ -2,6 +2,35 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.5
+
+**10 references updated across 5 skills:** cli-doc, features-doc, hooks-doc, ide-doc, operations-doc, sub-agents-doc
+
+### New
+
+- **`suggestion` color token** — new theme override token controlling autocomplete suggestions and selection highlight in pickers (cli-doc)
+- **Fullscreen message background tokens** — four new tokens: `userMessageBackgroundHover` (hovered/expanded message), `messageActionsBackground` (action bar open), `bashMessageBackgroundColor` (`!` shell entries), `memoryBackgroundColor` (`#` memory entries) (cli-doc)
+- **Usage meter and speaker label tokens** — new section with `rate_limit_fill`, `rate_limit_empty` (usage meter bar), `briefLabelYou`, and `briefLabelClaude` (message speaker labels) (cli-doc)
+- **`rainbow_<color>` gradient tokens** — seven-color rainbow gradient tokens (`rainbow_red` … `rainbow_violet` and their `_shimmer` variants) for `ultrathink`/`ultraplan` keyword rendering in the prompt input (cli-doc)
+- **`Cmd+Esc` / macOS Tahoe Game Overlay fix documented** — new troubleshooting section: macOS Tahoe binds `Cmd+Esc` to the system Game Overlay by default, intercepting the VS Code shortcut; steps to clear it in System Settings or rebind in VS Code (ide-doc)
+- **v2.1.128 upstream changelog entry** — 40+ fixes and features including `--plugin-dir` zip support, `--channels` console auth, `EnterWorktree` branch fix, and many more (operations-doc)
+- **`--agents` Windows PowerShell syntax** — `--agents` flag docs now include a Windows PowerShell tab with here-string (`@' ... '@`) syntax alongside the existing macOS/Linux example (sub-agents-doc)
+- **Windows hook script guidance for subagents** — notes added to the subagent hooks section and readonly-query example directing Windows users to write hooks in PowerShell with `shell: powershell` (sub-agents-doc)
+
+### Changed
+
+- **`ok: false` hook behavior now per-event** — `PreToolUse`: tool call is denied and reason returned to Claude as tool error; `PostToolUseFailure`, `TaskCreated`, `TaskCompleted`: reason returned as tool error; `PermissionRequest`: `ok: false` has no effect (use command hook `behavior: "deny"` instead); `PostToolUse`, `PostToolBatch`, `UserPromptSubmit`, `UserPromptExpansion`: turn ends with warning line (hooks-doc)
+- **Shimmer variant list made explicit** — inline list of all shimmer-paired tokens (`claude`, `warning`, `permission`, `promptBorder`, `inactive`, `fastMode`) replaces the previous prose-only description (cli-doc)
+- **`decision_source` / `source` field values fully documented** — the tool-decision event `source` field now has per-value explanations (`config`, `hook`, `user_permanent`, `user_temporary`, `user_abort`, `user_reject`) inline in the monitoring reference (operations-doc)
+- **Context window impact row added to Skills vs Subagents table** — new row clarifies skills add to the main context window while subagents use a separate window with their own input/output tokens (features-doc)
+- **`claude-code-guide` built-in subagent renamed** — display name changed from "Claude Code Guide" to `claude-code-guide` in the built-in subagents table (sub-agents-doc)
+- **Subagent file reload behavior clarified** — files edited directly on disk require a session restart; subagents created via `/agents` take effect immediately (sub-agents-doc)
+- **AVX troubleshooting section expanded** — VPS/VM users now get a diagnostic command (`grep -m1 -ow avx /proc/cpuinfo`) and an explicit note that hypervisor AVX pass-through must be enabled (operations-doc)
+
+### Removed
+
+- **`sessionTitle` `/rename` cross-reference** — brief parenthetical equating `sessionTitle` to `/rename` removed from hooks reference (hooks-doc)
+
 ## 26.5.4
 
 **51 references updated across 16 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
