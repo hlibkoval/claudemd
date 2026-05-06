@@ -2,6 +2,64 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.6
+
+**50 references updated across 15 skills:** agent-sdk-doc, cli-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, skills-doc
+
+### New
+
+- **v2.1.129 upstream changelog entry** — 30+ fixes and features including `--plugin-url` flag, `CLAUDE_CODE_FORCE_SYNC_OUTPUT`, `CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE`, `skillOverrides` fix, and many bug fixes (operations-doc)
+- **`ShareOnboardingGuide` tool** — new built-in tool that uploads `ONBOARDING.md` and returns a shareable link; called from `/team-onboarding`; available on Pro, Max, Team, and Enterprise plans (cli-doc)
+- **`session_store_flush` option** — new `ClaudeAgentOptions` field in Python SDK: `"batched"` (default, flush once per turn) or `"eager"` (background flush after every frame) (agent-sdk-doc)
+- **`autoMemoryEnabled` setting** — new settings key to enable or disable auto memory; when `false`, Claude does not read from or write to the auto memory directory (settings-doc)
+- **`disableRemoteControl` managed setting** — new setting (v2.1.128+) to disable Remote Control per device via MDM; blocks `claude remote-control`, the `--remote-control` flag, auto-start, and in-session toggle (settings-doc)
+- **`pathPattern` marketplace allowlist source** — new `strictKnownMarketplaces` source type using regex against the filesystem path of `file` and `directory` sources; use `".*"` to allow all local paths (settings-doc, plugins-doc)
+- **Piped stdin 10MB cap** — as of v2.1.128, piped stdin is capped at 10MB with a clear error; for larger inputs, write content to a file instead (headless-doc)
+- **OTel SIEM audit guidance** — new "Audit security events" section covering user attribution, MCP activity auditing, security event-to-attribute mapping table, and sample managed-settings config for SIEM export (operations-doc)
+- **SDK observability end-user attribution** — new section showing how to inject per-request end-user identity via `OTEL_RESOURCE_ATTRIBUTES` in `env` on `query()` calls (agent-sdk-doc)
+- **`raw.githubusercontent.com` network requirement** — added to the network allowlist table; required for changelog feed and release notes shown after updating, plus plugin marketplace install counts (security-doc)
+- **Web setup script 5-minute timing guidance** — new troubleshooting entry for sessions that hang during setup; recommends parallelizing installs with `&`/`wait` and moving heavy downloads to a SessionStart hook (headless-doc)
+- **Split-pane Desktop sessions** — hold Cmd/Ctrl and click a session in the sidebar to open it alongside the current one; `Cmd+\` / `Ctrl+\` closes the focused pane (ide-doc)
+- **Per-subagent `effort` override** — `effort` can now be set per subagent on `AgentDefinition` to override the session-level effort setting (agent-sdk-doc)
+- **`/color` random color** — bare `/color` with no argument now picks a random session color; `/focus` now mentions `viewMode` setting for persisting the selection (cli-doc)
+- **`Space` vim keybinding** — `Space` added as a move-right key in vim editing mode (cli-doc)
+- **`/team-onboarding` share link** — for Pro, Max, Team, and Enterprise claude.ai subscribers, `/team-onboarding` now also returns a share link teammates can open directly in Claude Code (cli-doc)
+- **`disableRemoteControl` fourth error cause** — added fourth cause for "Remote Control is disabled" error: `disableRemoteControl` managed setting applied per device (features-doc)
+- **`alwaysLoad: true` blocks startup** — `alwaysLoad: true` MCP servers block startup even when `MCP_CONNECTION_NONBLOCKING=1` is set, since their tools must be present at first prompt (mcp-doc, settings-doc)
+- **`workspace` MCP server name reserved** — the name `workspace` is reserved for internal use; Claude Code skips and warns if your config defines a server with that name (mcp-doc)
+
+### Changed
+
+- **Plan mode allows read-only tools** — `plan` permission mode now permits read-only tools (Read, Grep, etc.); Claude can explore the codebase but does not edit source files; updated across CLI, settings, and Agent SDK docs (cli-doc, settings-doc, agent-sdk-doc)
+- **Channels enterprise controls expanded to Console API keys** — channels are now permitted by default for Console API key auth; `channelsEnabled` managed setting behavior documented per-plan; channels reference note updated to include Console API key auth (features-doc, settings-doc)
+- **`PostToolUse` block behavior clarified** — `decision: "block"` in PostToolUse hooks adds the reason next to the tool result; Claude still sees the original output; use `updatedToolOutput` to replace it (hooks-doc)
+- **mTLS OTLP configuration restructured** — `OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` and `OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` removed from main config table; replaced by a new mTLS section with protocol-specific variable tables for `http/protobuf` vs `grpc`; dynamic headers clarified as `http`-protocol-only (operations-doc)
+- **Credential storage docs expanded** — Windows path now shown as `%USERPROFILE%\.claude\.credentials.json`; Linux and macOS storage documented separately with file mode details (getting-started-doc)
+- **SDK hooks execute in parallel** — multiple `PreToolUse` hooks now run in parallel, not sequentially; most restrictive result wins; documentation and examples updated accordingly (agent-sdk-doc)
+- **Telemetry service renamed from Statsig to Anthropic** — data-usage and env-vars docs updated to remove Statsig references; metrics now described as sent to Anthropic directly (security-doc, settings-doc)
+- **`--plugin-dir` accepts `.zip` archives** — flag description updated to reflect zip archive support (cli-doc)
+- **Status line script triggers** — script now also runs after `/compact` finishes; `context_window.current_usage` is null again after `/compact` until next API call (features-doc)
+- **`acceptEdits` mode description clarified** — security docs now enumerate which Bash commands are auto-approved: `mkdir`, `touch`, `rm`, `mv`, `cp`, `sed` for paths in the working directory (security-doc)
+- **Sandbox filesystem restrictions note** — clarified that filesystem restrictions combine `sandbox.filesystem` settings with Read/Edit deny rules (settings-doc)
+- **Migration guide settings sources section revised** — warning converted to a note; SDK v0.1.0 behavior change described more neutrally; code examples simplified (agent-sdk-doc)
+- **Mobile app navigation note** — Claude mobile app users now directed to tap "Code" in navigation to find Remote Control sessions (features-doc)
+- **Scheduled task jitter expanded** — jitter cap raised to 30 minutes (or half the interval for sub-hourly tasks); previous 10%/15-minute cap removed (features-doc)
+- **Fullscreen tmux caveat added** — new note that tmux does not support synchronized output, which can cause more flicker; suggests running outside tmux over SSH (features-doc)
+- **Plugin `CLAUDE_PLUGIN_ROOT` update behavior** — documented that previous version's directory persists ~7 days post-update; hooks, MCP, and LSP servers keep old path until `/reload-plugins`; monitors require session restart (plugins-doc)
+- **Plugin `CLAUDE.md` not loaded** — clarified that a `CLAUDE.md` at the plugin root is not loaded as project context; use skills instead (plugins-doc)
+- **Plugin marketplace skill invocation updated** — walkthrough example now shows namespaced invocation `/quality-review-plugin:quality-review` and removes slash prefix from skill name in descriptions (plugins-doc)
+- **`PermissionUpdate.suggestions` behavior documented** — Bash prompts include a `localSettings` suggestion; returning it in `updatedPermissions` writes the rule to `.claude/settings.local.json` (agent-sdk-doc)
+- **Plugin settings precedence note** — new note clarifying project settings override user settings for plugins; use `.claude/settings.local.json` to opt out on your machine (settings-doc)
+- **Skill body conciseness guidance** — new note that skill content stays in context across turns and should be kept concise (skills-doc)
+- **`extraKnownMarketplaces` example corrected** — JSON example now wraps the source object correctly (settings-doc)
+- **`strictKnownMarketplaces` `pathPattern` added** — `pathPattern` added alongside `hostPattern` as a regex-matching exception in the allowlist description (settings-doc)
+- **Windows path note added to settings** — `~/.claude` paths resolve to `%USERPROFILE%\.claude` on Windows (settings-doc)
+
+### Removed
+
+- **`OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` / `_CERTIFICATE` from main config table** — moved into new mTLS section as gRPC-specific variables (operations-doc)
+- **Node.js CA store note removed** — note that system CA store requires native binary and not the Node.js runtime removed from network config (security-doc)
+
 ## 26.5.5
 
 **10 references updated across 5 skills:** cli-doc, features-doc, hooks-doc, ide-doc, operations-doc, sub-agents-doc
