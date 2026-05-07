@@ -2,6 +2,45 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.7
+
+**21 references updated across 9 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, operations-doc, plugins-doc, settings-doc, skills-doc
+
+### New
+
+- **`strict_mcp_config` option** — new `ClaudeAgentOptions` field in Python SDK; ignores project `.mcp.json`, user settings, and plugin-provided MCP servers; maps to `--strict-mcp-config` (agent-sdk-doc)
+- **`include_hook_events` option** — new `ClaudeAgentOptions` field in Python SDK; includes hook lifecycle events in the message stream as `HookEventMessage` objects (agent-sdk-doc)
+- **`xhigh` effort level** — added `"xhigh"` to the `effort` literal type in Python and TypeScript SDKs and `AgentDefinition` (agent-sdk-doc)
+- **`settings` option and `applyFlagSettings()` method** — TypeScript `query()` now accepts an inline settings object or file path; `applyFlagSettings()` merges settings into the flag layer at runtime mid-session (agent-sdk-doc)
+- **API timeout and stall-detection env vars** — new "Handle slow or stalled API responses" section documenting `API_TIMEOUT_MS`, `CLAUDE_CODE_MAX_RETRIES`, `CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS`, and `CLAUDE_ENABLE_STREAM_WATCHDOG` (agent-sdk-doc)
+- **`ToolPermissionContext` expanded** — five new fields: `blocked_path`, `decision_reason`, `title`, `display_name`, `description`; `permissionDecision` now accepts `"defer"` (agent-sdk-doc)
+- **`deferred_tool_use` on `ResultMessage`** — new optional field on `ResultMessage` (agent-sdk-doc)
+- **`updatedToolOutput` in `PostToolUseHookSpecificOutput`** — new field to replace any tool output, not just MCP output (agent-sdk-doc)
+- **`--plugin-url` flag** — fetch a plugin `.zip` from a URL for the current session; documented in CLI reference, headless bare mode, and plugins dev guide (cli-doc, headless-doc, plugins-doc)
+- **JetBrains IDE scroll handling in fullscreen** — new section documenting custom scroll handling and automatic mitigation of 2025.2 scroll-wheel bugs (features-doc)
+- **`CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN` env var** — opt out of the fullscreen alternate-screen renderer; keeps conversation in native terminal scrollback (settings-doc)
+- **`CLAUDE_ASYNC_AGENT_STALL_TIMEOUT_MS` env var** — stall watchdog for background subagents; default 10 minutes; aborts and surfaces partial result on timeout (settings-doc)
+- **`CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY` env var** — opt in to populating `/model` picker from gateway's `/v1/models` endpoint; was previously on by default (settings-doc)
+- **`CLAUDE_CODE_FORCE_SYNC_OUTPUT` env var** — force-enable synchronized output for terminals that support it but fail auto-detection (e.g. Emacs `eat`) (settings-doc)
+- **`CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE` env var** — let Claude Code run the Homebrew or WinGet upgrade command in the background automatically (settings-doc)
+- **`CLAUDE_CODE_SESSION_ID` env var** — set automatically in Bash/PowerShell tool subprocesses; matches the `session_id` passed to hooks (settings-doc)
+- **`skillOverrides` setting** — per-skill visibility overrides (`"on"`, `"name-only"`, `"user-invocable-only"`, `"off"`); writable from the `/skills` menu with `Space`; requires v2.1.129+ (settings-doc, skills-doc)
+- **v2.1.131 and v2.1.132 upstream changelog entries** — 30+ fixes including `CLAUDE_CODE_SESSION_ID`, `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN`, JetBrains scroll fixes, Windows Terminal Shift+Enter, Alt+T fix on macOS (operations-doc)
+
+### Changed
+
+- **Gateway model discovery now opt-in** — `CLAUDE_CODE_ENABLE_GATEWAY_MODEL_DISCOVERY=1` required to enable; was previously automatic when `ANTHROPIC_BASE_URL` pointed at an Anthropic-format gateway (cloud-providers-doc, settings-doc)
+- **`context_window` token semantics changed** — `total_input_tokens` and `total_output_tokens` now reflect current context window usage (as of v2.1.132), not cumulative session totals; `current_usage` breaks them out by cache category (features-doc)
+- **`themes` and `monitors` moved under `experimental` key** — plugin `plugin.json` manifest now uses `experimental.themes` and `experimental.monitors`; top-level keys still work but `claude plugin validate` will warn (plugins-doc)
+- **`--settings` flag behavior clarified** — described as merging with file-based settings; keys set override lower layers, omitted keys keep their values; precedence section updated (cli-doc, settings-doc)
+- **`CLAUDE_CODE_ENABLE_FINE_GRAINED_TOOL_STREAMING` behavior changed** — now on by default for direct Anthropic API connections; set to `0` to opt out or `1` to force-enable; no effect on Bedrock/Vertex/Foundry/gateway (settings-doc)
+- **`/skills` menu gets Space-to-hide** — press `Space` to cycle skill visibility, `Enter` to save to `.claude/settings.local.json` (cli-doc)
+- **Shift+Enter natively supported in Windows Terminal** — removed from the "not available" list; now documented as working without setup (cli-doc, features-doc)
+- **`Option+T` (thinking toggle) works on macOS without Option as Meta** — fixed as of v2.1.132; terminal config note removed from model-config doc (cli-doc, features-doc)
+- **Pull request counter expanded** — now counts PRs and MRs created via shell commands or MCP tools, not only via Claude Code directly (operations-doc)
+- **`skillOverrides` referenced in skill budget and context docs** — tips for reducing context cost now mention setting skills to `"name-only"` via `skillOverrides` instead of editing SKILL.md (getting-started-doc, features-doc, skills-doc)
+- **`CLAUDE_CODE_SCROLL_SPEED` ignored in JetBrains terminal** — note added that JetBrains IDE terminal uses its own scroll handling (settings-doc)
+
 ## 26.5.6
 
 **50 references updated across 15 skills:** agent-sdk-doc, cli-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, skills-doc
