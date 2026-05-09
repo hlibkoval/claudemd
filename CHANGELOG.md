@@ -2,6 +2,51 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.8
+
+**35 references updated across 13 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`skills` option on `query()`** — new `skills` field (`"all"` | skill name list | `[]`) on TypeScript `QueryOptions` and Python `ClaudeAgentOptions`; SDK enables the Skill tool automatically when set; replaces the pattern of listing `"Skill"` in `allowedTools` (agent-sdk-doc)
+- **`structuredContent` on custom tool results** — tool handlers can now return a `structuredContent` JSON object alongside `content`; TypeScript only; Python requires a standalone MCP server (agent-sdk-doc)
+- **`ResultMessage` new fields** — `permission_denials`, `errors`, `api_error_status`, and `uuid` added to Python `ResultMessage`; `stop_reason` moved earlier in field order (agent-sdk-doc)
+- **`effort` field in `BaseHookInput`** — hooks now receive `effort.level` in JSON input and `$CLAUDE_EFFORT` env var; reflects the active (possibly downgraded) effort level for the turn (hooks-doc, settings-doc, operations-doc)
+- **`CLAUDE_EFFORT` env var** — set automatically in Bash tool subprocesses and hook commands to the active effort level; only present when the model supports the effort parameter (settings-doc)
+- **`MCP_CONNECT_TIMEOUT_MS` env var** — controls how long the first query waits for MCP connections before snapshotting the tool list; default 5000 ms (settings-doc)
+- **`gcpAuthRefresh` setting for Vertex AI** — runs a shell command to refresh GCP credentials when expired; browser-based flows supported; 3-minute timeout; project-settings require workspace trust (cloud-providers-doc)
+- **`force-for-plugin` output style frontmatter** — plugin output styles can auto-apply when the plugin is enabled, overriding the user's `outputStyle` setting (features-doc)
+- **Managed policy output style location** — output styles now supported at a third level: managed policy `.claude/output-styles` directory (features-doc)
+- **`host_not_allowed` cloud session error** — new error entry and troubleshooting section for `403 x-deny-reason: host_not_allowed` in cloud or routine sessions (errors-doc, operations-doc)
+- **Routines network access guide** — new step-by-step instructions for editing an environment's network access level from within a routine (features-doc)
+- **`/debug [issue]` command** — new entry in the debug config command table; enables debug logging and prompts Claude to diagnose using log output and settings paths (operations-doc)
+- **Test-against-clean-configuration section** — new doc section on isolating issues with `CLAUDE_CONFIG_DIR` pointing to an empty directory (operations-doc)
+- **VS Code extension installs in Windsurf and Kiro** — documented that the extension works in VS Code forks via the Open VSX registry (ide-doc)
+- **v2.1.133 upstream changelog entry** — includes `worktree.baseRef` setting, `sandbox.bwrapPath`/`socatPath`, `parentSettingsBehavior`, effort-in-hooks, and 10+ bug fixes (operations-doc)
+
+### Changed
+
+- **TypeScript SDK V2 session API deprecated** — `unstable_v2_createSession`, `unstable_v2_resumeSession`, and `unstable_v2_prompt` are deprecated and will be removed; use V1 `query()` instead; "preview" note removed from TypeScript SDK reference (agent-sdk-doc)
+- **Subagent `skills` field semantics clarified** — `skills` now described as preloading content into context at startup; unlisted skills remain invocable through the Skill tool during execution (agent-sdk-doc, sub-agents-doc, features-doc)
+- **`ANTHROPIC_VERTEX_PROJECT_ID` precedence documented** — overridden by `GCLOUD_PROJECT`, `GOOGLE_CLOUD_PROJECT`, or the project in `GOOGLE_APPLICATION_CREDENTIALS`; project ID resolution order fully described (cloud-providers-doc, settings-doc)
+- **`--add-dir` now links to `permissions.additionalDirectories`** — description updated to note the setting can persist directories across sessions (cli-doc)
+- **`--model` and `--verbose` flags link to settings** — descriptions now note that `--model` overrides the `model` setting and `ANTHROPIC_MODEL`, and `--verbose` overrides `viewMode` (cli-doc)
+- **`--worktree` supports PR fetch** — pass `#<number>` or a GitHub PR URL to fetch that PR from `origin` and branch the worktree from it (cli-doc)
+- **`--plugin-url` supports multiple URLs** — can now repeat the flag or pass space-separated URLs in a single quoted argument (cli-doc, plugins-doc)
+- **`--no-session-persistence` documents `CLAUDE_CODE_SKIP_PROMPT_HISTORY`** — description now cross-references the env var that achieves the same effect in any mode (cli-doc)
+- **`--teammate-mode` links to `teammateMode` setting** — description now notes the flag overrides the `teammateMode` setting (cli-doc)
+- **`--effort` links to `effortLevel` setting** — description updated to note it overrides the `effortLevel` setting (cli-doc)
+- **MCP URL hostname matching is case-insensitive** — clarified that hostname matching ignores case and trailing FQDN dots; paths remain case-sensitive (mcp-doc)
+- **CLAUDE.md symlink documented** — `ln -s AGENTS.md CLAUDE.md` now documented as an alternative to `@AGENTS.md` import; Windows caveat noted; `/init` now reads `AGENTS.md` and other tool configs (memory-doc)
+- **Hook advice added to CLAUDE.md troubleshooting** — guidance to use hooks instead of CLAUDE.md for instructions that must run at a specific lifecycle point (memory-doc)
+- **`CLAUDE_CODE_ENABLE_FINE_GRAINED_TOOL_STREAMING` updated** — now on by default on Bedrock and Vertex per model; force-enable via `ANTHROPIC_BASE_URL`/`ANTHROPIC_VERTEX_BASE_URL`/`ANTHROPIC_BEDROCK_BASE_URL` for proxy routing (settings-doc)
+- **`CLAUDE_CODE_DISABLE_AUTO_MEMORY` clarified** — `0` now described as forcing auto memory on even when `--bare` or `autoMemoryEnabled: false` would disable it (settings-doc)
+- **`/doctor` improved** — pressing `f` after `/doctor` sends the diagnostic report to Claude for guided fixes (operations-doc)
+- **MCP config troubleshooting row added** — new row for `mcpServers` in `settings.json` never appearing; correctly directs to `.mcp.json` (operations-doc)
+- **`CLAUDE_CODE_REMOTE_SESSION_ID` URL prefix fix** — variable uses `cse_` prefix; transcript URL path uses `session_` prefix; sed substitution required when building the link (headless-doc)
+
+- Minor wording/formatting updates across cloud-providers-doc (Experiment component removal), getting-started-doc (overview JSX removal), settings-doc (description cross-link additions)
+
 ## 26.5.7
 
 **21 references updated across 9 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, operations-doc, plugins-doc, settings-doc, skills-doc
