@@ -1,6 +1,6 @@
 ---
 name: hooks-doc
-description: Complete official documentation for Claude Code hooks — hook events and lifecycle, configuration schema, matcher patterns, exit codes, JSON input/output formats, decision control per event, command/HTTP/MCP/prompt/agent hook types, async hooks, environment variables, and troubleshooting.
+description: Complete official documentation for Claude Code hooks — hook events, configuration schema, JSON input/output formats, exit codes, matcher patterns, async hooks, HTTP hooks, prompt hooks, agent hooks, MCP tool hooks, and per-event decision control. Use when configuring hooks in settings.json, writing hook scripts, troubleshooting hooks not firing, or looking up specific event schemas.
 user-invocable: false
 ---
 
@@ -10,37 +10,13 @@ This skill provides the complete official documentation for Claude Code hooks.
 
 ## Quick Reference
 
-### Hook Lifecycle Events
+### Hook Configuration Structure
 
-| Event | When it fires | Can block? |
-| :--- | :--- | :--- |
-| `SessionStart` | Session begins or resumes | No |
-| `Setup` | `--init-only` or `--init`/`--maintenance` in `-p` mode | No |
-| `InstructionsLoaded` | CLAUDE.md or rules file loaded into context | No |
-| `UserPromptSubmit` | User submits a prompt | Yes |
-| `UserPromptExpansion` | User-typed slash command expands into prompt | Yes |
-| `PreToolUse` | Before a tool call executes | Yes |
-| `PermissionRequest` | Permission dialog about to appear | Yes |
-| `PermissionDenied` | Tool call denied by auto mode classifier | No (use `retry: true`) |
-| `PostToolUse` | After a tool call succeeds | No (feedback only) |
-| `PostToolUseFailure` | After a tool call fails | No |
-| `PostToolBatch` | After parallel tool batch resolves | Yes |
-| `Notification` | Claude Code sends a notification | No |
-| `SubagentStart` / `SubagentStop` | Subagent spawned / finishes | No / Yes |
-| `TaskCreated` / `TaskCompleted` | Task created / marked complete | Yes / Yes |
-| `Stop` / `StopFailure` | Claude finishes responding / turn ends on API error | Yes / No |
-| `TeammateIdle` | Agent team teammate about to go idle | Yes |
-| `ConfigChange` | Configuration file changes during session | Yes |
-| `CwdChanged` | Working directory changes | No |
-| `FileChanged` | Watched file changes on disk | No |
-| `WorktreeCreate` / `WorktreeRemove` | Worktree created / removed | Yes / No |
-| `PreCompact` / `PostCompact` | Before / after context compaction | Yes / No |
-| `Elicitation` / `ElicitationResult` | MCP server requests user input / user responds | Yes / Yes |
-| `SessionEnd` | Session terminates | No |
+Hooks live in JSON settings files under a `hooks` key. Three levels of nesting:
 
-### Configuration Structure
-
-Hooks live in a JSON settings file under a `hooks` key. Three-level nesting:
+1. **Hook event** — lifecycle point (e.g. `PreToolUse`, `Stop`)
+2. **Matcher group** — object with `matcher` + inner `hooks` array
+3. **Hook handler** — object with `type`, `command`/`url`/`prompt`, and options
 
 ```json
 {
@@ -49,10 +25,7 @@ Hooks live in a JSON settings file under a `hooks` key. Three-level nesting:
       {
         "matcher": "Edit|Write",
         "hooks": [
-          {
-            "type": "command",
-            "command": "jq -r '.tool_input.file_path' | xargs npx prettier --write"
-          }
+          { "type": "command", "command": "npx prettier --write $(jq -r '.tool_input.file_path')" }
         ]
       }
     ]
@@ -60,213 +33,253 @@ Hooks live in a JSON settings file under a `hooks` key. Three-level nesting:
 }
 ```
 
-### Hook Locations (Scope)
+### Hook Locations
 
 | Location | Scope | Shareable |
 | :--- | :--- | :--- |
-| `~/.claude/settings.json` | All projects | No |
+| `~/.claude/settings.json` | All your projects | No |
 | `.claude/settings.json` | Single project | Yes (commit to repo) |
 | `.claude/settings.local.json` | Single project | No (gitignored) |
-| Managed policy settings | Organization-wide | Yes (admin-controlled) |
-| Plugin `hooks/hooks.json` | When plugin enabled | Yes |
-| Skill or agent frontmatter | While component active | Yes |
+| Managed policy settings | Organization-wide | Yes, admin-controlled |
+| Plugin `hooks/hooks.json` | When plugin is enabled | Yes, bundled with plugin |
+| Skill or agent frontmatter | While component is active | Yes, in component file |
 
-Use `"disableAllHooks": true` in settings to disable all hooks. Use `/hooks` in Claude Code to browse configured hooks (read-only).
+Disable all hooks: `"disableAllHooks": true` in settings. Browse configured hooks: `/hooks`.
+
+### Hook Events (Lifecycle Order)
+
+| Event | When it fires | Can block? |
+| :--- | :--- | :--- |
+| `SessionStart` | Session begins or resumes | No |
+| `Setup` | `--init-only` or `--init`/`--maintenance` with `-p` | No |
+| `InstructionsLoaded` | CLAUDE.md or rules file loaded into context | No |
+| `UserPromptSubmit` | User submits a prompt, before Claude processes it | Yes |
+| `UserPromptExpansion` | Slash command expands into a prompt | Yes |
+| `PreToolUse` | Before a tool call executes | Yes |
+| `PermissionRequest` | Permission dialog is shown | Yes |
+| `PermissionDenied` | Auto mode classifier denies a tool call | No |
+| `PostToolUse` | After a tool call succeeds | No |
+| `PostToolUseFailure` | After a tool call fails | No |
+| `PostToolBatch` | After all parallel tool calls resolve, before next model call | Yes |
+| `SubagentStart` | Subagent is spawned | No |
+| `SubagentStop` | Subagent finishes | Yes |
+| `TaskCreated` | Task created via `TaskCreate` | Yes |
+| `TaskCompleted` | Task marked as completed | Yes |
+| `TeammateIdle` | Agent team teammate about to go idle | Yes |
+| `Stop` | Claude finishes responding (not on user interrupt) | Yes |
+| `StopFailure` | Turn ends due to API error | No |
+| `PreCompact` | Before context compaction | Yes |
+| `PostCompact` | After context compaction | No |
+| `Notification` | Claude Code sends a notification | No |
+| `ConfigChange` | Configuration file changes during session | Yes (except policy) |
+| `CwdChanged` | Working directory changes | No |
+| `FileChanged` | Watched file changes on disk | No |
+| `WorktreeCreate` | Worktree being created (replaces default git behavior) | Yes |
+| `WorktreeRemove` | Worktree being removed | No |
+| `Elicitation` | MCP server requests user input | Yes |
+| `ElicitationResult` | User responds to MCP elicitation | Yes |
+| `SessionEnd` | Session terminates | No |
 
 ### Matcher Patterns
 
 | Matcher value | Evaluated as |
 | :--- | :--- |
-| `"*"`, `""`, or omitted | Match all |
-| Only letters, digits, `_`, `\|` | Exact string or pipe-separated list |
-| Any other character | JavaScript regular expression |
+| `""`, `"*"`, or omitted | Match all |
+| Only letters, digits, `_`, and `\|` | Exact string or `\|`-separated list |
+| Contains any other character | JavaScript regex |
 
-Each event matches on a specific field:
+What each event matches on:
 
-| Event(s) | Matcher filters |
+| Events | Matcher field |
 | :--- | :--- |
-| `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied` | Tool name (`Bash`, `Edit\|Write`, `mcp__memory__.*`) |
-| `SessionStart` | Session source: `startup`, `resume`, `clear`, `compact` |
+| `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied` | tool name (`Bash`, `Edit\|Write`, `mcp__.*`) |
+| `SessionStart` | start source: `startup`, `resume`, `clear`, `compact` |
 | `Setup` | CLI flag: `init`, `maintenance` |
-| `SessionEnd` | End reason: `clear`, `resume`, `logout`, `prompt_input_exit`, `bypass_permissions_disabled`, `other` |
-| `Notification` | Type: `permission_prompt`, `idle_prompt`, `auth_success`, `elicitation_dialog`, `elicitation_complete`, `elicitation_response` |
-| `SubagentStart`, `SubagentStop` | Agent type: `general-purpose`, `Explore`, `Plan`, custom names |
-| `PreCompact`, `PostCompact` | Trigger: `manual`, `auto` |
-| `ConfigChange` | Source: `user_settings`, `project_settings`, `local_settings`, `policy_settings`, `skills` |
-| `StopFailure` | Error type: `rate_limit`, `authentication_failed`, `billing_error`, `server_error`, `max_output_tokens`, `unknown` |
-| `InstructionsLoaded` | Load reason: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact` |
+| `SessionEnd` | exit reason: `clear`, `resume`, `logout`, `prompt_input_exit`, `bypass_permissions_disabled`, `other` |
+| `Notification` | type: `permission_prompt`, `idle_prompt`, `auth_success`, `elicitation_dialog`, `elicitation_complete`, `elicitation_response` |
+| `SubagentStart`, `SubagentStop` | agent type: `general-purpose`, `Explore`, `Plan`, or custom |
+| `PreCompact`, `PostCompact` | trigger: `manual`, `auto` |
+| `ConfigChange` | source: `user_settings`, `project_settings`, `local_settings`, `policy_settings`, `skills` |
+| `StopFailure` | error: `rate_limit`, `authentication_failed`, `oauth_org_not_allowed`, `billing_error`, `invalid_request`, `server_error`, `max_output_tokens`, `unknown` |
+| `InstructionsLoaded` | load reason: `session_start`, `nested_traversal`, `path_glob_match`, `include`, `compact` |
 | `Elicitation`, `ElicitationResult` | MCP server name |
-| `FileChanged` | Literal filenames to watch (`\|`-separated) |
-| `UserPromptExpansion` | Command name |
-| `UserPromptSubmit`, `PostToolBatch`, `Stop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`, `WorktreeCreate`, `WorktreeRemove`, `CwdChanged` | No matcher support (always fires) |
+| `UserPromptExpansion` | command name |
+| `FileChanged` | literal filenames (`\|`-separated) to watch |
+| `UserPromptSubmit`, `PostToolBatch`, `Stop`, `TeammateIdle`, `TaskCreated`, `TaskCompleted`, `WorktreeCreate`, `WorktreeRemove`, `CwdChanged` | no matcher support |
 
-MCP tools follow `mcp__<server>__<tool>` naming. Use `mcp__memory__.*` to match all tools from a server.
+MCP tool naming: `mcp__<server>__<tool>`. Match all tools from a server with `mcp__memory__.*`.
 
-### The `if` Field (Fine-grained Filtering)
+### Hook Handler Fields
 
-Available on tool events only (`PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, `PermissionDenied`). Uses permission rule syntax. Hook only spawns when the tool call matches.
-
-```json
-{ "type": "command", "if": "Bash(git *)", "command": "./check-git-policy.sh" }
-```
-
-Supports patterns like `"Bash(git *)"`, `"Edit(*.ts)"`. For compound Bash commands, hook fires if any subcommand matches. On other events, a hook with `if` set never runs.
-
-### Hook Handler Types
-
-| Type | Description |
-| :--- | :--- |
-| `"command"` | Run a shell command. Receives JSON on stdin, communicates via exit code / stdout |
-| `"http"` | POST event JSON to a URL. Response body uses same JSON output format |
-| `"mcp_tool"` | Call a tool on a connected MCP server |
-| `"prompt"` | Single-turn LLM evaluation returning `{"ok": true/false, "reason": "..."}` |
-| `"agent"` | Subagent with tool access for multi-step verification (experimental) |
-
-### Common Handler Fields
+**Common fields (all types):**
 
 | Field | Required | Description |
 | :--- | :--- | :--- |
-| `type` | Yes | `"command"`, `"http"`, `"mcp_tool"`, `"prompt"`, or `"agent"` |
-| `if` | No | Permission rule syntax filter (tool events only) |
-| `timeout` | No | Seconds before cancel (default: 600 command, 30 prompt, 60 agent) |
-| `statusMessage` | No | Custom spinner message while hook runs |
-| `once` | No | Run once per session then remove (skill frontmatter only) |
+| `type` | yes | `"command"`, `"http"`, `"mcp_tool"`, `"prompt"`, or `"agent"` |
+| `if` | no | Permission rule syntax to filter by tool name+args (e.g. `"Bash(git *)"`, `"Edit(*.ts)"`). Tool events only. |
+| `timeout` | no | Seconds before cancel. Default: 600 (command), 30 (prompt), 60 (agent) |
+| `statusMessage` | no | Custom spinner message while hook runs |
+| `once` | no | Run once per session then remove. Skill frontmatter only. |
 
-### Command Hook Fields
+**Command hook extra fields:**
 
 | Field | Description |
 | :--- | :--- |
-| `command` | Shell command to execute |
-| `async` | Run in background without blocking |
-| `asyncRewake` | Run in background; wake Claude on exit 2 with stderr as system reminder |
+| `command` | Shell command to run (required) |
+| `async` | If `true`, run in background without blocking Claude |
+| `asyncRewake` | If `true`, async + wakes Claude on exit code 2 |
 | `shell` | `"bash"` (default) or `"powershell"` |
 
-### HTTP Hook Fields
+**HTTP hook extra fields:** `url` (required), `headers`, `allowedEnvVars`
+
+**MCP tool hook extra fields:** `server` (required), `tool` (required), `input`
+
+**Prompt/agent hook extra fields:** `prompt` (required, use `$ARGUMENTS` placeholder), `model`
+
+### Common Input Fields (stdin JSON)
 
 | Field | Description |
 | :--- | :--- |
-| `url` | URL to POST to |
-| `headers` | Key-value pairs; values support `$VAR_NAME` interpolation |
-| `allowedEnvVars` | List of env vars allowed to interpolate in headers |
+| `session_id` | Current session identifier |
+| `transcript_path` | Path to conversation JSONL |
+| `cwd` | Working directory when hook invoked |
+| `permission_mode` | `"default"`, `"plan"`, `"acceptEdits"`, `"auto"`, `"dontAsk"`, or `"bypassPermissions"` |
+| `hook_event_name` | Name of the event that fired |
+| `effort` | Object with `level`: `"low"`, `"medium"`, `"high"`, `"xhigh"`, `"max"` |
+| `agent_id` | Subagent ID (inside subagent calls only) |
+| `agent_type` | Agent name (when using `--agent` or inside subagent) |
 
-### MCP Tool Hook Fields
-
-| Field | Description |
-| :--- | :--- |
-| `server` | Name of connected MCP server |
-| `tool` | Tool name on that server |
-| `input` | Arguments; string values support `${path}` substitution from hook input |
-
-### Prompt/Agent Hook Fields
-
-| Field | Description |
-| :--- | :--- |
-| `prompt` | Prompt text. Use `$ARGUMENTS` as placeholder for hook input JSON |
-| `model` | Model to use (defaults to fast model) |
-
-### Exit Codes (Command Hooks)
+### Exit Codes
 
 | Exit code | Meaning |
 | :--- | :--- |
-| `0` | Success. JSON in stdout is processed. For `UserPromptSubmit`, `UserPromptExpansion`, `SessionStart`: stdout added to context |
-| `2` | Blocking error. Stderr fed to Claude (or user). See table above for per-event behavior |
-| Any other | Non-blocking error. Execution continues. First stderr line shown in transcript |
+| `0` | Success. JSON output processed. For `UserPromptSubmit`, `UserPromptExpansion`, `SessionStart`: stdout added as context |
+| `2` | Blocking error. Stderr sent to Claude as feedback. Effect depends on event (see table below) |
+| Other | Non-blocking error. Transcript shows hook error notice; execution continues |
 
-For `WorktreeCreate`, any non-zero exit code fails creation.
+**Exit code 2 blocking behavior by event:**
 
-### JSON Output Fields (Universal)
+| Event | Effect |
+| :--- | :--- |
+| `PreToolUse` | Blocks tool call |
+| `PermissionRequest` | Denies permission |
+| `UserPromptSubmit` | Blocks prompt, erases it |
+| `UserPromptExpansion` | Blocks expansion |
+| `Stop` | Prevents Claude from stopping |
+| `SubagentStop` | Prevents subagent from stopping |
+| `TeammateIdle` | Teammate continues working |
+| `TaskCreated` | Rolls back task creation |
+| `TaskCompleted` | Prevents task completion |
+| `ConfigChange` | Blocks config change (except policy_settings) |
+| `PostToolBatch` | Stops agentic loop |
+| `PreCompact` | Blocks compaction |
+| `Elicitation` | Denies elicitation |
+| `ElicitationResult` | Blocks response (becomes decline) |
+| `WorktreeCreate` | Any non-zero exit fails creation |
+| `PostToolUse`, `PostToolUseFailure` | Shows stderr to Claude (tool already ran) |
+| `Notification`, `SessionStart`, `Setup`, `SessionEnd`, `CwdChanged`, `FileChanged`, `PostCompact`, `SubagentStart` | Shows stderr to user only |
+| `StopFailure`, `PermissionDenied` | Ignored |
 
-Return on exit 0 by printing a JSON object to stdout:
+### JSON Output Fields
+
+Exit 0 and print JSON to stdout for structured control:
 
 | Field | Default | Description |
 | :--- | :--- | :--- |
-| `continue` | `true` | If `false`, Claude stops entirely. Takes precedence over event-specific decisions |
-| `stopReason` | none | Message shown to user when `continue` is `false` |
-| `suppressOutput` | `false` | Omit stdout from debug log |
-| `systemMessage` | none | Warning message shown to user |
-
-Context injection cap: 10,000 characters. Larger values are written to a file and replaced with a preview + path.
+| `continue` | `true` | If `false`, Claude stops processing entirely |
+| `stopReason` | none | Message shown to user when `continue: false` |
+| `suppressOutput` | `false` | If `true`, omits stdout from debug log |
+| `systemMessage` | none | Warning shown to user |
 
 ### Decision Control by Event
 
 | Events | Pattern | Key fields |
 | :--- | :--- | :--- |
 | `UserPromptSubmit`, `UserPromptExpansion`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `Stop`, `SubagentStop`, `ConfigChange`, `PreCompact` | Top-level `decision` | `decision: "block"`, `reason` |
-| `TeammateIdle`, `TaskCreated`, `TaskCompleted` | Exit code or `continue: false` | Exit 2 blocks; `{"continue": false}` stops entirely |
-| `PreToolUse` | `hookSpecificOutput` | `permissionDecision` (allow/deny/ask/defer), `permissionDecisionReason`, `updatedInput` |
+| `PreToolUse` | `hookSpecificOutput` | `permissionDecision` (allow/deny/ask/defer), `permissionDecisionReason`, `updatedInput`, `additionalContext` |
 | `PermissionRequest` | `hookSpecificOutput` | `decision.behavior` (allow/deny), `updatedInput`, `updatedPermissions`, `message`, `interrupt` |
-| `PermissionDenied` | `hookSpecificOutput` | `retry: true` to let model retry |
-| `WorktreeCreate` | Path return | Command prints path on stdout; HTTP returns `hookSpecificOutput.worktreePath` |
+| `PermissionDenied` | `hookSpecificOutput` | `retry: true` to tell model it may retry |
+| `WorktreeCreate` | path return | Command prints path on stdout; HTTP returns `hookSpecificOutput.worktreePath` |
 | `Elicitation`, `ElicitationResult` | `hookSpecificOutput` | `action` (accept/decline/cancel), `content` |
-| `WorktreeRemove`, `Notification`, `SessionEnd`, `PostCompact`, `InstructionsLoaded`, `StopFailure`, `CwdChanged`, `FileChanged` | None | Side-effects only |
+| Others | None | Side effects only (logging, cleanup) |
 
-### PreToolUse Decision Values
+**PreToolUse permissionDecision values:** `"allow"` (skip prompt), `"deny"` (block + feedback to Claude), `"ask"` (show dialog), `"defer"` (pause for SDK wrapper, `-p` mode only)
 
-| Value | Effect |
+**PermissionRequest updatedPermissions entry types:** `addRules`, `replaceRules`, `removeRules`, `setMode`, `addDirectories`, `removeDirectories`. Destinations: `session`, `localSettings`, `projectSettings`, `userSettings`.
+
+### Context Injection (`additionalContext`)
+
+Return inside `hookSpecificOutput` to inject text into Claude's context:
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "This file is generated. Edit src/schema.ts instead."
+  }
+}
+```
+
+Supported on: `SessionStart`, `Setup`, `SubagentStart`, `UserPromptSubmit`, `UserPromptExpansion`, `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`. Cap: 10,000 characters.
+
+### Environment Variables in Hooks
+
+| Variable | Available in |
 | :--- | :--- |
-| `"allow"` | Skip permission prompt. Deny/ask rules still apply |
-| `"deny"` | Cancel tool call; `permissionDecisionReason` shown to Claude |
-| `"ask"` | Show permission prompt to user |
-| `"defer"` | Exit with `stop_reason: "tool_deferred"` for Agent SDK integration (non-interactive `-p` only) |
+| `$CLAUDE_PROJECT_DIR` | All hooks — project root |
+| `${CLAUDE_PLUGIN_ROOT}` | Plugin hooks — plugin installation directory |
+| `${CLAUDE_PLUGIN_DATA}` | Plugin hooks — persistent data directory |
+| `$CLAUDE_ENV_FILE` | `SessionStart`, `Setup`, `CwdChanged`, `FileChanged` — write `export VAR=value` lines to persist env vars to Bash |
+| `$CLAUDE_CODE_REMOTE` | Set to `"true"` in remote web environments |
+| `$CLAUDE_EFFORT` | Active effort level |
 
-Multiple PreToolUse hooks: precedence is `deny` > `defer` > `ask` > `allow`.
+### Async Hooks
 
-### Common Input Fields (All Events)
+Add `"async": true` to run a command hook in the background without blocking. Decision fields (`decision`, `permissionDecision`, `continue`) are ignored — action has already proceeded. Output (`systemMessage`, `additionalContext`) delivered on next conversation turn. Use `asyncRewake: true` to wake Claude when the background process exits with code 2.
 
-| Field | Description |
-| :--- | :--- |
-| `session_id` | Current session identifier |
-| `transcript_path` | Path to conversation JSON |
-| `cwd` | Working directory when hook invoked |
-| `permission_mode` | `"default"`, `"plan"`, `"acceptEdits"`, `"auto"`, `"dontAsk"`, `"bypassPermissions"` |
-| `effort` | Object with `level` field: `"low"`, `"medium"`, `"high"`, `"xhigh"`, `"max"` |
-| `hook_event_name` | Name of the event that fired |
-| `agent_id` | Subagent identifier (inside subagent calls) |
-| `agent_type` | Agent name (when using `--agent` or inside subagent) |
+### Prompt-Based and Agent-Based Hooks
 
-### Environment Variables
+`type: "prompt"` — single LLM call (Haiku by default). Returns `{"ok": true}` or `{"ok": false, "reason": "..."}`.
 
-| Variable | Description |
-| :--- | :--- |
-| `$CLAUDE_PROJECT_DIR` | Project root; use to reference hook scripts portably |
-| `${CLAUDE_PLUGIN_ROOT}` | Plugin installation directory |
-| `${CLAUDE_PLUGIN_DATA}` | Plugin persistent data directory |
-| `$CLAUDE_ENV_FILE` | File path for persisting env vars to subsequent Bash commands (SessionStart, Setup, CwdChanged, FileChanged) |
-| `$CLAUDE_EFFORT` | Active effort level string (`low`, `medium`, etc.) |
-| `$CLAUDE_CODE_REMOTE` | `"true"` in remote web environments |
+`type: "agent"` — spawns subagent with tool access (Read, Grep, Glob, etc.). Same response schema. Default timeout 60s, up to 50 turns. Experimental.
 
-### Common Use Cases
+Events supporting all five types: `PermissionRequest`, `PostToolBatch`, `PostToolUse`, `PostToolUseFailure`, `PreToolUse`, `Stop`, `SubagentStop`, `TaskCompleted`, `TaskCreated`, `UserPromptExpansion`, `UserPromptSubmit`.
 
-| Goal | Event + matcher | Key technique |
-| :--- | :--- | :--- |
-| Format files after edit | `PostToolUse` + `Edit\|Write` | `jq -r '.tool_input.file_path' \| xargs prettier --write` |
-| Block sensitive file edits | `PreToolUse` + `Edit\|Write` | Exit 2 or `permissionDecision: "deny"` |
-| Desktop notification on idle | `Notification` + `idle_prompt` | `osascript` / `notify-send` / PowerShell |
-| Re-inject context after compact | `SessionStart` + `compact` | Print text to stdout |
-| Reload direnv on dir change | `CwdChanged` | `direnv export bash > "$CLAUDE_ENV_FILE"` |
-| Auto-approve specific tools | `PermissionRequest` + tool name | `{"hookSpecificOutput": {"hookEventName": "PermissionRequest", "decision": {"behavior": "allow"}}}` |
-| Audit config changes | `ConfigChange` | Append to log file |
-| Stop infinite Stop hook loop | `Stop` | Check `stop_hook_active` field in input |
+Events supporting only `command`/`http`/`mcp_tool`: `ConfigChange`, `CwdChanged`, `Elicitation`, `ElicitationResult`, `FileChanged`, `InstructionsLoaded`, `Notification`, `PermissionDenied`, `PostCompact`, `PreCompact`, `SessionEnd`, `StopFailure`, `SubagentStart`, `TeammateIdle`, `WorktreeCreate`, `WorktreeRemove`.
+
+`SessionStart` and `Setup`: only `command` and `mcp_tool`.
+
+### Key Per-Event Notes
+
+- **SessionStart**: stdout added as context. `source` input field: `startup`, `resume`, `clear`, `compact`. Only `command`/`mcp_tool` types.
+- **Stop**: check `stop_hook_active` input field to prevent infinite loops. `last_assistant_message` has Claude's final response text.
+- **FileChanged**: `matcher` both builds the watch list (literal filenames split on `|`) and filters which groups run. Not a regex watch list.
+- **CwdChanged** and **FileChanged**: can return `watchPaths` array to dynamically update file watch list.
+- **WorktreeCreate**: replaces default git behavior entirely. Must print worktree path on stdout.
+- **SessionEnd**: 1.5s default timeout (max 60s via per-hook `timeout` or `CLAUDE_CODE_SESSIONEND_HOOKS_TIMEOUT_MS`).
+- **PostToolUse**: `updatedToolOutput` replaces what Claude sees (tool already ran; real side effects unchanged).
+- **PermissionDenied**: only fires in auto mode. Use `retry: true` to tell model it may retry.
+- **`if` field**: filters individual handlers within a matched group by tool+args. Only on tool events. One rule only — no `&&`/`||`.
 
 ### Troubleshooting
 
-| Issue | Fix |
+| Symptom | Fix |
 | :--- | :--- |
-| Hook not firing | `/hooks` to verify; check matcher case-sensitivity; `PermissionRequest` doesn't fire in `-p` mode |
-| "hook error" in transcript | Test manually: `echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' \| ./hook.sh` |
-| Script not found | Use absolute paths or `$CLAUDE_PROJECT_DIR`; check `chmod +x` |
-| `/hooks` shows nothing | Validate JSON; check file location; restart session |
-| Stop hook infinite loop | Parse `stop_hook_active` from stdin; exit 0 if true |
-| JSON validation failed | Shell profile has unconditional `echo` — wrap in `if [[ $- == *i* ]]; then ... fi` |
+| Hook not firing | Run `/hooks` to verify it appears; check matcher is case-sensitive; verify correct event type |
+| `PermissionRequest` hook not firing | Doesn't fire in non-interactive mode (`-p`); use `PreToolUse` instead |
+| Infinite Stop loop | Check `stop_hook_active` in input and `exit 0` early when `true` |
+| JSON validation failed | Shell profile printing on startup pollutes stdout; wrap profile echos in `if [[ $- == *i* ]]; then` |
+| Hook error in transcript | Test manually: `echo '{"tool_name":"Bash",...}' \| ./hook.sh`; use absolute paths |
+| Security | Run with full user permissions; validate inputs; quote shell variables; use absolute paths |
 
-Debug: `claude --debug-file /tmp/claude.log` then `tail -f /tmp/claude.log`. Or use `/debug` mid-session.
+Debug: `claude --debug-file /tmp/claude.log` then `tail -f /tmp/claude.log`. Or run `/debug` mid-session.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Automate workflows with hooks](references/claude-code-hooks-guide.md) — quickstart, common use cases with ready-to-use configs (notifications, auto-format, file protection, context injection, config auditing, direnv, auto-approve), how hooks work, prompt/agent/HTTP hook types, limitations and troubleshooting
-- [Hooks reference](references/claude-code-hooks-reference.md) — complete hook lifecycle, configuration schema, matcher patterns, all handler types and fields, full JSON input/output spec, exit code behavior per event, decision control tables, and per-event input schemas for all 30+ events
+- [Automate workflows with hooks](references/claude-code-hooks-guide.md) — quickstart guide, common use cases, walkthrough examples, troubleshooting
+- [Hooks reference](references/claude-code-hooks-reference.md) — complete event schemas, JSON input/output formats, all decision control options, async hooks, HTTP hooks, prompt/agent hooks, MCP tool hooks, security
 
 ## Sources
 
