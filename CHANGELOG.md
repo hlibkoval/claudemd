@@ -2,6 +2,52 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.11
+
+**29 references updated across 13 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
+
+### New
+
+- **`resolveSettings()` TypeScript SDK function** — inspects the effective merged settings for a directory without spawning the CLI; returns `effective`, `provenance`, and per-source `sources`; accepts `settingSources`, `managedSettings`, and `serverManagedSettings` options; alpha API (agent-sdk-doc)
+- **`SDKPermissionDeniedMessage` stream event** — new `system`/`permission_denied` event emitted when the permission system auto-denies a tool call without a prompt; includes `tool_name`, `tool_use_id`, `agent_id`, `decision_reason_type`, and `decision_reason` fields; requires v2.1.136+ (agent-sdk-doc)
+- **`autoMode.hard_deny` classifier rule tier** — new fourth tier that blocks unconditionally, ignoring user intent and `allow` exceptions; supported in `autoMode` settings and the `$defaults` splice; classifier precedence is now `hard_deny` → `soft_deny` → `allow` → user intent (settings-doc, operations-doc)
+- **`policyHelper` setting** — admin-deployed executable that computes managed settings dynamically at startup; returns a JSON envelope with `managedSettings`, `claudeMd`, and `appendSystemPrompt`; only honored from MDM or system `managed-settings.json`; requires v2.1.136+ (settings-doc)
+- **`sshHostAllowlist` managed setting for Desktop** — restricts SSH sessions to approved hostname patterns; `*` and `*.example.com` wildcards supported; empty array disables SSH; read from managed settings only (ide-doc, settings-doc)
+- **`/radio` command** — opens Claude FM lo-fi radio in browser; prints stream URL when no browser available; not available on Bedrock, Vertex, or Foundry (cli-doc)
+- **`/clear [name]` optional label argument** — pass a name to label the cleared session so it appears in the `/resume` picker (cli-doc)
+- **`/context [all]` fullscreen expand flag** — in fullscreen mode the per-item breakdown is collapsed by default; pass `all` to expand it (cli-doc)
+- **Routines organization-level admin toggle** — Team and Enterprise admins can disable routines for all members from the admin settings console (features-doc, errors-doc, operations-doc)
+- **"Routines are disabled by your organization's policy" error** — new error entry and troubleshooting section; server-side setting, not overridable locally (errors-doc, operations-doc)
+- **Auto mode classifier context-window and unparseable-response errors** — two new auto mode failure modes documented: classifier transcript exceeded context window (falls back to manual prompt in interactive mode, aborts in non-interactive) and classifier returned an unparseable response (retry usually succeeds) (errors-doc, operations-doc)
+- **Combine results from multiple hooks section** — new doc section with JSON example explaining that all matching hooks run to completion before results are merged; deny does not short-circuit sibling hooks (hooks-doc)
+- **`CLAUDE_CODE_NATIVE_CURSOR` env var** — shows the terminal's own cursor at the input caret instead of a drawn block (settings-doc)
+- **`DO_NOT_TRACK` env var** — equivalent to `DISABLE_TELEMETRY`; honored as the standard cross-tool convention (settings-doc)
+- **`maxSkillDescriptionChars` setting** — configures per-skill character cap on `description` + `when_to_use` text in the skill listing; default 1536; requires v2.1.105+ (settings-doc, skills-doc)
+- **`skillListingBudgetFraction` setting** — fraction of context window reserved for skill listing; default 0.01; least-used skills are collapsed first when budget overflows; `/doctor` shows truncation count; requires v2.1.105+ (settings-doc, skills-doc)
+- **v2.1.136 and v2.1.137/2.1.138 upstream changelog entries** — includes `hard_deny` auto mode rules, `CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL`, 50+ bug fixes, Windows VSCode activation fix, and internal fixes (operations-doc)
+- **Week 18 and Week 19 what's-new entries** — Week 18: Windows without Git Bash, `claude ultrareview` in CI, `claude project purge`, PR URL in `/resume`; Week 19: plugins load from `.zip` archives and URLs, `worktree.baseRef`, auto mode hard deny, hooks see effort level (operations-doc)
+- **npm upgrade guidance** — `npm install -g @anthropic-ai/claude-code@latest` is now documented as the correct upgrade command; `npm update -g` warned against due to semver range behavior (getting-started-doc)
+
+### Changed
+
+- **`autoMode` multi-source merge behavior updated** — developers can now extend `hard_deny` as well as `environment`, `allow`, and `soft_deny`; `allow` described as overriding only `soft_deny`, not `hard_deny` (settings-doc)
+- **`--resume` now restores permission mode** — behavior changed from warning when modes differ to automatically restoring the mode from the prior session; `plan` and `bypassPermissions` are never carried over; explicit `--permission-mode` on resume overrides the restored value (hooks-doc)
+- **Multi-select answers accept array format** — `answers` dict for `AskUserQuestion` now accepts `list[str]` in addition to comma-joined string; TypeScript type updated to `dict[str, str | list[str]]`; docs and examples updated to pass arrays (agent-sdk-doc)
+- **HTTP transport alias `streamable-http` documented** — `.mcp.json`, `~/.claude.json`, and `claude mcp add-json` accept `streamable-http` as an alias for `http`; programmatic `mcpServers` option accepts only `"http"` (agent-sdk-doc, mcp-doc)
+- **MCP note added to Agent SDK MCP page** — cross-reference to MCP installation scopes for adding servers to the CLI added as a Note at the top of the page (agent-sdk-doc)
+- **Plugin `skills` field now additive** — specifying `skills` in `plugin.json` no longer replaces the default `skills/` directory; it now loads alongside it; docs for path behavior rules reorganized into a "replaces vs. adds" table (plugins-doc)
+- **OTel permission `source` values clarified** — `config` source now documented to include session-scoped grants and personal allow rules; `user_permanent` and `user_temporary` now documented to emit differently in interactive CLI vs. Agent SDK/non-interactive sessions (operations-doc)
+- **Prompt suggestions require Tab/arrow to accept** — changed from "press Tab/Right or Enter to accept" to "press Tab/Right to place in prompt input, then Enter to submit" (cli-doc)
+- **`/schedule` description clarifies cloud infrastructure** — routines now described as executing on Anthropic-managed cloud infrastructure (cli-doc)
+- **`claudeProcessWrapper` VS Code setting clarified** — now described as passing the bundled binary as an argument; use case for platform-missing builds documented (ide-doc)
+- **`sshHostAllowlist` added to Desktop enterprise settings table** — new row in the managed settings reference table for the Desktop app (ide-doc)
+- **Server-managed settings limitations updated** — new item: settings restricted to OS-level policy sources (`policyHelper`, `wslInheritsWindowsSettings`) are not honored via server-managed settings (settings-doc)
+- **Trust verification exception for `--worktree`** — non-interactive `-p` mode disables trust verification, but `--worktree` still requires prior trust acceptance for the directory (security-doc)
+- **tmux passthrough note generalized** — "iTerm2, Ghostty, or Kitty" replaced with "outer terminal" (cli-doc)
+- **Deny rule anchor semantics table added** — new table illustrating how bare filenames, `**` patterns, and `//` absolute anchors determine the reach of deny rules (settings-doc)
+- **Week 16 what's-new digest updated** — mobile push notifications promoted to a feature card, replacing `/ultrareview`; summary line updated to match (operations-doc)
+- **Commands workflow orientation section added** — new "Commands across a typical workflow" section groups commands by session phase before the full table (cli-doc)
+
 ## 26.5.8
 
 **35 references updated across 13 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, sub-agents-doc
