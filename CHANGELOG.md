@@ -2,6 +2,61 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.12
+
+**43 references updated across 13 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **Agent view (`claude agents`)** — new TUI dashboard that lists every running, blocked, and finished background session; replaces the old subagent-listing behavior of `claude agents` (piping still lists subagents); `--bg` flag launches a session detached and returns immediately (cli-doc, sub-agents-doc, operations-doc)
+- **`claude attach/logs/respawn/rm/stop` shell commands** — new shell-level commands for managing background sessions without opening agent view (cli-doc)
+- **`/background` and `/goal` commands** — `/background` detaches the current session as a background agent; `/goal` sets a completion condition and Claude keeps working across turns until it is met (cli-doc, features-doc, hooks-doc)
+- **`/scroll-speed` command** — interactive dialog to tune mouse wheel scroll speed with a live preview ruler; persists to `~/.claude/settings.json` (cli-doc, features-doc)
+- **Hook exec form (`args` field)** — new `args: string[]` field on command hooks spawns the executable directly without a shell; path placeholders need no quoting; `${CLAUDE_PROJECT_DIR}` syntax replaces `"$CLAUDE_PROJECT_DIR"` in examples (hooks-doc)
+- **Hook `continueOnBlock` for prompt hooks** — `PostToolUse` prompt hooks now accept `continueOnBlock: true` to feed rejection reason back to Claude and continue the turn instead of stopping (hooks-doc)
+- **`ExitPlanMode` hook input fields** — `PreToolUse`/`PostToolUse` hooks on `ExitPlanMode` now receive `plan`, `planFilePath`, and `allowedPrompts` fields; `PostToolUse` `tool_response` carries the approved plan (hooks-doc)
+- **`SubagentStop` `additionalContext` restriction documented** — `SubagentStop` hooks do not support `additionalContext`; returning `decision: "block"` with `reason` re-instructs the subagent; use `PostToolUse` on `Agent` to inject context into the parent (hooks-doc)
+- **`/goal` as built-in Stop hook shortcut** — Stop hook reference now notes that `/goal` is a session-scoped prompt-based Stop hook that requires no hook configuration (hooks-doc)
+- **Claude Platform on AWS provider** — new third-party provider documented across overview, quickstart, third-party integrations comparison table, LLM gateway, model config, and security data-usage pages; env vars `CLAUDE_CODE_USE_ANTHROPIC_AWS`, `ANTHROPIC_AWS_WORKSPACE_ID`, `ANTHROPIC_AWS_API_KEY`, `ANTHROPIC_AWS_BASE_URL`, `CLAUDE_CODE_SKIP_ANTHROPIC_AWS_AUTH` (agent-sdk-doc, cloud-providers-doc, settings-doc, security-doc)
+- **LLM gateway agent ID headers** — `X-Claude-Code-Agent-Id` and `X-Claude-Code-Parent-Agent-Id` headers documented for attributing API cost to individual subagents/nested agents in a proxy (cloud-providers-doc)
+- **Claude Platform on AWS through a gateway** — new LiteLLM gateway example for routing to Claude Platform on AWS via `ANTHROPIC_AWS_BASE_URL` and `CLAUDE_CODE_SKIP_ANTHROPIC_AWS_AUTH` (cloud-providers-doc)
+- **`Proactive` output style** — new built-in output style that instructs Claude to execute immediately and minimize clarifying questions without changing permission mode; listed in glossary and output-styles reference (features-doc, getting-started-doc)
+- **Notification hook event types `elicitation_response` and `elicitation_complete`** — two additional `Notification` event types added to the SDK hooks reference (agent-sdk-doc)
+- **`CLAUDE_CODE_MAX_TURNS` env var** — caps agentic turns per session; equivalent to `--max-turns`; rejected at startup if not a positive integer (settings-doc)
+- **`CLAUDE_CODE_DISABLE_AGENT_VIEW` env var and `disableAgentView` setting** — turn off agent view, `--bg`, `/background`, and the on-demand supervisor; can also be set via managed settings `disableAgentView` key (settings-doc)
+- **`claudeMd` managed setting** — embed organization-wide CLAUDE.md instructions directly in `managed-settings.json` without deploying a separate file; honored in managed and policy settings only (settings-doc, memory-doc)
+- **`remote-settings.json` in `~/.claude/`** — cached copy of server-managed settings; cleared by deleting the file and re-fetched on next launch (memory-doc)
+- **`Turn` glossary entry** — defines a turn as one complete Claude response, notes that Stop hooks fire at turn end (getting-started-doc)
+- **`CLAUDE_PROJECT_DIR` in MCP stdio server environment** — MCP stdio servers now receive `CLAUDE_PROJECT_DIR`; plugin configs can use `${CLAUDE_PROJECT_DIR}` in commands (mcp-doc, plugins-doc)
+- **MCP server auth on custom servers** — any server that returns `401 Unauthorized` with `WWW-Authenticate` now gets the same `/mcp` auth flow as built-in remote servers (mcp-doc)
+- **Tools reference expanded with per-tool behavior sections** — tools table now links to per-tool behavior sub-sections for Agent, Bash, Edit, Glob, Grep, LSP, Monitor, NotebookEdit, Read, WebFetch; full tool list including CronCreate/Delete/List, EnterPlanMode, ExitPlanMode, EnterWorktree, ExitWorktree, SendMessage, ShareOnboardingGuide, Skill, TaskCreate/Get/List/Stop/Update, TodoWrite, ToolSearch documented (cli-doc)
+- **VS Code `Reopen Closed Session` shortcut** — `Cmd/Ctrl+Shift+T` reopens the last closed Claude session tab; falls through to VS Code's native reopen when the tab wasn't Claude; controlled by `enableReopenClosedSessionShortcut` setting (default `true`) (ide-doc)
+- **v2.1.139 upstream changelog entry** — agent view, `/goal`, `/scroll-speed`, `claude plugin details`, exec-form hooks, `continueOnBlock`, `CLAUDE_PROJECT_DIR` in MCP stdio env, compaction preserves user instructions, `/mcp` Reconnect picks up `.mcp.json` edits (operations-doc)
+
+### Changed
+
+- **`ENABLE_TOOL_SEARCH=true` now fails on Vertex AI** — setting `true` forces the beta header even on unsupported backends; previously documented as an opt-in, now explicitly warned to cause Vertex AI request rejections (cloud-providers-doc, agent-sdk-doc, mcp-doc, settings-doc)
+- **MCP tool search default behavior clarified** — unset defaults to deferred loading, with automatic fallback to upfront loading on Vertex AI or non-first-party `ANTHROPIC_BASE_URL`; `true` forces the header everywhere and will fail on unsupported backends (agent-sdk-doc, mcp-doc, settings-doc)
+- **`permissionDecision: "defer"` available in both SDKs** — `"defer"` is no longer described as TypeScript-only; Python SDK docs updated; `updatedInput` note clarified: also requires `"ask"` or is ignored with `"defer"` (agent-sdk-doc)
+- **Output style activation changed** — `/output-style` command removed; styles now activated via `/config` or by setting `outputStyle` in `.claude/settings.local.json`; creation is via Markdown file at `~/.claude/output-styles/` (agent-sdk-doc, features-doc)
+- **`--model` flag and `ANTHROPIC_MODEL` not saved** — clarified that `--model` and `ANTHROPIC_MODEL` apply only to the launched session and are not persisted; use separate `--model` flags to run different models in parallel terminals (features-doc)
+- **`BASH_MAX_OUTPUT_LENGTH` behavior updated** — large outputs now saved to a file and Claude receives the path plus a short preview, instead of being middle-truncated (settings-doc)
+- **Read/Edit deny rules extended to recognized Bash file commands** — deny rules now also apply to `cat`, `head`, `tail`, and `sed` in Bash, not only to Claude's built-in file tools; does not cover arbitrary subprocesses (settings-doc)
+- **Background subagent permission model clarified** — background subagents auto-deny any tool call that would prompt; pre-approval flow language removed; fork mode behavior re-aligned with this model (sub-agents-doc)
+- **`claude agents` command repurposed** — now opens agent view TUI; `| cat` or piping prints subagent list (sub-agents-doc, cli-doc)
+- **Custom subagent `name` field is `agent_type` in hooks** — clarified that `agent_type` in `SubagentStart`/`SubagentStop` hooks and `agent_type` in common hook fields use the frontmatter `name`, not the filename (hooks-doc, sub-agents-doc)
+- **Hook deduplication includes `args`** — command hooks are now deduplicated by command string and `args`, not by command string alone (hooks-doc)
+- **Hook shell form clarified** — shell form uses `sh -c` on macOS/Linux and Git Bash on Windows; JSON parse errors from profile echo explained as Git Bash/`BASH_ENV` sourcing rather than full shell sourcing (hooks-doc)
+- **`$CLAUDE_PROJECT_DIR` syntax replaced with `${CLAUDE_PROJECT_DIR}`** — path placeholder syntax changed in all hook examples; exec form recommended for path placeholders to avoid quoting (hooks-doc)
+- **`/background` and parallel session monitoring cross-references added** — best-practices-doc, sub-agents-doc, features-doc, and getting-started-doc now link to agent view where worktrees, parallel workflows, and background operation are discussed (best-practices-doc, getting-started-doc, sub-agents-doc, features-doc)
+- **Channels non-interactive mode behavior** — tools requiring terminal input (multiple-choice, plan mode approval) disabled when channels run with `-p` (features-doc)
+- **Channels notification delivery semantics documented** — notifications not acknowledged; queuing behavior and event-drop conditions explained; delivery confirmation pattern via reply tool described (features-doc)
+- **`/loop` self-paced mode termination** — in self-paced mode Claude can end the loop by not scheduling the next wakeup once the task is provably complete (features-doc)
+- **Scheduled tasks cross-reference to `/goal`** — note added that `/goal` keeps Claude working until a condition is met, contrasting with interval-based loop (features-doc)
+- **Security data-usage table updated for Claude Platform on AWS** — telemetry and error reporting default off; session quality surveys default on; same opt-out env vars apply (security-doc)
+- **Claude Platform on AWS listed in model alias resolution** — `opus` and `sonnet` aliases resolve to the same models as the Anthropic API (Opus 4.7 / Sonnet 4.6) on Claude Platform on AWS (features-doc)
+- **`claude plugin details <name>` command** — new CLI subcommand to show a plugin's component inventory and projected per-session token cost (operations-doc)
+
 ## 26.5.11
 
 **29 references updated across 13 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc

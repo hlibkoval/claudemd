@@ -130,6 +130,10 @@
     ],
     "getting-started-doc": [
       {
+        "url": "https://code.claude.com/docs/en/goal.md",
+        "file": "claude-code-goal.md"
+      },
+      {
         "url": "https://code.claude.com/docs/en/overview.md",
         "file": "claude-code-overview.md"
       },
@@ -214,6 +218,10 @@
       {
         "url": "https://code.claude.com/docs/en/amazon-bedrock.md",
         "file": "claude-code-amazon-bedrock.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/claude-platform-on-aws.md",
+        "file": "claude-code-claude-platform-on-aws.md"
       },
       {
         "url": "https://code.claude.com/docs/en/google-vertex-ai.md",
@@ -418,6 +426,18 @@
       {
         "url": "https://code.claude.com/docs/en/deep-links.md",
         "file": "claude-code-deep-links.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/agent-view.md",
+        "file": "claude-code-agent-view.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/agents.md",
+        "file": "claude-code-agents.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/worktrees.md",
+        "file": "claude-code-worktrees.md"
       }
     ],
     "errors-doc": [
