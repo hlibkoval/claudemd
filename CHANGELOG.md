@@ -2,6 +2,54 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.13
+
+**34 references updated across 10 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, features-doc, getting-started-doc, headless-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
+
+### New
+
+- **Fast mode on Opus 4.7** — fast mode now supports Opus 4.7 at the same 2.5x speed and $30/150 MTok pricing; opt in with `CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE=1`; Opus 4.7 becomes the default fast mode model on May 14, 2026; Opus 4.6 and 4.7 share the same rate limit pool; pin to 4.6 with `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1` (features-doc, settings-doc)
+- **`mcp-server-dev` plugin for scaffolding MCP servers** — new section replacing the dynamic server-listing component; directs to Anthropic Directory and describes using the official `mcp-server-dev` plugin to scaffold remote HTTP or stdio servers via `/mcp-server-dev:build-mcp-server` (mcp-doc)
+- **`feedback_survey` OpenTelemetry event** — new OTEL event logged when a session quality survey appears or is answered; attributes include `event_type`, `appearance_id`, `survey_type`, `response`, and `enabled_via_override` (operations-doc)
+- **`CLAUDE_CODE_ENABLE_FEEDBACK_SURVEY_FOR_OTEL` env var** — routes session quality survey ratings to an org's own OTEL collector instead of Anthropic when nonessential traffic is blocked; transcript sharing stays disabled (security-doc, settings-doc)
+- **`CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE` env var** — opts fast mode into Opus 4.7 before the May 14 automatic default change (settings-doc)
+- **`CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` env var** — pins fast mode to Opus 4.6 regardless of other fast mode model settings (settings-doc)
+- **`CLAUDE_CODE_RESUME_PROMPT` env var** — overrides the continuation message injected when resuming a session that ended mid-turn; useful for spawn scripts in long-running agents (settings-doc)
+- **`teammateDefaultModel` config setting** — default model for agent team teammates when the spawn prompt doesn't specify one; appears in `/config` as "Default teammate model"; set to `null` to inherit the lead's current model (agent-teams-doc, settings-doc)
+- **AppArmor profile for bubblewrap on Ubuntu 24.04+** — new setup instructions to allow `bwrap` to create user namespaces blocked by Ubuntu 24.04's default AppArmor policy (security-doc)
+- **Pull request status dot in agent view rows** — colored dot at the right edge of each row linked to the PR; dot color reflects PR state (yellow = waiting/failed, green = checks passed, purple = merged, grey = draft/closed) (features-doc)
+- **`autoUpdate` field on `extraKnownMarketplaces` entries** — admins can set `"autoUpdate": true` on a marketplace entry in managed settings to enable auto-update for org marketplaces without per-user toggles (plugins-doc, settings-doc)
+- **`--plugin-dir` accepts `.zip` archives** — the `--plugin-dir` flag now accepts a `.zip` archive of the plugin directory, requiring Claude Code v2.1.128 or later (plugins-doc)
+- **Project skills load from parent directories** — skills now load from `.claude/skills/` in the starting directory and every parent up to the repo root; nested discovery for subdirectories below the starting dir remains unchanged (skills-doc)
+- **`CLAUDE_CODE_ENABLE_TASKS` opt-in for non-interactive mode** — set to `1` to switch `-p` and Agent SDK sessions to the Task tools before `TodoWrite` is removed (cli-doc)
+- **GitHub App access clarification for cloud sessions** — a cloud session can access any repo the connected GitHub account can see; App installation scopes PR webhooks for Auto-fix, not session-level access; auto-fix is now a per-PR toggle with a clear/stop flow (headless-doc)
+- **`claude auth` exempt from `forceRemoteSettingsRefresh` exit** — `claude auth` subcommands bypass the fail-closed startup check so users can re-authenticate when expired credentials cause the settings fetch to fail (settings-doc)
+- **Embedder managed settings via SDK `managedSettings` option** — embedding hosts can supply additional managed policy via the SDK `managedSettings` option when `parentSettingsBehavior` is set to `"merge"`; embedder values can tighten policy but not loosen it (settings-doc)
+- **v2.1.140 upstream changelog entry** — case/separator-insensitive `subagent_type` matching, updated agent color palette, plugin folder-vs-manifest-key warning, plus eleven bug fixes (operations-doc)
+
+### Changed
+
+- **`TodoWrite` deprecation documented** — `TodoWrite` is now marked deprecated in favor of `TaskCreate`, `TaskGet`, `TaskList`, and `TaskUpdate`; interactive sessions already use Task tools; `TodoWrite` remains the default for `-p` and Agent SDK until `CLAUDE_CODE_ENABLE_TASKS=1` is set (cli-doc)
+- **Agent view documentation expanded** — PR status table, `Ctrl+R` rename shortcut, session deletion behavior with worktree cleanup, `/exit` detach behavior in background sessions, and grouping logic (`Ready for review` vs `Completed`) all documented (features-doc, cli-doc)
+- **`/goal` availability conditions expanded** — `/goal` is also blocked when `disableAllHooks` or `allowManagedHooksOnly` is set at any settings level, not only managed policy (getting-started-doc)
+- **Agent SDK `settingSources` location table updated** — `"project"` source now documents that `settings.json` and hooks load only from `<cwd>/.claude/` with no parent-directory fallback; skills load up to repo root; `CLAUDE.local.md` loads from `<cwd>` and every parent (agent-sdk-doc)
+- **Agent SDK system prompt page restructured** — page reorganized around a decision table for choosing between the `claude_code` preset, preset with `append`, and a custom string; Python examples updated to use `AssistantMessage` isinstance check (agent-sdk-doc)
+- **`--exclude-dynamic-system-prompt-sections` description updated** — dynamic sections now listed as working directory, environment info, memory paths, and git-repo flag (replacing "git status") (cli-doc, agent-sdk-doc)
+- **`--system-prompt` guidance expanded** — flag description now explains when to append vs. replace with guidance on output styles and CLAUDE.md for persistent use; links to Agent SDK system prompt decision guide (cli-doc)
+- **MCP page removes dynamic server-listing component** — large JSX component replaced with static guidance pointing to the Anthropic Directory and `mcp-server-dev` plugin (mcp-doc)
+- **Feedback survey disabled by `DO_NOT_TRACK`** — survey is now also suppressed when `DO_NOT_TRACK` is set, matching `DISABLE_TELEMETRY` behavior (security-doc, settings-doc)
+- **`DISABLE_TELEMETRY` side-effect documented** — setting `DISABLE_TELEMETRY` also disables feature flags, which may affect features still rolling out (settings-doc)
+- **Read-only Bash commands list expanded** — `echo`, `pwd`, `which` added to the built-in set of commands that run without a permission prompt (settings-doc)
+- **`--add-dir` hooks and settings scope clarified** — hooks and other `settings.json` keys now documented as loading only from the current working directory's `.claude/` folder with no parent-directory fallback (settings-doc)
+- **`worktree.sparsePaths` description updated** — clarifies that only listed directories plus root-level files are written to disk (settings-doc)
+- **Sonnet 1M context requires extra usage** — clarified that Sonnet with 1M context is not included in the Max/Team/Enterprise automatic upgrade and requires extra usage on every plan (features-doc)
+- **Routines MCP connector scope clarified** — connectors in routines are claude.ai integrations, not locally-added `claude mcp add` servers; guidance on adding local servers as connectors or via `.mcp.json` (features-doc)
+- **Output styles vs CLAUDE.md guidance rewritten** — guidance now frames the choice around whether Claude should change identity vs. keep coding-assistant defaults (features-doc)
+- **Worktree cleanup conditions updated** — "no changes" auto-removal now requires no uncommitted changes, no untracked files, and no new commits; named sessions prompt instead of auto-removing (features-doc)
+- **Security page references Anthropic Directory** — MCP server trust guidance updated to note that Anthropic reviews Directory connectors against listing criteria but does not security-audit individual servers (security-doc)
+- **Plugin manifest-vs-folder warning documented** — when a plugin has both a default folder and the matching manifest key, Claude Code v2.1.140 flags the ignored folder in `/doctor`, `claude plugin list`, and the `/plugin` detail view (plugins-doc)
+- **`claude plugin uninstall/prune --yes` condition updated** — `-y, --yes` flag now documented as required when stdin or stdout is not a TTY, not just stdin (plugins-doc)
+
 ## 26.5.12
 
 **43 references updated across 13 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, sub-agents-doc
