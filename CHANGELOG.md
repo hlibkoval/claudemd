@@ -2,6 +2,39 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.14
+
+**17 references updated across 9 skills:** agent-sdk-doc, best-practices-doc, cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
+
+### New
+
+- **Agent SDK monthly credit starting June 15, 2026** — Agent SDK and `claude -p` usage on subscription plans will draw from a new monthly Agent SDK credit pool, separate from interactive usage limits; note now appears in agent-sdk-doc, headless-doc, getting-started-doc, and security-doc (agent-sdk-doc, headless-doc, getting-started-doc, security-doc)
+- **`keep-coding-instructions` frontmatter key for output styles** — custom output styles can now set `keep-coding-instructions: true` to layer instructions on top of the built-in software engineering prompt instead of replacing it; code-reviewer example updated to use it (agent-sdk-doc, features-doc)
+- **`ANTHROPIC_WORKSPACE_ID` env var** — scopes workload identity federation tokens to a specific workspace when the federation rule covers more than one (operations-doc)
+- **`CLAUDE_CODE_PLUGIN_PREFER_HTTPS` env var** — clones GitHub plugin sources over HTTPS instead of SSH for environments without a GitHub SSH key (operations-doc)
+- **`terminalSequence` field in hook JSON output** — hooks can emit desktop notifications, window titles, and bells without a controlling terminal (operations-doc, hooks-doc)
+- **`claude agents --cwd <path>`** — scopes the session list to a specific directory (operations-doc)
+- **`/feedback` can include recent sessions** — last 24 hours or 7 days of session data can be included for issues spanning multiple sessions (operations-doc)
+- **Rewind "Summarize up to here"** — new rewind menu option compresses earlier context while keeping recent turns intact (operations-doc)
+- **Note that some features require Claude.ai accounts** — admin setup doc now calls out that Claude Code on the web, Routines, Code Review, Remote Control, and the Chrome extension are unavailable through Console API keys or cloud-provider credentials alone (settings-doc)
+- **v2.1.141 upstream changelog entry** — 60+ items including hook `terminalSequence`, `CLAUDE_CODE_PLUGIN_PREFER_HTTPS`, `ANTHROPIC_WORKSPACE_ID`, improved spinner feedback, and many bug fixes (operations-doc)
+
+### Changed
+
+- **Output styles doc overhauled** — creation workflow restructured as a step-by-step guide; "How output styles work" moved after the create section; comparison table replaces prose comparisons with CLAUDE.md, `--append-system-prompt`, agents, and skills; "Related resources" section added (features-doc)
+- **Permission deny-rule precedence clarified** — settings and permissions docs now explain that deny rules from any scope block allow rules from any scope, not just that project overrides user (settings-doc)
+- **Settings precedence examples updated** — scalar settings example now uses `spinnerTipsEnabled` and `permissions.defaultMode` instead of a permission rule to avoid confusion with array-merge behavior; summary updated to distinguish scalar override from array concatenation (settings-doc)
+- **CLAUDE.md load order table reordered** — user instructions row now appears before project instructions row to reflect actual load order (managed → user → project → local) (memory-doc)
+- **`disableAllHooks` scope clarification** — hooks configured in managed settings still run unless `disableAllHooks` is also set there; previously implied it was a global kill switch (hooks-doc)
+- **`--plugin-dir` managed override expanded** — plugins that managed settings force-disable are now also documented as immune to `--plugin-dir` override (plugins-doc)
+- **API provider choice note expanded** — provider comparison note now includes that the choice affects which Claude Code features developers can use (settings-doc)
+- **Output styles customization level updated in comparison table** — "Replace default" changed to "Replace or extend default" in the system prompt customization comparison table (agent-sdk-doc)
+
+### Removed
+
+- **Opus 4.7 Agent SDK version note** — removed note requiring Agent SDK v0.2.111 or later for Opus 4.7 (agent-sdk-doc)
+- **Migration Guide note from agent-sdk-doc overview** — note about SDK rename from "Claude Code SDK" to "Claude Agent SDK" and migration guide link removed (agent-sdk-doc)
+
 ## 26.5.13
 
 **34 references updated across 10 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, features-doc, getting-started-doc, headless-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
