@@ -2,6 +2,16 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.15.1
+
+### Fixed
+
+- **`skills-doc` no longer fails to load** — the generated `SKILL.md` contained the literal dynamic-context-injection trigger tokens (the inline exclamation-mark-plus-backtick form and the multi-line three-backtick-plus-exclamation fence opener). The skill preprocessor scans raw text before markdown parsing, so code/fence wrapping did not shield them, and `/skills-doc` aborted with `Shell command failed for pattern`. Both trigger descriptions are now spelled out in words.
+
+### Changed
+
+- **`skill-md-conventions` rule 3 expanded** — now covers both injection trigger tokens and documents that inline-code/fenced backticks do not neutralize them, to prevent regeneration from reintroducing the leak.
+
 ## 26.5.15
 
 **24 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, settings-doc, sub-agents-doc

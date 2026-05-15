@@ -77,9 +77,11 @@ Multi-word argument values: wrap in quotes — `/my-skill "hello world" second` 
 
 ### Dynamic Context Injection
 
-Use `` !`<command>` `` to run shell commands before Claude sees the skill content. Output replaces the placeholder inline. This is preprocessing — Claude only sees the final rendered result.
+Inline form: an exclamation mark immediately followed by a backtick-wrapped command. It runs that shell command before Claude sees the skill content, and the output replaces the placeholder inline. This is preprocessing — Claude only sees the final rendered result.
 
-Multi-line form uses a fenced block opened with ` ```! `.
+Multi-line form: a fenced code block whose opening fence (three backticks) is immediately followed by an exclamation mark, with shell commands on the lines inside.
+
+(Both trigger tokens are described in words here, not written literally, because the skill preprocessor would otherwise execute them when this very file is loaded.)
 
 Disable for untrusted sources: set `"disableSkillShellExecution": true` in settings.
 

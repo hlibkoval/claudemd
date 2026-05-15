@@ -40,5 +40,8 @@ For the complete official documentation, see the reference files:
 
 1. Reference files in `references/` are curl'd word-for-word copies of upstream docs. Never modify them.
 2. Include source URLs for every reference doc. Read `skill-map.json` (in the project root) for the canonical URLs.
-3. **Never write `!` immediately followed by a backtick.** Claude Code's permission system interprets `!\`` as a bash command pattern and blocks the skill from loading.
+3. **Never write either dynamic-context-injection trigger token literally — describe them in words instead.** The skill preprocessor scans the raw `SKILL.md` text for these tokens *before* markdown parsing, so wrapping them in inline code or fenced blocks does NOT shield them — they will execute (or fail) when the skill loads.
+   - Inline token: an exclamation mark immediately followed by a backtick-wrapped command. Never write `!` directly followed by a backtick (not even inside `` `…` ``).
+   - Multi-line token: a fenced code block whose opening fence (three backticks) is immediately followed by an exclamation mark. Never write three backticks directly followed by `!`.
+   - When documenting these features, spell the tokens out (e.g. "an exclamation mark followed by a backtick-wrapped command", "three backticks followed by an exclamation mark") rather than reproducing them.
 4. Study 2-3 existing sibling SKILL.md files (e.g., `skills/hooks-doc/SKILL.md`, `skills/plugins-doc/SKILL.md`) to match the established pattern.
