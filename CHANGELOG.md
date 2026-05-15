@@ -2,6 +2,54 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.15
+
+**24 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`includeHookEvents` query option (TypeScript SDK)** — new boolean flag surfaces hook lifecycle events in the message stream as `SDKHookStartedMessage`, `SDKHookProgressMessage`, and `SDKHookResponseMessage`; required to see `systemMessage` output from hooks (agent-sdk-doc)
+- **Task tool types now exported from the TypeScript SDK** — `TaskCreateInput`, `TaskUpdateInput`, `TaskGetInput`, `TaskListInput` and their output counterparts are now in `ToolInputSchemas`/`ToolOutputSchemas` and no longer require local definitions (agent-sdk-doc)
+- **`plugin_marketplaces` and `plugins` inputs for GitHub Actions** — `anthropics/claude-code-action@v1` now accepts plugin installation inputs; skill invocations via `/plugin-name:skill-name` are documented with a full code-review example (ci-cd-doc)
+- **`claude agents --cwd <path>`** — scopes the agent view session list to one project directory; also documented in the CLI reference and agents command reference (cli-doc, features-doc)
+- **`claude --bg --name <name>`** — sets the session's display name in agent view instead of the auto-generated title (features-doc)
+- **`claude agents` flags for defaults: `--permission-mode`, `--model`, `--effort`** — requires v2.1.142; active defaults appear in the footer; `bypassPermissions`/`auto` still require prior interactive acceptance (features-doc)
+- **`claude agents` configuration flags: `--settings`, `--add-dir`, `--plugin-dir`, `--mcp-config`, `--strict-mcp-config`** — all flags pass through to every dispatched session; new "Settings, plugins, and MCP servers" section documents the full table (features-doc)
+- **Rewind "Summarize up to here"** — new rewind menu option compresses earlier context while keeping recent turns intact; documented separately from "Summarize from here" with a Restore vs. summarize comparison (features-doc)
+- **Scheduled task `update_scheduled_task` MCP tool** — a running task can now modify its own schedule or prompt; delete confirmation now includes an "Also delete files on disk" checkbox (features-doc)
+- **Remote Control toggle in Desktop Settings** — "Enable Remote Control for all sessions" can now also be toggled from Desktop app Settings → Claude Code (features-doc)
+- **WSL PulseAudio fix for voice dictation** — new troubleshooting entry: WSL requires `sox libsox-fmt-pulse` because WSLg routes audio through PulseAudio, not an ALSA device (features-doc)
+- **`/goal` version requirement note** — `/goal` requires Claude Code v2.1.139 or later; `/goal` now also documented as working in the desktop app (getting-started-doc)
+- **`terminalSequence` hook output field** — hooks can emit allowlisted terminal escape sequences (desktop notifications, window titles, BEL) without a controlling terminal; restricted to OSC 0/1/2/9/99/777 and BEL; full example with `jq` and `printf`; requires v2.1.141 (hooks-doc)
+- **Command hooks run without a controlling terminal as of v2.1.139** — documented explicitly; hooks cannot open `/dev/tty`; use `systemMessage` for user messages or `terminalSequence` for notifications (hooks-doc)
+- **`Agent` tool `PostToolUse` response fields** — `tool_response` for a completed Agent call now carries usage telemetry: `status`, `agentId`, `content`, `totalTokens`, `totalDurationMs`, `totalToolUseCount`, `usage` (hooks-doc)
+- **`UserPromptSubmit` default timeout is 30 seconds** — shorter than the 600-second default for other events; set `timeout` in the hook entry to override (hooks-doc)
+- **Desktop app OS notifications** — the Desktop app sends an OS notification when a Code session finishes and you aren't viewing that session (ide-doc)
+- **Desktop terminal: open second tab** — click `+` in the terminal pane header or right-click a folder in chat to open a second terminal tab (ide-doc)
+- **`managedMcpServers` managed settings key** — pushes MCP server configurations with optional `toolPolicy` maps to all users; available in third-party Desktop deployments only (ide-doc)
+- **`DEBUG` env var** — set to `1` to enable debug mode; namespace patterns like `DEBUG=express:*` do not trigger it (settings-doc)
+- **`CLAUDE_CODE_PLUGIN_PREFER_HTTPS` env var** — documented in env vars reference (settings-doc)
+- **`ANTHROPIC_WORKSPACE_ID` env var** — documented in env vars reference (settings-doc)
+- **Subagent subdirectory scanning** — `.claude/agents/` and `~/.claude/agents/` are now scanned recursively; plugin `agents/` subdirectories become part of the scoped identifier (e.g. `my-plugin:review:security`) (sub-agents-doc)
+- **v2.1.142 upstream changelog entry** — covers new `claude agents` flags, Opus 4.7 fast mode default, plugin root-level SKILL.md support, and numerous bug fixes (operations-doc)
+
+### Changed
+
+- **`systemMessage` clarified: shown to user, not model** — updated across SDK hooks guide, Python SDK reference, TypeScript SDK reference, and hooks reference; use `additionalContext` to pass context to Claude (agent-sdk-doc, hooks-doc)
+- **Checkpointing: checkpoint created per prompt, not per edit** — glossary and best-practices now say "each prompt you send" creates a checkpoint; clarified that Claude Code snapshots files before each edit so the checkpoint can restore them (best-practices-doc, getting-started-doc)
+- **"Summarize from here" / "Summarize up to here" best-practices updated** — both options now documented with their respective behaviors (best-practices-doc)
+- **Hook timeout defaults now vary by event and hook type** — guide and reference updated to show `UserPromptSubmit` lowers `command`/`http`/`mcp_tool` default to 30 s; `prompt` is 30 s; `agent` is 60 s (hooks-doc)
+- **Async hook `systemMessage` behavior corrected** — `systemMessage` from async hooks is shown to the user, not delivered to Claude as context; code example updated to use `additionalContext` via `hookSpecificOutput` (hooks-doc)
+- **`awsCredentialExport` trigger condition clarified** — runs at session start and on every credential reload, not only on expiry; separate from `awsAuthRefresh` which only runs on detected expiry (cloud-providers-doc)
+- **MCP OAuth now triggers on `401` or `403`** — previously only `401 Unauthorized` flagged a server for OAuth; `403 Forbidden` now also triggers the `/mcp` authentication flow (mcp-doc)
+- **`CLAUDE_CODE_SIMPLE_SYSTEM_PROMPT` applies to all models** — previously documented as Opus 4.7 only; now applies to any model and accepts `0`/`false`/`no`/`off` to opt out (settings-doc)
+- **`/status` setting sources output clarified** — explains the `Setting sources` line shows which layers are loaded, not which layer supplied each key; distinguishes the Config tab from `settings.json` contents (settings-doc)
+- **`claude agents` piped-output behavior removed from sub-agents doc** — note about `claude agents | cat` listing subagents removed; feature no longer documented (sub-agents-doc)
+
+### Removed
+
+- **`claude agents` piped listing of subagents** — note that piping `claude agents` output lists configured subagents has been removed from sub-agents docs (sub-agents-doc)
+
 ## 26.5.14
 
 **17 references updated across 9 skills:** agent-sdk-doc, best-practices-doc, cli-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc

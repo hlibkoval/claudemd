@@ -212,6 +212,10 @@
       {
         "url": "https://code.claude.com/docs/en/computer-use.md",
         "file": "claude-code-computer-use.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/desktop-changelog.md",
+        "file": "claude-code-desktop-changelog.md"
       }
     ],
     "cloud-providers-doc": [
