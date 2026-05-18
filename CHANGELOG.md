@@ -2,6 +2,32 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.18
+
+**18 references updated across 8 skills:** agent-sdk-doc, cloud-providers-doc, errors-doc, features-doc, mcp-doc, memory-doc, operations-doc, security-doc, settings-doc, skills-doc
+
+### New
+
+- **`feedback-bundles/` directory under `~/.claude/`** — `/feedback` on third-party providers now writes a redacted local archive here instead of sending data to Anthropic; documented in the `~/.claude/` runtime data table (memory-doc)
+- **`/feedback` on third-party providers saves local archive** — on Bedrock, Vertex AI, Foundry, and other third-party providers, `/feedback` writes a redacted transcript bundle to `~/.claude/feedback-bundles/` for sharing with an Anthropic account representative (security-doc)
+- **`/feedback` history scope selector** — before submitting feedback you now choose how much history to include: current session only (default), other sessions from same project over the last 24 hours, or 7 days (security-doc)
+- **Foundry "Run Claude Code" step (step 5)** — new section documents starting Claude Code after setting Foundry environment variables, and clarifies there is no interactive setup wizard (cloud-providers-doc)
+- **Bedrock and Vertex AI small/fast model now defaults to primary model** — background tasks (session title generation, etc.) use the primary model by default on Bedrock and Vertex AI; set `ANTHROPIC_DEFAULT_HAIKU_MODEL` to restore Haiku for background tasks (cloud-providers-doc)
+- **Vertex AI tool search now supported for Sonnet 4.5+ and Opus 4.5+** — `ENABLE_TOOL_SEARCH=true` works on those models; earlier Vertex AI models still reject the beta header (cloud-providers-doc, mcp-doc, settings-doc, agent-sdk-doc)
+- **Claude Code v2.1.143 release notes** — new entry added to the upstream changelog covering plugin dependency enforcement, `worktree.bgIsolation: "none"`, stop hook block cap, PowerShell defaulting on for cloud providers, and many background agent fixes (operations-doc)
+
+### Changed
+
+- **`effortLevel` settings value clarified** — documented accepted values (`low`, `medium`, `high`, `xhigh`) and that `max` is session-only and not valid in settings files (features-doc)
+- **`ANTHROPIC_SMALL_FAST_MODEL_AWS_REGION` now conditional** — only takes effect on Bedrock when `ANTHROPIC_DEFAULT_HAIKU_MODEL` or the deprecated `ANTHROPIC_SMALL_FAST_MODEL` is also set (settings-doc)
+- **`ENABLE_TOOL_SEARCH=true` behavior on Vertex AI updated** — requests fail only on Vertex AI models earlier than Sonnet 4.5 or Opus 4.5, not on all Vertex AI (settings-doc, mcp-doc, agent-sdk-doc)
+- **`/feedback` unavailability wording** — references to "unavailable on your provider" changed to "unavailable in your environment" (errors-doc, operations-doc)
+- **`/feedback` third-party behavior clarified** — now states the command saves a local archive rather than being simply unavailable on Bedrock, Vertex AI, and Foundry (errors-doc, operations-doc)
+- **Agent SDK Python examples use `ClaudeAgentOptions` typed constructor** — plugin and options examples updated from raw dict to `ClaudeAgentOptions(...)` pattern; `SystemMessage` and `ToolUseBlock` now imported and used with `isinstance()` checks (agent-sdk-doc)
+- **Agent SDK TypeScript `SDKUserMessage` type exported and used** — streaming examples import `SDKUserMessage`, use `parent_tool_use_id: null`, and drop `as const` casts; `session_id` field is now optional (agent-sdk-doc)
+- **Result message checks now require `subtype === "success"`** — TypeScript SDK examples updated to guard `message.type === "result"` with `&& message.subtype === "success"` before reading `message.result` (agent-sdk-doc)
+- **Dynamic context substitution single-pass clarified** — documented that substitution runs once and command output is not re-scanned for further placeholders (skills-doc)
+
 ## 26.5.15.1
 
 ### Fixed
