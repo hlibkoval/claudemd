@@ -2,6 +2,70 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.19
+
+**43 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`TodoWrite` disabled by default as of v2.1.142** — Task tools (`TaskCreate`, `TaskUpdate`, `TaskGet`, `TaskList`) are now the default in all modes; set `CLAUDE_CODE_ENABLE_TASKS=0` to revert to `TodoWrite`; examples in todo-tracking docs updated with the override env var (agent-sdk-doc)
+- **TypeScript Agent SDK V2 session API removed in 0.3.142** — `unstable_v2_createSession`, `unstable_v2_resumeSession`, `unstable_v2_prompt`, `SDKSession`, and `SDKSessionOptions` removed; page updated with migration guidance and a pin to `@0.2` for legacy code (agent-sdk-doc)
+- **`EffortLevel` type added to Python SDK** — new exported literal type replaces inline `Literal["low", "medium", "high", "xhigh", "max"]` in `ClaudeAgentOptions` and `AgentDefinition`; `xhigh` documented as Opus 4.7-only with fallback (agent-sdk-doc)
+- **`ThinkingConfig` gains `display` field** — optional `"summarized" | "omitted"` field on `ThinkingConfigAdaptive` and `ThinkingConfigEnabled`; needed to receive thinking content on Opus 4.7+, which omits it by default (agent-sdk-doc)
+- **`TaskCreate` / `TaskUpdate` replace `TodoWrite` in orchestration tools table** — orchestration tool row updated from `TodoWrite` to `TaskCreate` and `TaskUpdate` (agent-sdk-doc)
+- **`WaitForMcpServers` tool documented** — new built-in tool that waits for background-connecting MCP servers; only appears when tool search is disabled (cli-doc, mcp-doc)
+- **MCP startup non-blocking by default as of v2.1.142** — `MCP_CONNECTION_NONBLOCKING` now defaults to non-blocking; set to `0` to restore the blocking 5-second wait; `alwaysLoad: true` servers still block regardless (mcp-doc, settings-doc)
+- **`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` env var** — configures how many consecutive times a Stop/SubagentStop hook may block before the turn is forced to end (default: 8); set to `0` to disable the cap (settings-doc, hooks-doc)
+- **`CLAUDE_CODE_POWERSHELL_RESPECT_EXECUTION_POLICY` env var** — stops Claude Code from passing `-ExecutionPolicy Bypass` when spawning PowerShell; respects machine execution policy instead (settings-doc)
+- **`CLAUDE_ENABLE_BYTE_WATCHDOG_BEDROCK` env var** — enables a byte-level streaming idle watchdog on Bedrock `vnd.amazon.eventstream` responses, separate from the event-level watchdog (settings-doc)
+- **`worktree.bgIsolation` settings key** — controls isolation mode for background sessions; `"worktree"` (default) blocks edits in main checkout until `EnterWorktree` is called; `"none"` allows direct edits; requires v2.1.143 (settings-doc)
+- **`defaultMode: "auto"` blocked in project/local settings** — `auto` is now ignored when set in `.claude/settings.json` or `.claude/settings.local.json` to prevent repos from self-granting auto mode; must be set in `~/.claude/settings.json` (settings-doc)
+- **`Read` deny rules block IDE selection context** — deny rules now also prevent selected text and open-file context from a connected VS Code or JetBrains IDE from reaching Claude (settings-doc, ide-doc)
+- **`/usage-credits` command replaces `/extra-usage`** — renamed across CLI; old name still works as alias; `DISABLE_EXTRA_USAGE_COMMAND` env var description updated (cli-doc, settings-doc, errors-doc, features-doc, best-practices-doc, ci-cd-doc)
+- **Fast mode now defaults to Opus 4.7 as of v2.1.142** — `CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE` removed; use `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE=1` to pin Opus 4.6; "Use fast mode on Opus 4.7" section removed from docs (features-doc, settings-doc)
+- **`--fallback-model` CLI flag** — enables automatic fallback to a specified model when the default is overloaded; applies in `-p` mode and background sessions, ignored in interactive mode (cli-doc)
+- **Plugin `displayName` field** — new optional `plugin.json` field for human-readable plugin names shown in UI; falls back to `name`; requires v2.1.143 (plugins-doc)
+- **Single-file plugin layout** — a plugin with only a `SKILL.md` at its root is auto-loaded as a single-skill plugin in v2.1.142+; no `"skills": ["./"]` manifest entry needed (plugins-doc)
+- **Plugin context cost shown in discover pane** — `/plugin` details pane now shows a **Context cost** token estimate before installation; requires v2.1.143 (plugins-doc)
+- **Plugin dependency enable/disable enforcement** — enabling a plugin now also enables its dependencies transitively; disabling a plugin fails if another enabled plugin depends on it, with a suggested chained command; requires v2.1.143 (plugins-doc)
+- **LSP servers listed in `claude plugin inspect`** — `inspect` output now includes an LSP servers group (plugins-doc)
+- **`claude --agent <name>` unscoped lookup** — passing just an agent name now finds it across installed plugins; scoped form still required to disambiguate name conflicts (sub-agents-doc)
+- **Subagent startup context documented** — new "What loads at startup" section details exactly what a non-fork subagent receives: system prompt, task message, CLAUDE.md/memory, git status, and preloaded skills; Explore and Plan omit CLAUDE.md and git status (sub-agents-doc)
+- **`CLAUDE_CODE_SUBAGENT_MODEL` overrides per-invocation model** — env var now documented as overriding both the `model` parameter and the subagent definition's `model` frontmatter (features-doc)
+- **Code Review "no issues" behavior updated** — when no issues are found, Code Review updates the GitHub check run status instead of always posting a comment (ci-cd-doc)
+- **`Your organization has disabled Claude subscription access` error** — new error entry for orgs that block subscription login to Claude Code; includes `oauth_org_not_allowed` SDK error code (errors-doc)
+- **`Usage policy refusal` error entry** — new error for requests that violate the usage policy with a distinct message (errors-doc)
+- **`Request rejected (429)` message now names status page** — error message suffix updated to include `status.claude.com`; Bedrock/Vertex name their own status pages (errors-doc)
+- **Claude Code v2.1.144 release notes** — new changelog entry covering `/resume` for background sessions, elapsed time in subagent notifications, `/model` per-session-only change, plugin last-updated display, and many bug fixes (operations-doc)
+- **Desktop terminal-dialog commands unavailable note** — `/permissions`, `/config`, `/agents`, `/doctor` now documented as unavailable in the Desktop Code tab; workaround is to use settings files or the standalone CLI (ide-doc)
+- **`claude agents` entry added to CLI reference table** — full description including `--cwd`, `--permission-mode`, `--model`, `--effort`, and passthrough flags (cli-doc)
+- **`claude project purge` entry added to CLI reference** — documents all flags: `--dry-run`, `-y`, `-i`, `--all` (cli-doc)
+- **`claude auth status --text` flag** — human-readable output mode added to `claude auth status` (cli-doc)
+- **`claude auth login` flags documented** — `--email`, `--sso`, `--console` now listed in the CLI reference table (cli-doc)
+- **Stop hook block cap documented** — "Stop hook runs forever" troubleshooting entry rewritten to explain the 8-consecutive-block cap and `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` override (hooks-doc)
+- **Project trust re-prompt in home directory** — glossary and security docs updated: trust acceptance in the home directory is session-only and prompts again on each launch (getting-started-doc, plugins-doc)
+
+### Changed
+
+- **`CLAUDE_CODE_ENABLE_TASKS` behavior reversed** — env var now documented as `0` to revert to `TodoWrite` rather than `1` to opt in to Task tools (agent-sdk-doc, settings-doc, cli-doc)
+- **`query()` Python SDK session description updated** — clarified that `query()` creates a new session "by default" and documents `continue_conversation`/`resume` options for reuse; "Continue Chat" row updated (agent-sdk-doc)
+- **`ClaudeSDKClient` context manager wording softened** — "must be used as" changed to "typically used as" an async context manager (agent-sdk-doc)
+- **`updatedMCPToolOutput` deprecated in favor of `updatedToolOutput`** — `PostToolUseHookSpecificOutput` field now marked deprecated with note that `updatedToolOutput` works for all tools (agent-sdk-doc)
+- **`strictMcpConfig` description corrected** — now accurately says it ignores project `.mcp.json`, user settings, and plugin-provided MCP servers (agent-sdk-doc)
+- **`allowManagedDomainsOnly` sandbox flag clarified** — documented as managed-settings-only; has no effect when set via SDK options (agent-sdk-doc)
+- **`CLAUDE_CODE_SIMPLE` / `--bare` mode now skips OAuth** — bare mode also documented as skipping OAuth and keychain credential reads; API key or `apiKeyHelper` required (settings-doc)
+- **`CLAUDE_ENABLE_STREAM_WATCHDOG` applies to Bedrock** — now documented as applying to all providers including Bedrock; independent byte-level watchdog `CLAUDE_ENABLE_BYTE_WATCHDOG_BEDROCK` can be used alongside it (settings-doc)
+- **`showThinkingSummaries` clarified for non-interactive contexts** — setting now documented as having no effect in SDK or IDE extension contexts, not just `-p` mode (settings-doc)
+- **`[1m]` model suffix behavior on Bedrock/Vertex** — clarified that the suffix is read per-variable and a model ID without it uses 200K context even if the same model has the suffix in another variable (features-doc)
+- **`context: fork` skips CLAUDE.md for Explore/Plan agents** — documented that forked skills using the Explore or Plan agent type do not see CLAUDE.md (skills-doc, sub-agents-doc)
+- **Status line Windows path handling documented** — Git Bash on Windows consumes unquoted backslashes; paths in `command` must use forward slashes (features-doc)
+- **Voice dictation `space` binding note clarified** — `"space": null` is decorative; custom key replaces the default binding rather than adding a second trigger (features-doc)
+- **`ENABLE_TOOL_SEARCH=true` Vertex AI note simplified** — removed the parenthetical listing of Vertex AI model names; wording tightened (settings-doc)
+
+### Removed
+
+- **`CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE` env var** — removed in v2.1.142; replaced by `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` for pinning Opus 4.6 (settings-doc, features-doc)
+
 ## 26.5.18
 
 **18 references updated across 8 skills:** agent-sdk-doc, cloud-providers-doc, errors-doc, features-doc, mcp-doc, memory-doc, operations-doc, security-doc, settings-doc, skills-doc
