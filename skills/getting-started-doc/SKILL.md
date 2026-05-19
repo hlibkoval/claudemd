@@ -1,53 +1,69 @@
 ---
 name: getting-started-doc
-description: Complete official documentation for getting started with Claude Code — overview, quickstart, advanced setup, authentication, how the agentic loop works, platforms and integrations, the /goal command, glossary of terms, and team adoption resources (champion kit and communications kit).
+description: Complete official documentation for getting started with Claude Code — overview of what Claude Code is and what it can do, quickstart (install, login, first session, essential commands), advanced setup (system requirements, installation methods, update/uninstall, binary verification), authentication (account types, team setup, credential management, auth precedence, long-lived tokens), how Claude Code works (agentic loop, tools, sessions, context window, checkpoints, permission modes), platforms and integrations (CLI vs Desktop vs VS Code vs JetBrains vs web, remote access options), the /goal command (set completion conditions, evaluation, requirements), glossary of Claude Code terms, and team rollout resources (champion kit, communications kit).
 user-invocable: false
 ---
 
 # Getting Started Documentation
 
-This skill provides the complete official documentation for getting started with Claude Code.
+This skill provides the complete official documentation for getting started with Claude Code, including installation, authentication, how the system works, available platforms, and team rollout resources.
 
 ## Quick Reference
 
 ### What Claude Code Is
 
-Claude Code is an agentic coding tool that reads your codebase, edits files, runs commands, and integrates with development tools. Available as a terminal CLI, VS Code/JetBrains extension, desktop app, and web surface.
+Claude Code is an AI-powered agentic coding assistant that reads your codebase, edits files, runs commands, and integrates with your development tools. Available in your terminal, IDE, desktop app, and browser. It is not autocomplete — it reads your whole project and can work across multiple files and tools.
 
-### Installation
+### Install Claude Code
 
-| Method | Command | Auto-updates |
-| :--- | :--- | :--- |
-| Native (macOS/Linux/WSL) | `curl -fsSL https://claude.ai/install.sh \| bash` | Yes |
-| Native (Windows PowerShell) | `irm https://claude.ai/install.ps1 \| iex` | Yes |
-| Homebrew (stable) | `brew install --cask claude-code` | No (run `brew upgrade claude-code`) |
-| Homebrew (latest) | `brew install --cask claude-code@latest` | No |
-| WinGet | `winget install Anthropic.ClaudeCode` | No |
-| npm | `npm install -g @anthropic-ai/claude-code` | No |
-| apt/dnf/apk | See setup reference | No |
+| Platform | Command |
+| :--- | :--- |
+| macOS / Linux / WSL | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| Windows PowerShell | `irm https://claude.ai/install.ps1 \| iex` |
+| Windows CMD | `curl -fsSL https://claude.ai/install.cmd -o install.cmd && install.cmd && del install.cmd` |
+| Homebrew (stable) | `brew install --cask claude-code` |
+| Homebrew (latest) | `brew install --cask claude-code@latest` |
+| WinGet | `winget install Anthropic.ClaudeCode` |
+| npm | `npm install -g @anthropic-ai/claude-code` |
+| Linux apt | See setup reference for signed apt/dnf/apk repos |
 
-After installation: `claude --version` to verify, `claude doctor` for a full check.
+Native installs auto-update in the background. Homebrew and WinGet do not — run `brew upgrade claude-code` or `winget upgrade Anthropic.ClaudeCode` manually.
 
 ### System Requirements
 
-- **OS:** macOS 13+, Windows 10 1809+ / Server 2019+, Ubuntu 20.04+, Debian 10+, Alpine 3.19+
-- **Hardware:** 4 GB+ RAM, x64 or ARM64
-- **Shell:** Bash, Zsh, PowerShell, or CMD (Git for Windows recommended on native Windows)
+| Requirement | Details |
+| :--- | :--- |
+| **OS** | macOS 13+, Windows 10 1809+ / Server 2019+, Ubuntu 20.04+, Debian 10+, Alpine 3.19+ |
+| **Hardware** | 4 GB+ RAM, x64 or ARM64 |
+| **Network** | Internet required |
+| **Shell** | Bash, Zsh, PowerShell, or CMD (Git for Windows recommended on native Windows) |
 
-### Authentication — Account Types and Precedence
+Verify installation: `claude --version` or `claude doctor`
 
-| Priority | Method | Notes |
-| :--- | :--- | :--- |
-| 1 | Cloud provider env vars (`CLAUDE_CODE_USE_BEDROCK`, etc.) | Bedrock, Vertex AI, Microsoft Foundry |
-| 2 | `ANTHROPIC_AUTH_TOKEN` | Bearer token, for LLM gateways/proxies |
-| 3 | `ANTHROPIC_API_KEY` | Direct API key from Claude Console |
-| 4 | `apiKeyHelper` script | Dynamic/rotating credentials |
-| 5 | `CLAUDE_CODE_OAUTH_TOKEN` | Long-lived token from `claude setup-token` |
-| 6 | Subscription OAuth (default) | Claude Pro, Max, Team, Enterprise via `/login` |
+### Authentication
 
-- Free Claude.ai plan does not include Claude Code access.
-- macOS: credentials stored in Keychain. Linux: `~/.claude/.credentials.json` (mode 0600). Windows: `%USERPROFILE%\.claude\.credentials.json`.
-- `claude setup-token` generates a one-year OAuth token for CI/scripts (requires Pro/Max/Team/Enterprise).
+Run `claude` in your terminal; browser-based login opens on first launch.
+
+| Account type | Notes |
+| :--- | :--- |
+| Claude Pro / Max / Team / Enterprise | Log in with claude.ai account — recommended |
+| Claude Console | API access with pre-paid credits; Console workspace auto-created |
+| Amazon Bedrock | Set cloud provider env vars; no browser login needed |
+| Google Vertex AI | Set cloud provider env vars; no browser login needed |
+| Microsoft Foundry | Set cloud provider env vars; no browser login needed |
+
+**Authentication precedence** (highest → lowest):
+
+1. `CLAUDE_CODE_USE_BEDROCK` / `CLAUDE_CODE_USE_VERTEX` / `CLAUDE_CODE_USE_FOUNDRY`
+2. `ANTHROPIC_AUTH_TOKEN` (Bearer header)
+3. `ANTHROPIC_API_KEY` (X-Api-Key header)
+4. `apiKeyHelper` script output
+5. `CLAUDE_CODE_OAUTH_TOKEN` (long-lived token from `claude setup-token`)
+6. Subscription OAuth credentials from `/login`
+
+**Credential storage:** macOS Keychain; `~/.claude/.credentials.json` (mode 0600) on Linux; `%USERPROFILE%\.claude\.credentials.json` on Windows.
+
+**Long-lived tokens for CI:** Run `claude setup-token` to generate a one-year OAuth token. Set it as `CLAUDE_CODE_OAUTH_TOKEN`. Requires Pro/Max/Team/Enterprise. Not usable with `--bare` mode.
 
 ### Essential CLI Commands
 
@@ -55,163 +71,177 @@ After installation: `claude --version` to verify, `claude doctor` for a full che
 | :--- | :--- |
 | `claude` | Start interactive session |
 | `claude "task"` | Run a one-time task |
-| `claude -p "query"` | Run one-off query then exit |
+| `claude -p "query"` | Non-interactive: run query, print, exit |
 | `claude -c` | Continue most recent conversation |
-| `claude -r` | Resume a previous conversation |
-| `claude update` | Manually apply latest update |
+| `claude -r` | Resume a previous conversation (picker) |
+| `claude --model <name>` | Start with a specific model |
+| `claude update` | Manually update to latest version |
 | `claude doctor` | Diagnose installation issues |
-| `/clear` | Clear conversation history |
-| `/login` / `/logout` | Switch accounts |
+| `claude setup-token` | Generate long-lived OAuth token for CI |
+| `/clear` | Start a new session |
 | `/help` | Show available commands |
+| `/login` / `/logout` | Switch accounts |
 | `/model` | Switch model mid-session |
-| `/init` | Generate CLAUDE.md from repo |
-| `Shift+Tab` | Cycle permission modes |
+| `/init` | Generate CLAUDE.md from project structure |
+| `/context` | See what's using context window space |
+| `/compact` | Manually trigger context compaction |
+| `/rewind` | Revert to an earlier checkpoint (Esc Esc) |
+| `/goal <condition>` | Set autonomous completion condition |
+| `exit` or Ctrl+D | Exit Claude Code |
 
-### Agentic Loop — Three Phases
+### The Agentic Loop
 
-1. **Gather context** — read files, search codebase, understand structure
-2. **Take action** — edit files, run commands, make changes
-3. **Verify results** — run tests, check output, course-correct
+Claude works in three repeating phases: **gather context → take action → verify results**. Each tool use feeds results back into the next step.
 
-### Built-in Tool Categories
+**Built-in tool categories:**
 
 | Category | What Claude can do |
 | :--- | :--- |
-| **File operations** | Read, edit, create, rename files |
-| **Search** | Find files by pattern, regex content search |
-| **Execution** | Shell commands, tests, git, servers |
-| **Web** | Search web, fetch docs |
-| **Code intelligence** | Type errors, jump to definition (requires LSP plugin) |
+| File operations | Read files, edit code, create files, rename/reorganize |
+| Search | Find files by pattern, regex content search, explore codebases |
+| Execution | Run shell commands, start servers, run tests, use git |
+| Web | Search the web, fetch docs, look up error messages |
+| Code intelligence | Type errors, definitions, references (requires code intelligence plugin) |
 
-### Permission Modes (cycle with `Shift+Tab`)
+### Permission Modes
+
+Cycle through modes with `Shift+Tab`:
 
 | Mode | Behavior |
 | :--- | :--- |
-| `default` | Asks before file edits and shell commands |
-| `acceptEdits` | Edits files + common filesystem commands without asking |
-| `plan` | Read-only exploration; proposes changes for approval |
-| `auto` | Background classifier approves actions (research preview) |
+| **Default** | Asks before file edits and shell commands |
+| **Auto-accept edits** | File edits and common FS commands flow through; other commands still ask |
+| **Plan mode** | Read-only research, then proposes a plan for approval before any edit |
+| **Auto mode** | Background classifier reviews actions; research preview on Max/Team/Enterprise/API |
 
-### Context Window Management
+### Sessions and Context
 
-- Sessions save history to `~/.claude/projects/` as JSONL
-- Auto-compaction clears old tool outputs, then summarizes conversation
-- Persistent instructions go in `CLAUDE.md` — survives compaction
-- Run `/compact [focus on X]` to trigger manually
-- Run `/context` to see what's using space
-- Press `Esc` twice (or `/rewind`) to rewind to a previous checkpoint
+- Sessions are tied to your current directory; each starts with a fresh context window.
+- Resume with `claude -c` (most recent) or `claude -r` (picker).
+- Fork a session with `--fork-session` or `/branch`.
+- Context fills as you work; Claude auto-compacts. Use `/compact focus on X` to guide what's preserved.
+- CLAUDE.md and auto memory survive compaction.
+- Checkpoints snapshot files before every edit — press Esc twice or run `/rewind` to restore.
 
-### Sessions
+### `/goal` — Autonomous Completion
 
-- Each session has its own independent context window tied to a directory
-- `claude --continue` / `claude -c` — resume most recent
-- `claude --resume` / `claude -r` — pick from list
-- `--fork-session` or `/branch` — copy history to a new session ID
-- Sessions across branches: use git worktrees (`-w` flag) for true isolation
-- Auto memory saved to `~/.claude/projects/` per git repo (first 200 lines / 25 KB of MEMORY.md loads each session)
+Requires Claude Code v2.1.139+. Sets a condition Claude keeps working toward across turns.
 
-### Platforms
-
-| Platform | Best for |
-| :--- | :--- |
-| CLI | Terminal workflows, scripting, Agent SDK, third-party providers |
-| Desktop | Visual diff review, parallel sessions, computer use, Dispatch |
-| VS Code | Inline diffs, integrated terminal, file context |
-| JetBrains | Diff viewer, selection sharing in IntelliJ/PyCharm/WebStorm |
-| Web | Long-running cloud tasks that continue when you disconnect |
-| Mobile | Monitoring/starting tasks away from desk via Remote Control or Dispatch |
-
-### The `/goal` Command
-
-Sets a completion condition; Claude keeps working across turns until a separate evaluator confirms it is met.
-
-```text
+```
 /goal all tests in test/auth pass and the lint step is clean
 ```
 
-- One goal active per session; new `/goal` replaces the old one
-- `/goal` with no argument — check status (turns, tokens, last evaluator reason)
-- `/goal clear` — remove active goal
-- Evaluator uses a small fast model (default: Haiku); billed separately
-- Works in non-interactive mode: `claude -p "/goal <condition>"`
-- Requires trusted workspace (hooks must be enabled)
+| Command | Effect |
+| :--- | :--- |
+| `/goal <condition>` | Set (or replace) the active goal; starts a turn immediately |
+| `/goal` | Check status: condition, turns, tokens, latest evaluator reason |
+| `/goal clear` | Remove active goal before condition is met |
 
-### Autonomous Workflow Comparison
+After each turn, a small fast model (default: Haiku) checks the condition against the conversation. "No" sends Claude back to work with the reason as guidance.
+
+**Comparison with other autonomous approaches:**
 
 | Approach | Next turn starts when | Stops when |
 | :--- | :--- | :--- |
-| `/goal` | Previous turn finishes | Evaluator confirms condition met |
+| `/goal` | Previous turn finishes | Model confirms condition is met |
 | `/loop` | Time interval elapses | You stop it, or Claude decides done |
-| Stop hook | Previous turn finishes | Your script/prompt decides |
+| Stop hook | Previous turn finishes | Your own script or prompt decides |
 
-### Update Management
+`/goal` requires workspace trust and is unavailable when `disableAllHooks` or `allowManagedHooksOnly` is set.
 
-| Setting | Effect |
+### Platforms Overview
+
+| Platform | Best for | Distinctive features |
+| :--- | :--- | :--- |
+| CLI | Terminal workflows, scripting, CI | Full feature set, Agent SDK, computer use (Pro/Max macOS) |
+| Desktop | Visual review, parallel sessions | Diff viewer, app preview, Dispatch, computer use |
+| VS Code | Working inside VS Code | Inline diffs, integrated terminal, file context |
+| JetBrains | IntelliJ / PyCharm / WebStorm | Diff viewer, selection sharing, terminal session |
+| Web | Long-running tasks, offline continuation | Anthropic-managed cloud, continues after disconnect |
+| Mobile | Starting/monitoring while away | Cloud sessions (iOS/Android), Remote Control, Dispatch |
+
+You can mix surfaces on the same project. CLAUDE.md, settings, and MCP servers are shared across local surfaces.
+
+### Remote Access Options
+
+| Option | Claude runs on | Best for |
+| :--- | :--- | :--- |
+| Dispatch | Your machine (Desktop) | Phone-initiated tasks, minimal setup |
+| Remote Control | Your machine (CLI/VS Code) | Steering in-progress work from another device |
+| Channels | Your machine (CLI) | Reacting to chat/CI events (Telegram, Discord) |
+| Slack | Anthropic cloud | PRs from `@Claude` mentions in team chat |
+| Scheduled tasks | CLI, Desktop, or cloud | Recurring automation (daily reviews, nightly CI) |
+
+### Integrations
+
+| Integration | Use for |
 | :--- | :--- |
-| `autoUpdatesChannel: "latest"` (default) | Receive new features immediately |
-| `autoUpdatesChannel: "stable"` | ~1 week delay, skips regressions |
-| `minimumVersion: "2.1.100"` | Floor; auto-updates won't go below this |
-| `DISABLE_AUTOUPDATER: "1"` | Stop background check (manual `claude update` still works) |
-| `DISABLE_UPDATES` | Block all update paths |
+| Chrome | Testing web apps, automating sites with your logged-in sessions |
+| GitHub Actions | Automated PR reviews, issue triage, scheduled maintenance |
+| GitLab CI/CD | Same as GitHub Actions for GitLab |
+| Code Review | Automatic review on every PR |
+| Slack | Bug reports → pull requests from team chat |
 
 ### Key Glossary Terms
 
 | Term | Definition |
 | :--- | :--- |
-| **Agentic loop** | gather context → take action → verify results, repeated |
-| **Agentic harness** | Claude Code's tools, context management, execution env around the model |
-| **CLAUDE.md** | Persistent project instructions loaded at every session start |
-| **Auto memory** | Notes Claude writes for itself; stored per git repo in `~/.claude/projects/` |
-| **Compaction** | Auto-summarization when context window approaches its limit |
-| **Checkpoint** | Restore point before each file edit; revert with `Esc`+`Esc` or `/rewind` |
-| **Session** | Conversation tied to a directory with its own context window |
-| **Subagent** | Delegated task with its own fresh context window |
-| **Skill** | `SKILL.md` file that adds a workflow or knowledge to Claude's toolkit |
-| **Hook** | User-defined handler that fires at lifecycle points |
-| **MCP** | Model Context Protocol — connects Claude to external services |
-| **Surface** | Any place Claude Code runs: CLI, VS Code, JetBrains, Desktop, web |
-| **Worktree isolation** | Separate git worktree (`-w`) for parallel agents |
-| **Bare mode** | `--bare` — skips hooks/skills/plugins/memory for reproducible CI runs |
-| **Non-interactive mode** | `-p` / `--print` — single prompt, exit, no conversation |
-| **Remote Control** | Drive a local session from browser or mobile via claude.ai |
+| **Agentic loop** | Gather context → take action → verify results, repeat |
+| **Agentic harness** | The tools, context management, and execution environment around the model |
+| **CLAUDE.md** | Markdown file of persistent instructions you write, loaded every session |
+| **Auto memory** | Notes Claude writes for itself; stored in `~/.claude/projects/<project>/memory/` |
+| **Checkpoint** | Snapshot before each edit; restore with Esc Esc or `/rewind` |
+| **Compaction** | Auto-summarization when context window fills; project CLAUDE.md reloads after |
+| **Skill** | `SKILL.md` file containing instructions/workflow Claude loads automatically or on `/name` |
+| **Subagent** | Specialized agent in its own context window; returns summary to main conversation |
+| **Permission mode** | Baseline approval behavior; cycle with Shift+Tab |
+| **Plan mode** | Read-only research + proposal before any edits |
+| **Auto mode** | Background classifier approves tool calls; research preview |
+| **MCP** | Model Context Protocol — connects Claude to external services (Jira, Slack, databases) |
+| **Hook** | Shell command/prompt/MCP tool that fires at fixed lifecycle points |
+| **Session** | Conversation tied to current directory, with its own context window |
+| **Turn** | One complete response from Claude (may include many tool calls) |
+| **Surface** | Any interface: CLI, VS Code, JetBrains, Desktop, web |
+| **Worktree isolation** | Runs Claude in a separate git worktree (`-w` flag) for parallel agents |
+| **Bare mode** | `--bare` flag skips hooks/skills/MCP/CLAUDE.md; for CI/scripts |
+| **Non-interactive mode** | `-p` flag; runs a prompt and exits; formerly "headless mode" |
+| **Teleport** | `/teleport` pulls a cloud session into your local terminal |
+| **Dispatch** | Routes a phone-initiated task to spawn a Desktop session |
 
-### Team Adoption Quick-Reference
+### Team Rollout Quick Reference
 
-**For champions (engineers promoting usage):**
+**Before launch checklist:** Create `#claude-code` channel, test install command, have security/data-handling link ready, choose a concrete first task from your real codebase, name a channel owner for 48 hours, line up an exec sponsor.
+
+**First tasks to recommend to new users:**
+- "The test in [file] is flaky. Figure out why and fix it."
+- "Walk me through how [module] works, then tell me where the entry point is."
+- "Look at my working diff and tell me what looks risky."
+
+**Champion quick-reference techniques:**
 
 | Technique | How |
 | :--- | :--- |
-| Provide context | Use `@file` or `@directory/` references, or paste error/log output directly |
-| Review before edit | `Shift+Tab` → plan mode — see proposed changes before execution |
-| Teach repo conventions | Run `/init` to generate `CLAUDE.md`; add conventions, test commands |
-| Reuse workflows | Create `.claude/skills/<name>/SKILL.md` for team-shared slash commands |
-| Long task notifications | Configure a Stop hook for desktop notifications when tasks finish |
-| Recover from bad output | Paste the failing test or stack trace back — don't just rephrase |
-
-**Answering common concerns:**
-
-| Concern | Response |
-| :--- | :--- |
-| "I'm faster without it" | Try it on work you avoid: legacy files, unfamiliar services, test scaffolding |
-| "I don't trust AI on production code" | Plan mode + normal diff review = nothing applied without inspection |
-| "Setup isn't worth it" | Install takes ~2 minutes; `/init` once is sufficient to start |
-| "It hallucinated" | Usually a context problem — add `@`-references and the actual error output |
-| "Where does my code go?" | CLI talks directly to Anthropic API; under Enterprise plan, code/prompts not used for training |
+| Provide context | Use `@file` or `@directory/` references, or paste error output |
+| Review plan first | Press Shift+Tab to enter plan mode |
+| Teach it your repo | Run `/init` to generate CLAUDE.md |
+| Reuse workflows | Create `.claude/skills/<name>/SKILL.md` |
+| Stay informed on long tasks | Configure a Stop hook for desktop notification |
+| Recover from bad result | Paste failing test or stack trace back, don't rephrase |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Overview](references/claude-code-overview.md) — what Claude Code is, surfaces, capabilities, next steps
-- [Quickstart](references/claude-code-quickstart.md) — step-by-step first session: install, login, explore, edit, git, fix bugs
-- [Advanced setup](references/claude-code-setup.md) — system requirements, platform-specific install, Linux package managers, npm, updates, uninstall
-- [Authentication](references/claude-code-authentication.md) — login, team auth (Teams/Enterprise/Console/cloud providers), credential management, long-lived tokens
-- [How Claude Code works](references/claude-code-how-it-works.md) — agentic loop, tools, sessions, context window, checkpoints, permissions, effective usage tips
-- [Platforms and integrations](references/claude-code-platforms.md) — all surfaces compared, integrations (Chrome, CI/CD, Slack), remote access options
-- [/goal command](references/claude-code-goal.md) — set completion conditions, compare autonomous workflow approaches, evaluation mechanics
-- [Glossary](references/claude-code-glossary.md) — definitions for all Claude Code terms with links to in-depth pages
-- [Champion kit](references/claude-code-champion-kit.md) — playbook for engineers promoting team adoption: sharing, answering questions, 30-day plan
-- [Communications kit](references/claude-code-communications-kit.md) — launch announcements, drip campaign tips, FAQ responses for org-wide rollouts
+- [Overview](references/claude-code-overview.md) — what Claude Code is, get started across surfaces, what you can do, use Claude Code everywhere
+- [Quickstart](references/claude-code-quickstart.md) — install, log in, first session, make a code change, git usage, essential commands, pro tips
+- [Advanced setup](references/claude-code-setup.md) — system requirements, installation methods (native/Homebrew/WinGet/Linux packages/npm), Windows setup, update/release channels, binary verification, uninstall
+- [Authentication](references/claude-code-authentication.md) — account types, team setup (Teams/Enterprise/Console/cloud providers), credential management, auth precedence, long-lived tokens
+- [How Claude Code works](references/claude-code-how-it-works.md) — agentic loop, models, tools, what Claude can access, environments and interfaces, sessions, context window management, checkpoints, permission modes, effective usage tips
+- [Platforms and integrations](references/claude-code-platforms.md) — choose a platform, connect tools, remote access options, integrations reference
+- [Keep Claude working toward a goal](references/claude-code-goal.md) — `/goal` command, comparison with `/loop` and Stop hooks, writing effective conditions, status/clear/resume, non-interactive use, evaluation model, requirements
+- [Glossary](references/claude-code-glossary.md) — definitions for all Claude Code terms with links to in-depth docs
+- [Champion kit](references/claude-code-champion-kit.md) — playbook for engineers driving internal adoption: what to share, answering objections, 30-day plan
+- [Communications kit](references/claude-code-communications-kit.md) — launch announcements, tips-and-tricks drip campaign, FAQ responses, prompt templates for rollout admins
 
 ## Sources
 
@@ -221,7 +251,7 @@ For the complete official documentation, see the reference files:
 - Authentication: https://code.claude.com/docs/en/authentication.md
 - How Claude Code works: https://code.claude.com/docs/en/how-claude-code-works.md
 - Platforms and integrations: https://code.claude.com/docs/en/platforms.md
-- /goal command: https://code.claude.com/docs/en/goal.md
+- Keep Claude working toward a goal: https://code.claude.com/docs/en/goal.md
 - Glossary: https://code.claude.com/docs/en/glossary.md
 - Champion kit: https://code.claude.com/docs/en/champion-kit.md
 - Communications kit: https://code.claude.com/docs/en/communications-kit.md

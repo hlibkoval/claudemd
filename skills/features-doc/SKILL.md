@@ -1,563 +1,428 @@
 ---
 name: features-doc
-description: Complete official documentation for Claude Code features — fast mode, model configuration and aliases, output styles, status line, checkpointing and rewind, remote control, scheduled tasks and /loop, voice dictation, channels (Telegram/Discord/iMessage), channels reference for building custom channels, desktop scheduled tasks, context window visualization, fullscreen TUI rendering, routines (cloud automation), deep links, agent view, running agents in parallel, and git worktrees for session isolation.
+description: Complete official documentation for Claude Code features — fast mode, model configuration (aliases, effort levels, extended context), output styles, status line, checkpointing/rewind, remote control, scheduled tasks (/loop, Desktop, Routines), voice dictation, channels (Telegram/Discord/iMessage), context window, fullscreen rendering, deep links, agent view, and parallel agents overview.
 user-invocable: false
 ---
 
 # Features Documentation
 
-This skill provides the complete official documentation for Claude Code features.
+This skill provides the complete official documentation for Claude Code's built-in features, including model configuration, UI enhancements, automation tools, and multi-agent capabilities.
 
 ## Quick Reference
 
+### Extension Features Overview
+
+| Feature | What it does | When to use it |
+| :--- | :--- | :--- |
+| **CLAUDE.md** | Persistent context loaded every session | "Always do X" project conventions |
+| **Skills** | Instructions/workflows Claude can use | Reusable reference docs, repeatable tasks |
+| **Subagents** | Isolated execution, returns summary | Context isolation, parallel tasks |
+| **Agent teams** | Multiple independent sessions coordinated | Complex parallel work with peer messaging |
+| **MCP** | Connect to external services | External data or actions |
+| **Hooks** | Scripts triggered by lifecycle events | Automation that must run every time |
+| **Plugins** | Packaging layer for the above | Share setups across repos |
+
+**Feature load order:** CLAUDE.md files are additive; skills override by name (managed > user > project); MCP servers override by name (local > project > user); hooks merge (all registered hooks fire).
+
 ### Fast Mode
 
-| Setting | Value |
+| Item | Value |
 | :--- | :--- |
-| Toggle | `/fast` or `"fastMode": true` in user settings |
-| Models | Opus 4.6 (default), Opus 4.7 (set `CLAUDE_CODE_ENABLE_OPUS_4_7_FAST_MODE=1`) |
-| Speed | 2.5x faster than standard Opus |
-| Price | $30/$150 MTok input/output (same for both Opus versions) |
-| Indicator | `↯` icon next to prompt |
-| Requires | Extra usage enabled; not available on Bedrock/Vertex/Foundry |
-| Per-session opt-in | `"fastModePerSessionOptIn": true` in managed settings |
-| Disable org-wide | Set `CLAUDE_CODE_DISABLE_FAST_MODE=1` |
-| Rate limit fallback | Automatically falls back to standard speed; `↯` turns gray |
-
-Switching from Opus 4.7 fast mode off stays on Opus 4.7 (does not revert to previous model). Use `/model` to change models.
+| **Toggle** | `/fast` in CLI or VS Code extension; or `"fastMode": true` in user settings |
+| **Speed** | 2.5× faster than standard Opus |
+| **Pricing** | $30 input / $150 output per MTok |
+| **Availability** | Opus 4.7 (default in v2.1.142+) and Opus 4.6; not available on Sonnet/Haiku or Bedrock/Vertex/Foundry |
+| **Plans** | All subscription plans (Pro/Max/Team/Enterprise) and Console; uses usage credits only |
+| **Indicator** | `↯` icon next to prompt while active |
+| **Per-session opt-in** | Set `"fastModePerSessionOptIn": true` in managed settings to reset fast mode each session |
+| **Rate limits** | Shared pool for Opus 4.7 and 4.6; falls back to standard speed on limit hit |
+| **Disable org-wide** | `CLAUDE_CODE_DISABLE_FAST_MODE=1` |
 
 ### Model Configuration
 
-**Model aliases:**
+#### Model Aliases
 
-| Alias | Resolves to |
+| Alias | Behavior |
 | :--- | :--- |
-| `default` | Clears override; system default for account tier |
-| `best` | Most capable model (currently `opus`) |
-| `sonnet` | Latest Sonnet; Anthropic/AWS = Sonnet 4.6, Bedrock/Vertex/Foundry = Sonnet 4.5 |
-| `opus` | Latest Opus; Anthropic/AWS = Opus 4.7, Bedrock/Vertex/Foundry = Opus 4.6 |
-| `haiku` | Fast/efficient Haiku |
+| `default` | Clears override; reverts to recommended model for account type |
+| `best` | Most capable available (currently `opus`) |
+| `sonnet` | Latest Sonnet (daily coding tasks) |
+| `opus` | Latest Opus (complex reasoning) |
+| `haiku` | Fast and efficient (simple tasks) |
 | `sonnet[1m]` | Sonnet with 1M token context |
 | `opus[1m]` | Opus with 1M token context |
-| `opusplan` | Opus in plan mode, Sonnet in execution mode |
+| `opusplan` | Uses `opus` in plan mode, switches to `sonnet` for execution |
 
-**Setting model (priority order):**
-1. `/model <alias|name>` during session
-2. `claude --model <alias|name>` at startup
-3. `ANTHROPIC_MODEL=<alias|name>` env var
-4. `"model"` field in settings file
+On Anthropic API and Claude Platform on AWS: `opus` = Opus 4.7, `sonnet` = Sonnet 4.6. On Bedrock/Vertex/Foundry: `opus` = Opus 4.6, `sonnet` = Sonnet 4.5.
 
-**1M token context:**
+#### Setting Priority
 
-| Plan | Opus 1M | Sonnet 1M |
-| :--- | :--- | :--- |
-| Max/Team/Enterprise | Included | Requires extra usage |
-| Pro | Requires extra usage | Requires extra usage |
-| API/pay-as-you-go | Full access | Full access |
+1. `/model <alias>` during session (saved to user settings)
+2. `--model <alias>` at startup (session-only)
+3. `ANTHROPIC_MODEL=<alias>` environment variable (session-only)
+4. `model` field in settings file
 
-Disable: `CLAUDE_CODE_DISABLE_1M_CONTEXT=1`
-
-**Effort levels** (for Opus 4.7, 4.6, Sonnet 4.6):
+#### Effort Levels
 
 | Level | When to use |
 | :--- | :--- |
-| `low` | Latency-sensitive, not intelligence-sensitive |
-| `medium` | Cost-sensitive, accepts some intelligence trade-off |
-| `high` | Intelligence-sensitive work, or to reduce spend vs `xhigh` |
+| `low` | Latency-sensitive, simple tasks |
+| `medium` | Cost-sensitive, acceptable quality trade-off |
+| `high` | Minimum for intelligence-sensitive work |
 | `xhigh` | Best for most coding/agentic tasks (default on Opus 4.7) |
-| `max` | Demanding tasks; session-only, not saved to settings |
+| `max` | Demanding tasks; session-only (cannot be saved to settings) |
 
-Set via: `/effort`, `/effort <level>`, `--effort` flag, `CLAUDE_CODE_EFFORT_LEVEL`, `effortLevel` in settings, or skill/subagent frontmatter `effort` field.
+Set with `/effort <level>`, `--effort` flag, `CLAUDE_CODE_EFFORT_LEVEL` env var, or `effortLevel` in settings. Include `ultrathink` in a prompt for deeper reasoning on that turn without changing the session effort setting.
 
-Include `ultrathink` in a prompt for one-off deep reasoning without changing the session effort level.
+#### Extended Context (1M tokens)
 
-**Extended thinking:** toggle with `Option+T` (macOS) / `Alt+T` (Windows/Linux), or set `alwaysThinkingEnabled` via `/config`. Set `MAX_THINKING_TOKENS=0` to disable regardless of effort.
+| Plan | Opus 1M | Sonnet 1M |
+| :--- | :--- | :--- |
+| Max/Team/Enterprise | Included | Usage credits required |
+| Pro | Usage credits required | Usage credits required |
+| API / pay-as-you-go | Full access | Full access |
 
-**Model alias env vars:**
+Disable with `CLAUDE_CODE_DISABLE_1M_CONTEXT=1`. Use `[1m]` suffix: `/model opus[1m]`.
 
-| Env var | Controls |
+#### Default Model by Plan
+
+| Plan | Default |
 | :--- | :--- |
-| `ANTHROPIC_DEFAULT_OPUS_MODEL` | What `opus` and `opusplan` (plan phase) resolve to |
-| `ANTHROPIC_DEFAULT_SONNET_MODEL` | What `sonnet` and `opusplan` (execution) resolve to |
-| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | What `haiku` and background tasks resolve to |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | Model for subagents |
+| Max and Team Premium | Opus 4.7 |
+| Pro, Team Standard, Enterprise, Anthropic API | Sonnet 4.6 |
+| Bedrock, Vertex, Foundry | Sonnet 4.5 |
 
-`availableModels` in managed settings restricts the `/model` picker. Combine with `model` and `ANTHROPIC_DEFAULT_*_MODEL` for full control.
+#### Model Env Variables
 
-**Third-party provider pinning:** Set `ANTHROPIC_DEFAULT_OPUS_MODEL` (etc.) to provider-specific IDs. Append `[1m]` to enable 1M context. Use `_NAME`, `_DESCRIPTION`, `_SUPPORTED_CAPABILITIES` companions for display and feature detection.
-
-Capability values for `_SUPPORTED_CAPABILITIES`: `effort`, `xhigh_effort`, `max_effort`, `thinking`, `adaptive_thinking`, `interleaved_thinking`
-
-**Prompt caching env vars:** `DISABLE_PROMPT_CACHING`, `DISABLE_PROMPT_CACHING_HAIKU`, `DISABLE_PROMPT_CACHING_SONNET`, `DISABLE_PROMPT_CACHING_OPUS`
+| Variable | Effect |
+| :--- | :--- |
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | Model for `opus` alias and `opusplan` in plan mode |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | Model for `sonnet` alias and `opusplan` in execute mode |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | Model for `haiku` alias and background functionality |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | Override model for all subagents |
 
 ### Output Styles
 
-**Built-in styles:**
-
-| Style | Description |
+| Style | Behavior |
 | :--- | :--- |
-| Default | Standard software engineering system prompt |
-| Proactive | Executes immediately, minimal pauses; does not change permission mode |
-| Explanatory | Adds educational "Insights" between coding steps |
-| Learning | Adds "Insights" plus `TODO(human)` markers for collaborative learning |
+| **Default** | Standard software engineering mode |
+| **Proactive** | Execute immediately, make assumptions, prefer action over planning |
+| **Explanatory** | Adds "Insights" between task completion steps |
+| **Learning** | Collaborative mode; adds `TODO(human)` markers for user-implemented pieces |
 
-Set via `/config` → Output style, or `"outputStyle": "<name>"` in settings. Takes effect on next session start.
+Change with `/config` → Output style, or set `"outputStyle": "<name>"` in settings. Changes take effect on the next session start (kept stable during a session for prompt caching).
 
-**Custom output style frontmatter:**
+**Custom output styles** — Markdown files in `~/.claude/output-styles/`, `.claude/output-styles/`, or managed policy directory.
 
-| Field | Description |
-| :--- | :--- |
-| `name` | Style name (defaults to filename) |
-| `description` | Shown in `/config` picker |
-| `keep-coding-instructions` | Keep Claude's built-in coding behavior (default `false`) |
-| `force-for-plugin` | Auto-apply when plugin is enabled, overrides user `outputStyle` |
-
-File locations: `~/.claude/output-styles/` (user), `.claude/output-styles/` (project), or in managed settings dir. Plugins can ship output styles in `output-styles/`.
+| Frontmatter | Purpose | Default |
+| :--- | :--- | :--- |
+| `name` | Style name (if not filename) | From filename |
+| `description` | Shown in `/config` picker | None |
+| `keep-coding-instructions` | Keep Claude's built-in software engineering instructions | `false` |
+| `force-for-plugin` | Auto-apply when plugin is enabled | `false` |
 
 ### Status Line
 
-Config in settings (`~/.claude/settings.json` or project settings):
+**Setup:** Add to `~/.claude/settings.json`:
 ```json
 {
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 2,
-    "refreshInterval": 5,
-    "hideVimModeIndicator": false
+    "refreshInterval": 10
   }
 }
 ```
 
-Use `/statusline <description>` to generate a script automatically.
+Or use `/statusline <description>` and Claude generates the script automatically.
 
-**Key JSON fields available in stdin:**
+**Key available JSON fields (sent to script via stdin):**
 
 | Field | Description |
 | :--- | :--- |
-| `model.display_name` | Current model name |
-| `workspace.current_dir` | Working directory |
-| `workspace.project_dir` | Launch directory (may differ if cwd changed) |
-| `workspace.added_dirs` | Dirs added via `/add-dir` |
-| `workspace.git_worktree` | Git worktree name (if in a linked worktree) |
+| `model.id`, `model.display_name` | Current model |
+| `workspace.current_dir`, `workspace.project_dir` | Working directories |
+| `context_window.used_percentage` | % of context used |
+| `context_window.context_window_size` | Max tokens (200000 or 1000000) |
 | `cost.total_cost_usd` | Estimated session cost |
-| `cost.total_duration_ms` | Total elapsed time |
-| `context_window.used_percentage` | Context usage percentage |
-| `context_window.context_window_size` | Max context (200K or 1M) |
-| `effort.level` | Current effort level |
-| `rate_limits.five_hour.used_percentage` | 5h rate limit usage (Pro/Max only) |
-| `rate_limits.seven_day.used_percentage` | 7d rate limit usage (Pro/Max only) |
-| `session_id` | Unique session ID (use as cache key) |
-| `vim.mode` | Vim mode state when vim mode is on |
-| `worktree.name` | Active worktree name (only in `--worktree` sessions) |
-| `output_style.name` | Current output style |
+| `cost.total_duration_ms` | Session elapsed time (ms) |
+| `effort.level` | Current effort level (when supported) |
+| `rate_limits.five_hour.used_percentage` | 5-hour limit usage (Pro/Max only) |
+| `rate_limits.seven_day.used_percentage` | 7-day limit usage (Pro/Max only) |
+| `session_id` | Stable session identifier (use for cache keys) |
+| `vim.mode` | Current vim mode (when vim mode enabled) |
+| `worktree.name`, `worktree.branch` | Worktree info (during `--worktree` sessions) |
 
-Updates after each assistant message, after `/compact`, on permission mode/vim mode change. Debounced at 300ms. Use `refreshInterval` for time-based or subagent-idle updates.
+**Subagent status line:** Use `subagentStatusLine` setting to customize per-agent rows in the agent panel. Script receives `tasks` array on stdin and outputs `{"id": "<task-id>", "content": "<row>"}` per line.
 
-Subagent status line: `"subagentStatusLine"` setting — command receives `tasks` array, outputs `{"id": "...", "content": "..."}` lines.
+**Tips:** Cache slow operations (git status) keyed on `session_id`. Updates run after each assistant message, after `/compact`, on permission mode change, and on vim mode toggle (debounced 300ms). Requires workspace trust acceptance.
 
 ### Checkpointing and Rewind
 
-**Automatic:** Claude Code tracks file edits before each edit. Every user prompt creates a checkpoint. Persists 30 days (configurable).
+Checkpoints are created automatically before each file edit. Access via `Esc Esc` (double-Esc) or `/rewind`.
 
-**To rewind:** Press `Esc` twice or run `/rewind`. Choose from:
+**Rewind actions:**
 
 | Action | Effect |
 | :--- | :--- |
-| Restore code and conversation | Revert both files and conversation |
-| Restore conversation | Rewind conversation, keep current files |
-| Restore code | Revert files, keep conversation |
-| Summarize from here | Compress this message and everything after into a summary |
-| Summarize up to here | Compress everything before this message into a summary |
-| Never mind | Cancel |
+| Restore code and conversation | Reverts both to selected point |
+| Restore conversation | Rewinds chat; keeps current files |
+| Restore code | Reverts files; keeps conversation |
+| Summarize from here | Compresses selected message and everything after into summary |
+| Summarize up to here | Compresses everything before selected message; stays at end |
 
-**Limitations:** Only tracks edits from Claude's file tools (not Bash commands, external changes, or other sessions). Not a replacement for git.
+Checkpoints persist across sessions (auto-cleaned after 30 days by default). Does **not** track files modified by bash commands or edits from other sessions.
 
 ### Remote Control
 
-Runs Claude locally; remote devices control via `claude.ai/code` or Claude mobile app. Available on Pro/Max/Team/Enterprise (requires admin enable for Team/Enterprise).
+Connects claude.ai/code or the Claude mobile app to a local Claude Code session — Claude runs on your machine, not in the cloud.
 
-**Start modes:**
+**Requirements:** Pro/Max/Team/Enterprise subscription (not API keys); Team/Enterprise requires admin to enable the Remote Control toggle.
 
-| Mode | Command | Use case |
-| :--- | :--- | :--- |
-| Server | `claude remote-control` | Waits for remote connections; supports multiple sessions |
-| Interactive | `claude --remote-control` or `claude --rc` | Full local session also accessible remotely |
-| From existing session | `/remote-control` or `/rc` | Continue current session remotely |
-| VS Code | `/remote-control` in prompt box | Banner shows connection status |
+| Mode | Command |
+| :--- | :--- |
+| Server mode (multi-session) | `claude remote-control` |
+| Interactive with remote enabled | `claude --remote-control` or `claude --rc` |
+| From existing session | `/remote-control` or `/rc` |
+| Enable for all sessions | `/config` → Enable Remote Control for all sessions |
 
-**Server mode flags:** `--name`, `--spawn same-dir|worktree|session`, `--capacity <N>`, `--verbose`, `--sandbox`/`--no-sandbox`. Press `w` at runtime to toggle between `same-dir` and `worktree`.
+**Server mode flags:**
 
-Connect from another device via session URL, QR code (press `Space` to toggle), or session list at `claude.ai/code`. Remote sessions show a computer icon with green dot when online.
+| Flag | Description |
+| :--- | :--- |
+| `--name "<title>"` | Custom session title |
+| `--spawn same-dir` | All sessions share cwd (default) |
+| `--spawn worktree` | Each session gets its own git worktree |
+| `--spawn session` | Single-session mode |
+| `--capacity <N>` | Max concurrent sessions (default 32) |
 
-Enable for all sessions via `/config` → Enable Remote Control for all sessions.
+Press `Space` to show QR code. Sessions survive network drops and laptop sleep. Push notifications available via Claude mobile app (requires v2.1.110+).
 
-**Push notifications:** Requires Claude mobile app, same account. Enable via `/config` → Push when Claude decides. Requires v2.1.110+.
+**Troubleshooting errors:**
+- "requires a claude.ai subscription" → run `claude auth login`
+- "disabled by your organization's policy" → admin needs to enable the Remote Control toggle at claude.ai/admin-settings/claude-code
+- "Remote credentials fetch failed" → run with `--verbose`
 
-**Comparison of remote approaches:**
+### Scheduled Tasks
 
-| Feature | Trigger | Claude runs on |
-| :--- | :--- | :--- |
-| Remote Control | Drive running session from web/mobile | Your machine |
-| Channels | Push from chat app or webhook | Your machine |
-| Scheduled tasks | Set a schedule | CLI/Desktop/Cloud |
+Three scheduling options:
 
-### Scheduled Tasks (`/loop`)
-
-**Three behaviors:**
-
-| Input | Example | Result |
-| :--- | :--- | :--- |
-| Interval + prompt | `/loop 5m check deploy` | Fixed cron schedule |
-| Prompt only | `/loop check deploy` | Claude picks interval dynamically |
-| Nothing (or interval only) | `/loop` | Built-in maintenance prompt |
-
-Supported interval units: `s`, `m`, `h`, `d`. Intervals rounded to cron granularity.
-
-**Maintenance prompt scope** (bare `/loop`): continue unfinished work, tend to open PRs (comments, CI, conflicts), cleanup passes. Override with `.claude/loop.md` (project) or `~/.claude/loop.md` (user).
-
-**Cron management tools:** `CronCreate`, `CronList`, `CronDelete`. Session can hold up to 50 tasks. 7-day expiry on recurring tasks.
-
-**Jitter:** Recurring tasks fire up to 30 min after scheduled time (or half the interval). One-shot tasks at `:00` or `:30` fire up to 90s early. Use non-round minute (e.g. `3 9 * * *`) to avoid jitter.
-
-**Stop `/loop`:** Press `Esc` (only for `/loop`-created tasks). Tasks created via natural language remain.
-
-Disable scheduler: `CLAUDE_CODE_DISABLE_CRON=1`
-
-**Cron expressions:** 5-field (`minute hour day-of-month month day-of-week`). Supports `*`, single values, steps (`*/15`), ranges (`1-5`), lists (`1,15,30`).
-
-**Scheduling comparison:**
-
-| | Cloud (Routines) | Desktop | `/loop` |
+| | Cloud Routines | Desktop Tasks | `/loop` |
 | :--- | :--- | :--- | :--- |
-| Runs on | Anthropic cloud | Your machine | Your machine |
-| Requires machine on | No | Yes | Yes |
-| Requires open session | No | No | Yes |
-| Persistent | Yes | Yes | Restored on `--resume` if unexpired |
-| Local files | No (fresh clone) | Yes | Yes |
-| Min interval | 1 hour | 1 minute | 1 minute |
+| **Runs on** | Anthropic cloud | Your machine | Your machine |
+| **Requires machine on** | No | Yes | Yes |
+| **Requires open session** | No | No | Yes |
+| **Persists across restarts** | Yes | Yes | Restored on `--resume` if unexpired |
+| **Local file access** | No (fresh clone) | Yes | Yes |
+| **Min interval** | 1 hour | 1 minute | 1 minute |
+
+#### `/loop` (Session-scoped)
+
+| Input | Effect |
+| :--- | :--- |
+| `/loop 5m check the deploy` | Fixed-interval polling |
+| `/loop check the deploy` | Claude chooses interval dynamically |
+| `/loop` | Built-in maintenance prompt (PR tending, cleanup) |
+
+Stop a running loop with `Esc`. Tasks expire after 7 days. Session can hold up to 50 scheduled tasks. Cron tools: `CronCreate`, `CronList`, `CronDelete`.
+
+Customize bare `/loop` with `loop.md` at `.claude/loop.md` (project) or `~/.claude/loop.md` (user). Disable scheduling entirely with `CLAUDE_CODE_DISABLE_CRON=1`.
+
+**Cron expression examples:**
+
+| Expression | Meaning |
+| :--- | :--- |
+| `*/5 * * * *` | Every 5 minutes |
+| `0 9 * * *` | Daily at 9am local |
+| `0 9 * * 1-5` | Weekdays at 9am local |
+
+#### Desktop Scheduled Tasks
+
+Created from the Routines sidebar in Claude Code Desktop (choose **Local**). Schedule options: Manual, Hourly, Daily, Weekdays, Weekly. Each task gets its own permission mode. Enable worktree toggle to isolate each run. Missed runs: one catch-up run for most recently missed time on wake. Edit prompt on disk at `~/.claude/scheduled-tasks/<task-name>/SKILL.md`.
+
+#### Cloud Routines
+
+Created at claude.ai/code/routines, from Desktop (choose **Remote**), or via `/schedule` in CLI. Triggers: scheduled (hourly/nightly/weekly/one-time), API (HTTP POST to per-routine endpoint), or GitHub events (PR opened, release, etc.). Runs autonomously with no permission prompts. Belongs to individual claude.ai account; counted against daily run allowance. Admins can disable via the Routines toggle at claude.ai/admin-settings/claude-code.
 
 ### Voice Dictation
 
-Enable: `/voice` (toggle), `/voice hold`, `/voice tap`, `/voice off`. Requires claude.ai account (not available with API keys, Bedrock, Vertex, Foundry). Requires v2.1.69+. Tap mode requires v2.1.116+.
+**Requirements:** Claude.ai account authentication (not API key or Bedrock/Vertex/Foundry); local microphone access; requires Claude Code v2.1.69+ (tap mode v2.1.116+).
 
-**Hold mode (default):** Hold `Space` to record; brief warmup period. Release to stop and insert transcript at cursor. `"autoSubmit": true` in voice settings to auto-send on release.
+| Command | Effect |
+| :--- | :--- |
+| `/voice` | Toggle on/off (keeps current mode) |
+| `/voice hold` | Enable hold-to-record mode (default) |
+| `/voice tap` | Enable tap-to-record-and-send mode |
+| `/voice off` | Disable |
 
-**Tap mode:** Tap `Space` to start recording (only when prompt is empty), tap again to stop and auto-send (if transcript ≥ 3 words). 15-second silence timeout, 2-minute max.
+**Hold mode:** Hold `Space` to record; release to insert transcript. Brief warmup delay before recording starts. Set `"autoSubmit": true` to send automatically on release (3+ words). **Tap mode:** Tap once to start, tap again to send (auto-submits on 3+ words; stops after 15s silence or 2 min total).
 
-Settings:
-```json
-{
-  "voice": { "enabled": true, "mode": "tap" }
-}
-```
-
-Dictation language follows `language` setting. Rebind `voice:pushToTalk` in `~/.claude/keybindings.json` (context: `"Chat"`). Use modifier combinations (e.g. `meta+k`) to avoid hold-detection warmup.
-
-Supported languages: cs, da, nl, en, fr, de, el, hi, id, it, ja, ko, no, pl, pt, ru, es, sv, tr, uk.
+Settings persist across sessions. Rebind dictation key via `voice:pushToTalk` action in `~/.claude/keybindings.json`. Dictation language follows the `language` setting (defaults to English).
 
 ### Channels
 
-Push events from external systems into a running Claude Code session. Claude reacts while you're away. Available in research preview (v2.1.80+); requires claude.ai or Console API key; not available on Bedrock/Vertex/Foundry.
+Push events from Telegram, Discord, iMessage, or custom MCP servers into a running Claude Code session. Requires Claude Code v2.1.80+, Anthropic auth (not Bedrock/Vertex/Foundry). Team/Enterprise must enable via admin settings.
 
-**Supported channel plugins** (require Bun): Telegram, Discord, iMessage, fakechat (demo).
+**Start with channels enabled:**
+```bash
+claude --channels plugin:telegram@claude-plugins-official
+```
 
-Install: `/plugin install <name>@claude-plugins-official`. Enable per session: `claude --channels plugin:<name>@claude-plugins-official`.
+**Supported channels (require Bun):** Telegram, Discord, iMessage, fakechat (localhost demo).
 
-**Security:** Each approved channel plugin maintains a sender allowlist. Telegram/Discord use pairing codes to bootstrap. iMessage: self-messages bypass gate; add others with `/imessage:access allow <handle>`.
+**Setup pattern (Telegram/Discord):**
+1. Install plugin: `/plugin install telegram@claude-plugins-official`
+2. Configure token: `/telegram:configure <token>`
+3. Restart with `--channels`
+4. Pair account: `/telegram:access pair <code>`
+5. Lock down: `/telegram:access policy allowlist`
 
-**Enterprise controls:**
+**iMessage:** Reads `~/Library/Messages/chat.db` directly; needs Full Disk Access. Self-messages bypass access control. Add others with `/imessage:access allow +15551234567`.
+
+**Enterprise settings:**
 
 | Setting | Purpose |
 | :--- | :--- |
-| `channelsEnabled` | Master switch (Team/Enterprise: off by default) |
-| `allowedChannelPlugins` | Restrict which plugins can register (array of `{marketplace, plugin}`) |
+| `channelsEnabled` | Master switch; required for Team/Enterprise |
+| `allowedChannelPlugins` | Restrict which plugins can register as channels |
 
-### Channels Reference (Building Custom Channels)
+### Fullscreen Rendering
 
-A channel is an MCP server declaring `capabilities.experimental['claude/channel']`. It emits `notifications/claude/channel` events with `content` (string) and optional `meta` (object with string values; each becomes a `<channel>` tag attribute).
+Eliminates flicker, adds mouse support, keeps memory flat in long sessions. Uses terminal alternate screen buffer.
 
-Events arrive in Claude's context as:
-```
-<channel source="your-server" key1="val1">content here</channel>
-```
+**Enable:** `/tui fullscreen` (or `CLAUDE_CODE_NO_FLICKER=1`). **Disable:** `/tui default`.
 
-**Server constructor options:**
+**Mouse support:** Click to position cursor; click collapsed tool result to expand; click URL/file path to open; click-and-drag to select (auto-copies to clipboard); scroll with mouse wheel.
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `capabilities.experimental['claude/channel']` | `{}` | Required; registers notification listener |
-| `capabilities.experimental['claude/channel/permission']` | `{}` | Optional; enables permission relay |
-| `capabilities.tools` | `{}` | Required for two-way channels (reply tool) |
-| `instructions` | `string` | Added to Claude's system prompt |
+**Transcript mode** (`Ctrl+o`): `less`-style search with `/`, `n`/`N` for next/prev match. Press `[` to write full conversation to terminal scrollback; `v` to open in `$VISUAL`.
 
-**Test during preview:** `claude --dangerously-load-development-channels server:<name>` or `plugin:<name>@<marketplace>`.
+**Scroll shortcuts:** `PgUp`/`PgDn`, `Ctrl+Home` (jump to start), `Ctrl+End` (jump to bottom + resume auto-follow). Tune scroll speed with `CLAUDE_CODE_SCROLL_SPEED=3` or `/scroll-speed` command.
 
-**Permission relay:** When declared, Claude Code forwards tool approval prompts to your channel. Inbound `notifications/claude/channel/permission_request` carries `request_id`, `tool_name`, `description`, `input_preview`. Reply with `notifications/claude/channel/permission` carrying `request_id` and `behavior: "allow"|"deny"`.
-
-Gate on sender identity (not room/chat ID) before emitting notifications to prevent prompt injection.
-
-### Desktop Scheduled Tasks
-
-Available in the Desktop app under Routines → New routine → Local.
-
-| Schedule option | Description |
-| :--- | :--- |
-| Manual | Only runs when you click Run now |
-| Hourly | Every hour |
-| Daily | Time picker, defaults 9:00 AM |
-| Weekdays | Daily except weekends |
-| Weekly | Day + time picker |
-
-Tasks run while Desktop app is open and machine is awake. On wake, one catch-up run fires for the most recently missed time (within 7 days). Tasks use their own permission mode; use Run now to pre-approve tools.
-
-Edit task file: `~/.claude/scheduled-tasks/<task-name>/SKILL.md`. Tasks can self-update via `update_scheduled_task` MCP tool.
-
-Enable worktree isolation per task via the worktree toggle when creating.
-
-### Context Window
-
-Key context loading order:
-1. System prompt (~4,200 tokens, invisible)
-2. Auto memory/MEMORY.md (first 200 lines or 25KB)
-3. Environment info (cwd, platform, etc.)
-4. MCP tool names (schemas deferred via tool search)
-5. Skill descriptions (all model-invocable skills; not re-injected after `/compact`)
-6. `~/.claude/CLAUDE.md` (user-level)
-7. Project CLAUDE.md
-8. Your prompts and Claude's work accumulate from there
-
-**What survives `/compact`:**
-
-| Mechanism | After compaction |
-| :--- | :--- |
-| System prompt and output style | Unchanged |
-| Project-root CLAUDE.md and unscoped rules | Re-injected from disk |
-| Auto memory | Re-injected from disk |
-| Rules with `paths:` frontmatter | Lost until matching file is read again |
-| Nested CLAUDE.md in subdirectories | Lost until file in that dir is read again |
-| Invoked skill bodies | Re-injected; capped at 5K tokens/skill, 25K total; oldest dropped first |
-
-Check live context: `/context`. Check memory files: `/memory`.
-
-### Fullscreen TUI Rendering
-
-Enable with `/tui fullscreen` or set `CLAUDE_CODE_NO_FLICKER=1`. Disable with `/tui default` or `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1`. Requires v2.1.89+.
-
-Benefits: eliminates flicker, flat memory in long conversations, mouse support, input stays fixed at bottom.
-
-**Mouse actions:**
-- Click in prompt → position cursor
-- Click collapsed tool result → expand/collapse
-- Click URL/file path → open
-- Click and drag → select text (copies on release)
-- Mouse wheel → scroll
-
-**Scroll shortcuts:**
-
-| Shortcut | Action |
-| :--- | :--- |
-| `PgUp`/`PgDn` | Scroll half screen |
-| `Ctrl+Home` | Jump to start |
-| `Ctrl+End` | Jump to latest, resume auto-follow |
-
-**Search/transcript mode:** `Ctrl+O` toggles transcript mode with `less`-style navigation (`/` to search, `n`/`N` for next/prev match). Press `[` to write conversation to terminal scrollback. Press `v` to open in `$EDITOR`.
-
-Adjust scroll speed: `CLAUDE_CODE_SCROLL_SPEED=3` or `/scroll-speed` command.
-
-Disable mouse capture only: `CLAUDE_CODE_DISABLE_MOUSE=1`
-
-tmux: requires `set -g mouse on`. Incompatible with `tmux -CC` integration mode.
-
-Auto-follow: scrolling up pauses it. Disable entirely via `/config` → Auto-scroll.
-
-Clear conversation: `Ctrl+L` twice within 2 seconds (or double `Cmd+K` on macOS).
-
-### Routines (Cloud Automation)
-
-Saved Claude Code configs (prompt + repos + connectors) that run on Anthropic-managed cloud. Three trigger types: scheduled, API, or GitHub events. Available on Pro/Max/Team/Enterprise with Claude Code on the web enabled.
-
-Manage at `claude.ai/code/routines` or via `/schedule` in CLI.
-
-**Trigger types:**
-
-| Type | Setup | Use case |
-| :--- | :--- | :--- |
-| Schedule | Pick preset or cron via `/schedule update` (min 1 hour) | Recurring maintenance |
-| API | POST to per-routine endpoint with bearer token | Alert systems, deploy pipelines |
-| GitHub | PR or Release events with optional filters | Automated code review |
-
-**API trigger:** `POST` to endpoint with `Authorization: Bearer <token>` header. Optional `text` field for run-specific context. Returns session ID and URL. Beta header: `anthropic-beta: experimental-cc-routine-2026-04-01`.
-
-**GitHub filter fields for PRs:** Author, Title, Body, Base branch, Head branch, Labels, Is draft, Is merged. Operators: equals, contains, starts with, is one of, is not one of, matches regex.
-
-**Branch permissions:** By default Claude only pushes to `claude/`-prefixed branches. Enable "Allow unrestricted branch pushes" per repo for full access.
-
-**One-off runs:** Don't count against daily routine cap. Created with natural language like `/schedule tomorrow at 9am, summarize merged PRs`.
-
-Routines belong to individual accounts. Connectors = claude.ai integrations (not local `claude mcp add` servers). Default environment uses Trusted network access (approved registries/APIs only).
+**Disable mouse capture only:** `CLAUDE_CODE_DISABLE_MOUSE=1` keeps flicker-free rendering while restoring native text selection.
 
 ### Deep Links
 
-`claude-cli://` custom URL scheme opens Claude Code in a new terminal window with optional directory and pre-filled prompt.
-
-**URL format:** `claude-cli://open?q=<encoded-prompt>&cwd=<abs-path>&repo=<owner/name>`
+Open Claude Code in a terminal from a URL. Format: `claude-cli://open?<params>`
 
 | Parameter | Description |
 | :--- | :--- |
-| `q` | URL-encoded prompt text (max 5,000 chars; `%0A` for newlines) |
-| `cwd` | Absolute path working directory (takes precedence over `repo`) |
-| `repo` | GitHub `owner/name` slug; resolves to most recently used local clone |
+| `q` | URL-encoded prompt text (max 5,000 chars) |
+| `cwd` | Absolute path for working directory |
+| `repo` | GitHub `owner/name` slug (resolves to most recently used local clone) |
 
-`repo` only resolves to paths where you've already run `claude` once. Link opens in the same state the clone is in (does not switch branches).
+If both `cwd` and `repo` are passed, `cwd` takes precedence. Requires Claude Code v2.1.91+.
 
-Prompt is populated but not sent until user presses Enter. A banner shows the link launched the session.
+**Registration:** Automatic on first interactive session. Disable with `"disableDeepLinkRegistration": "disable"` in settings.
 
-**Registration:** Automatic on first interactive session. Location:
-- macOS: `~/Applications/Claude Code URL Handler.app`
-- Linux: `~/.local/share/applications/claude-code-url-handler.desktop`
-- Windows: `HKEY_CURRENT_USER\Software\Classes\claude-cli`
+**Note:** GitHub-rendered Markdown strips `claude-cli://` links (shows only label text). Use code blocks on GitHub to display the URL for copy-paste.
 
-Disable: `"disableDeepLinkRegistration": "disable"` in settings.
+**VS Code tab:** Use `vscode://anthropic.claude-code/open` instead of `claude-cli://` to open a VS Code editor tab.
 
-Note: GitHub Markdown strips `claude-cli://` schemes; put links in code blocks on GitHub.
+### Agent View
 
-VS Code uses `vscode://anthropic.claude-code/open` instead (opens an editor tab).
+Unified dashboard for background sessions. Open with `claude agents`.
 
-### Agent View (`claude agents`)
+**Key commands:**
 
-One screen for all background sessions. Research preview; requires v2.1.139+.
+| Command | Purpose |
+| :--- | :--- |
+| `claude agents` | Open agent view |
+| `claude agents --cwd <path>` | Scope to sessions in a directory |
+| `claude --bg "<prompt>"` | Start a session directly in background |
+| `claude attach <id>` | Attach to a session |
+| `claude logs <id>` | Show recent output |
+| `claude stop <id>` / `claude kill <id>` | Stop a session |
+| `claude rm <id>` | Remove session and transcript |
+| `claude respawn <id>` | Restart session with conversation intact |
+| `claude daemon status` | Show supervisor process state |
 
-**Open:** `claude agents` (shows all projects) or `claude agents --cwd <path>` (scope to directory).
+**In-session commands:**
+- `/bg` or `/background` — move current session to background
+- `←` on empty prompt — background current session and open agent view
 
 **Session state icons:**
 
 | State | Icon | Meaning |
 | :--- | :--- | :--- |
-| Working | Animated | Actively running tools or generating |
-| Needs input | Yellow | Waiting on a question or permission |
+| Working | Animated | Actively running tools |
+| Needs input | Yellow | Waiting on question/permission |
 | Idle | Dimmed | Ready for next prompt |
-| Completed | Green | Task finished |
+| Completed | Green | Finished successfully |
 | Failed | Red | Ended with error |
-| Stopped | Grey | Stopped with `Ctrl+X` or `claude stop` |
+| Stopped | Grey | Manually stopped |
 
-**Process shape:**
-- `✻` / animated `✽` — process alive, responds immediately
-- `∙` — process exited; restarts from saved state when you interact
-- `✢` — `/loop` session sleeping between iterations
+**Process icons:** `✻`/`✽` = process alive; `∙` = process exited (will restart on attach); `✢` = `/loop` session sleeping.
 
-**Key shortcuts:**
+**File isolation:** Background sessions automatically move into isolated git worktrees under `.claude/worktrees/` before editing files. Disable with `worktree.bgIsolation: "none"` in project settings.
+
+**Agent view keyboard shortcuts:**
 
 | Shortcut | Action |
 | :--- | :--- |
-| `Space` | Open/close peek panel |
-| `Enter` / `→` | Attach to session |
-| `←` (empty prompt) | Detach and return to agent view |
-| `Ctrl+X` | Stop session; press again within 2s to delete |
+| `Space` | Peek at selected session |
+| `Enter` / `→` | Attach to selected session |
+| `←` | Detach and return to agent view |
 | `Ctrl+T` | Pin/unpin session |
 | `Ctrl+R` | Rename session |
-| `Ctrl+S` | Toggle grouping (state vs directory) |
+| `Ctrl+X` (twice) | Stop then delete session |
+| `Ctrl+S` | Toggle grouping (state vs. directory) |
 | `?` | Show all shortcuts |
 
-**Dispatch from CLI:** `claude --bg "<prompt>"`, optionally with `--agent`, `--name`, `--model`.
+**Filtering:** `a:<name>` by agent name; `s:<state>` by state; `#<number>` or PR URL by pull request.
 
-**File isolation:** Each background session auto-moves to an isolated git worktree under `.claude/worktrees/` before editing. Outside git repos, no isolation.
+Disable agent view entirely: `"disableAgentView": true` in settings or `CLAUDE_CODE_DISABLE_AGENT_VIEW=1`.
 
-**Shell commands:**
+### Parallel Agents Comparison
 
-| Command | Purpose |
-| :--- | :--- |
-| `claude agents` | Open agent view |
-| `claude attach <id>` | Attach in this terminal |
-| `claude logs <id>` | Show recent output |
-| `claude stop <id>` | Stop a session |
-| `claude respawn <id>` | Restart stopped session |
-| `claude respawn --all` | Restart all stopped sessions |
-| `claude rm <id>` | Remove session (cleans up worktree if no uncommitted changes) |
-
-**Supervisor process:** Runs background sessions independently of any terminal. Auto-starts; survives Claude Code updates. State in `~/.claude/daemon.log`, `~/.claude/daemon/roster.json`, `~/.claude/jobs/<id>/`.
-
-Disable: `"disableAgentView": true` in settings or `CLAUDE_CODE_DISABLE_AGENT_VIEW=1`.
-
-### Running Agents in Parallel
-
-| Approach | Use it when |
-| :--- | :--- |
-| Subagents | Side task would flood main conversation; only result matters |
-| Agent view | Multiple independent tasks; hand off and check back at a glance |
-| Agent teams | Claude should plan, assign, and supervise workers (experimental) |
-| Worktrees | Parallel sessions or subagents edit overlapping files |
-| `/batch` | Repo-wide migration; splits into 5–30 worktree-isolated subagents |
-
-**Check running work:**
-- Background sessions: `claude agents` (agent view)
-- Subagents in current session: `/agents` (Running tab)
-- Background tasks in current session: `/tasks`
-
-### Worktrees
-
-Create an isolated git worktree session: `claude --worktree <name>` or `claude -w <name>`. Creates `.claude/worktrees/<name>/` on branch `worktree-<name>`. Omit name for auto-generated one.
-
-**Base branch:**
-- Default: `origin/HEAD` (remote default branch)
-- Local HEAD: set `"worktree": {"baseRef": "head"}` in settings
-- Specific PR: `claude --worktree "#1234"` (fetches `pull/1234/head`)
-- Custom: configure `WorktreeCreate` hook
-
-**Copy gitignored files:** `.worktreeinclude` in project root (`.gitignore` syntax). Only copies gitignored files matching a pattern.
-
-**Cleanup:**
-- No changes: worktree and branch removed automatically
-- Changes present: Claude prompts to keep or remove
-- Non-interactive (`-p`): not auto-cleaned; use `git worktree remove`
-
-Subagent worktrees older than `cleanupPeriodDays` (with no changes) are swept at startup.
-
-**Non-git VCS:** Configure `WorktreeCreate` and `WorktreeRemove` hooks to replace default git behavior.
-
-**Isolate subagents:** Set `isolation: worktree` in subagent frontmatter, or ask Claude to "use worktrees for your agents".
+| Approach | Coordination | Communication | File isolation | Use when |
+| :--- | :--- | :--- | :--- | :--- |
+| **Subagents** | Main session delegates | Reports result back | Optional per-worktree | Side task would flood main context |
+| **Agent view** | You dispatch and monitor | You see state; step in when needed | Auto worktree per session | Several independent tasks to hand off |
+| **Agent teams** | Lead Claude coordinates | Teammates message each other | None (partition manually) | Complex parallel work needing peer sync |
+| **`/batch`** | Planned by Claude | Pull requests per piece | Worktree per subagent | Repo-wide migration or mechanical refactor |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Features overview](references/claude-code-features-overview.md) — when to use CLAUDE.md vs skills vs subagents vs MCP vs hooks vs plugins
-- [Fast mode](references/claude-code-fast-mode.md) — 2.5x faster Opus, toggling, cost tradeoff, requirements, per-session opt-in
-- [Model configuration](references/claude-code-model-config.md) — model aliases, effort levels, extended thinking, 1M context, third-party pinning
-- [Output styles](references/claude-code-output-styles.md) — built-in styles, creating custom styles, frontmatter fields
-- [Status line](references/claude-code-statusline.md) — configuring a custom status bar, available JSON fields, examples
-- [Checkpointing](references/claude-code-checkpointing.md) — automatic tracking, rewind and summarize options, limitations
-- [Remote control](references/claude-code-remote-control.md) — server mode, interactive mode, mobile app, push notifications
-- [Scheduled tasks](references/claude-code-scheduled-tasks.md) — `/loop` command, cron tools, maintenance prompt, loop.md customization
-- [Voice dictation](references/claude-code-voice-dictation.md) — hold mode, tap mode, language settings, keybinding customization
-- [Channels](references/claude-code-channels.md) — Telegram/Discord/iMessage setup, security allowlists, enterprise controls
-- [Channels reference](references/claude-code-channels-reference.md) — building custom channel MCP servers, webhook receiver example, reply tools, permission relay
-- [Desktop scheduled tasks](references/claude-code-desktop-scheduled-tasks.md) — Routines UI, schedule options, permissions, missed runs
-- [Context window](references/claude-code-context-window.md) — interactive visualization, what loads when, what survives compaction
-- [Fullscreen rendering](references/claude-code-fullscreen.md) — flicker-free TUI, mouse support, scroll shortcuts, transcript mode, tmux notes
-- [Routines](references/claude-code-routines.md) — cloud automation, schedule/API/GitHub triggers, connectors, network access, usage limits
-- [Deep links](references/claude-code-deep-links.md) — `claude-cli://` URL scheme, URL parameters, platform registration
-- [Agent view](references/claude-code-agent-view.md) — `claude agents`, monitoring background sessions, dispatch, keyboard shortcuts, supervisor process
-- [Run agents in parallel](references/claude-code-agents.md) — comparison of subagents vs agent view vs agent teams vs worktrees vs `/batch`
-- [Worktrees](references/claude-code-worktrees.md) — `--worktree` flag, base branch, `.worktreeinclude`, cleanup, non-git VCS hooks
+- [Extend Claude Code (features overview)](references/claude-code-features-overview.md) — when to use CLAUDE.md vs skills vs subagents vs MCP vs hooks vs plugins; context costs by feature; how features layer
+- [Fast mode](references/claude-code-fast-mode.md) — `/fast` toggle, pricing, requirements, per-session opt-in, rate limit fallback
+- [Model configuration](references/claude-code-model-config.md) — model aliases, effort levels, extended context, third-party deployment pinning, `availableModels`, `modelOverrides`, prompt caching config
+- [Output styles](references/claude-code-output-styles.md) — built-in styles, custom style creation, frontmatter reference, comparison with CLAUDE.md and agents
+- [Status line](references/claude-code-statusline.md) — setup, available JSON fields, Bash/Python/Node examples, subagent status line, Windows config, troubleshooting
+- [Checkpointing](references/claude-code-checkpointing.md) — automatic tracking, rewind menu, restore vs. summarize, limitations
+- [Remote Control](references/claude-code-remote-control.md) — modes, flags, connecting from another device, mobile push notifications, security model, troubleshooting
+- [Scheduled tasks (/loop)](references/claude-code-scheduled-tasks.md) — `/loop` syntax, fixed vs. dynamic intervals, maintenance prompt, `loop.md` customization, cron reference, jitter and 7-day expiry
+- [Desktop scheduled tasks](references/claude-code-desktop-scheduled-tasks.md) — creating tasks in Desktop app, schedule options, missed runs, permissions, task management
+- [Routines (cloud scheduling)](references/claude-code-routines.md) — create from web/Desktop/CLI, schedule/API/GitHub triggers, managing runs, usage limits
+- [Voice dictation](references/claude-code-voice-dictation.md) — hold and tap modes, language support, rebinding the dictation key, troubleshooting
+- [Channels](references/claude-code-channels.md) — Telegram/Discord/iMessage setup, fakechat quickstart, security/allowlists, enterprise controls
+- [Channels reference](references/claude-code-channels-reference.md) — building a custom channel MCP server, notification format, reply tool, sender gating, permission relay
+- [Context window explorer](references/claude-code-context-window.md) — interactive breakdown of what loads at session start and when
+- [Fullscreen rendering](references/claude-code-fullscreen.md) — enable/disable, mouse support, scroll shortcuts, transcript mode, tmux caveats
+- [Deep links](references/claude-code-deep-links.md) — `claude-cli://open` URL format, parameters, embedding in runbooks, platform registration
+- [Agent view](references/claude-code-agent-view.md) — dispatching, monitoring, peek/reply, attaching, file isolation, shell commands, supervisor process
+- [Run agents in parallel](references/claude-code-agents.md) — comparison of subagents, agent view, agent teams, worktrees, and `/batch`
+- [Worktrees](references/claude-code-worktrees.md) — `--worktree` flag, base branch config, `.worktreeinclude`, subagent isolation, cleanup
 
 ## Sources
 
-- Features overview: https://code.claude.com/docs/en/features-overview.md
+- Extend Claude Code (features overview): https://code.claude.com/docs/en/features-overview.md
 - Fast mode: https://code.claude.com/docs/en/fast-mode.md
 - Model configuration: https://code.claude.com/docs/en/model-config.md
 - Output styles: https://code.claude.com/docs/en/output-styles.md
 - Status line: https://code.claude.com/docs/en/statusline.md
 - Checkpointing: https://code.claude.com/docs/en/checkpointing.md
-- Remote control: https://code.claude.com/docs/en/remote-control.md
-- Scheduled tasks: https://code.claude.com/docs/en/scheduled-tasks.md
+- Remote Control: https://code.claude.com/docs/en/remote-control.md
+- Scheduled tasks (/loop): https://code.claude.com/docs/en/scheduled-tasks.md
+- Desktop scheduled tasks: https://code.claude.com/docs/en/desktop-scheduled-tasks.md
+- Routines (cloud scheduling): https://code.claude.com/docs/en/routines.md
 - Voice dictation: https://code.claude.com/docs/en/voice-dictation.md
 - Channels: https://code.claude.com/docs/en/channels.md
 - Channels reference: https://code.claude.com/docs/en/channels-reference.md
-- Desktop scheduled tasks: https://code.claude.com/docs/en/desktop-scheduled-tasks.md
-- Context window: https://code.claude.com/docs/en/context-window.md
+- Context window explorer: https://code.claude.com/docs/en/context-window.md
 - Fullscreen rendering: https://code.claude.com/docs/en/fullscreen.md
-- Routines: https://code.claude.com/docs/en/routines.md
 - Deep links: https://code.claude.com/docs/en/deep-links.md
 - Agent view: https://code.claude.com/docs/en/agent-view.md
 - Run agents in parallel: https://code.claude.com/docs/en/agents.md
