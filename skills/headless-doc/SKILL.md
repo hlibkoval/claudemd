@@ -1,258 +1,224 @@
 ---
 name: headless-doc
-description: Complete official documentation for running Claude Code programmatically (headless/non-interactive mode via -p flag), Claude Code on the web (cloud sessions, environments, setup scripts, network access, teleport), and the web quickstart (connecting GitHub, starting tasks, reviewing PRs).
 user-invocable: false
 ---
 
-# Headless, Cloud, and Web Documentation
+# Headless / Claude Code on the Web Documentation
 
-This skill provides the complete official documentation for running Claude Code non-interactively (headless mode), using Claude Code on the web (cloud sessions), and getting started with the web interface.
+This skill provides the complete official documentation for running Claude Code non-interactively (headless/programmatic mode via `claude -p`) and using Claude Code on the web (cloud sessions at claude.ai/code).
 
 ## Quick Reference
 
-### Headless / Non-Interactive Mode (`-p` flag)
+### Headless / programmatic mode (`claude -p`)
 
-| Flag | Description |
+| Flag | Purpose |
 | :--- | :--- |
 | `-p` / `--print` | Run non-interactively; print response and exit |
-| `--bare` | Skip hooks, skills, plugins, MCP, CLAUDE.md — recommended for CI/scripts |
-| `--allowedTools "Read,Edit,Bash"` | Auto-approve specific tools |
-| `--permission-mode acceptEdits` | Auto-approve file writes and common FS commands |
-| `--permission-mode dontAsk` | Deny anything not in `permissions.allow` or read-only set |
-| `--output-format text` | Plain text output (default) |
-| `--output-format json` | Structured JSON with `result`, `session_id`, `total_cost_usd` |
-| `--output-format stream-json` | Newline-delimited JSON events for streaming |
-| `--json-schema '<schema>'` | Constrain JSON output to a schema; result in `structured_output` field |
-| `--include-partial-messages` | Include token deltas in stream-json output |
-| `--verbose` | Enable verbose event output (required for streaming deltas) |
+| `--bare` | Skip auto-discovery of hooks, skills, plugins, MCP, CLAUDE.md — recommended for CI |
+| `--output-format text\|json\|stream-json` | Control response format (default: `text`) |
+| `--json-schema <schema>` | Return structured output conforming to a JSON Schema (placed in `structured_output` field) |
+| `--verbose --include-partial-messages` | Stream tokens as they arrive with `stream-json` |
+| `--allowedTools <list>` | Auto-approve specific tools (e.g. `"Read,Edit,Bash"`) |
+| `--permission-mode <mode>` | `acceptEdits` or `dontAsk` baseline for the session |
 | `--continue` | Continue the most recent conversation |
-| `--resume <session-id>` | Continue a specific conversation by session ID |
-| `--append-system-prompt "..."` | Add instructions while keeping default behavior |
-| `--append-system-prompt-file <f>` | Same, from a file |
-| `--system-prompt "..."` | Fully replace the default system prompt |
-| `--settings <file-or-json>` | Load settings (bare mode: use for auth via `apiKeyHelper`) |
-| `--mcp-config <file-or-json>` | Load MCP server config |
+| `--resume <session-id>` | Resume a specific conversation |
+| `--append-system-prompt <text>` | Add instructions while keeping Claude's default system prompt |
+| `--append-system-prompt-file <path>` | Same but reads from a file |
+| `--system-prompt <text>` | Fully replace the default system prompt |
+| `--settings <file-or-json>` | Load settings from a file or inline JSON |
+| `--mcp-config <file-or-json>` | Load MCP servers |
 | `--agents <json>` | Load custom agents |
 | `--plugin-dir <path>` | Load a plugin from a local directory |
-| `--plugin-url <url>` | Load a plugin from a URL |
+| `--plugin-url <url>` | Load a plugin from a marketplace URL |
 
-**Stdin cap:** 10 MB (v2.1.128+). For larger inputs, write to a file and reference the path in the prompt.
+#### Output format shapes
 
-**`--bare` skips:** OAuth, keychain reads, hooks, skills, plugins, MCP, CLAUDE.md, auto memory. Auth must come from `ANTHROPIC_API_KEY` or `apiKeyHelper` in `--settings`.
+| Format | `result` field | Extra fields |
+| :--- | :--- | :--- |
+| `text` | Plain text on stdout | — |
+| `json` | Text response string | `session_id`, `total_cost_usd`, per-model cost breakdown |
+| `json` + `--json-schema` | — | `structured_output` (schema-conforming object), `session_id`, usage |
+| `stream-json` | Newline-delimited JSON events | Use `--verbose --include-partial-messages` for token streaming |
 
-**Note:** `--bare` will become the default for `-p` in a future release.
+#### Bare mode context loading
 
-### Output Format Examples
+When `--bare` is used, Claude only has access to what you pass explicitly:
 
-```bash
-# Plain text (default)
-claude -p "What does the auth module do?"
-
-# JSON with cost metadata
-claude -p "Summarize this project" --output-format json | jq -r '.result'
-
-# Structured output with schema
-claude -p "Extract function names from auth.py" \
-  --output-format json \
-  --json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}},"required":["functions"]}' \
-  | jq '.structured_output'
-
-# Streaming
-claude -p "Explain recursion" --output-format stream-json --verbose --include-partial-messages
-```
-
-### Stream Event Types
-
-| Event type/subtype | Description |
+| To load | Use |
 | :--- | :--- |
-| `system/init` | Session metadata: model, tools, MCP, plugins loaded. Has `plugins` (loaded) and `plugin_errors` arrays. |
-| `system/api_retry` | API retry in progress. Fields: `attempt`, `max_retries`, `retry_delay_ms`, `error_status`, `error` |
-| `system/plugin_install` | Plugin install progress (when `CLAUDE_CODE_SYNC_PLUGIN_INSTALL` is set). `status`: `started`, `installed`, `failed`, `completed` |
-| `stream_event` with `delta.type == "text_delta"` | Token delta for streaming text |
+| System prompt additions | `--append-system-prompt`, `--append-system-prompt-file` |
+| Settings | `--settings <file-or-json>` |
+| MCP servers | `--mcp-config <file-or-json>` |
+| Custom agents | `--agents <json>` |
+| A plugin | `--plugin-dir <path>`, `--plugin-url <url>` |
 
-### `--allowedTools` Permission Rule Syntax
+Auth in bare mode: must come from `ANTHROPIC_API_KEY` or `apiKeyHelper` in `--settings` JSON. OAuth/keychain reads are skipped.
 
-```bash
-# Exact tool
---allowedTools "Read,Edit"
+#### Stdin and pipe limits
 
-# Prefix matching (space before * is required)
---allowedTools "Bash(git diff *),Bash(git log *),Bash(git commit *)"
-```
+- Piped stdin is capped at **10 MB** (as of v2.1.128). Exceed it → non-zero exit. Use a file path instead.
+- `--output-format json` includes `total_cost_usd` per invocation.
 
-**Note:** `Bash(git diff*)` without a space also matches `git diff-index`. Use `Bash(git diff *)` for prefix-only.
+#### `stream-json` retry events (`system/api_retry`)
 
-### Conversation Management
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `type` | `"system"` | message type |
+| `subtype` | `"api_retry"` | identifies this event |
+| `attempt` | integer | current attempt, starting at 1 |
+| `max_retries` | integer | total retries permitted |
+| `retry_delay_ms` | integer | ms until next attempt |
+| `error_status` | integer or null | HTTP status, or null for connection errors |
+| `error` | string | category: `authentication_failed`, `rate_limit`, `server_error`, etc. |
 
-```bash
-# Continue most recent
-claude -p "Now focus on database queries" --continue
+#### `system/init` event (first stream event)
 
-# Resume specific session
-session_id=$(claude -p "Start a review" --output-format json | jq -r '.session_id')
-claude -p "Continue that review" --resume "$session_id"
-```
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `plugins` | array | successfully loaded plugins (name, path) |
+| `plugin_errors` | array | load-time errors (plugin, type, message); key omitted when none |
 
-### Cloud Sessions vs. Other Modes
+Set `CLAUDE_CODE_SYNC_PLUGIN_INSTALL=1` to emit `system/plugin_install` events before the first turn.
+
+### Claude Code on the web (cloud sessions)
+
+#### Ways to run Claude Code — comparison
 
 | | On the web | Remote Control | Terminal CLI | Desktop app |
 | :--- | :--- | :--- | :--- | :--- |
 | **Code runs on** | Anthropic cloud VM | Your machine | Your machine | Your machine or cloud VM |
-| **Chat from** | claude.ai / mobile | claude.ai / mobile | Terminal | Desktop UI |
-| **Local config** | No (repo only) | Yes | Yes | Yes (local) / No (cloud) |
-| **Requires GitHub** | Yes (or bundle) | No | No | Only for cloud sessions |
+| **You chat from** | claude.ai or mobile | claude.ai or mobile | Your terminal | Desktop UI |
+| **Uses local config** | No, repo only | Yes | Yes | Yes for local, No for cloud |
+| **Requires GitHub** | Yes (or bundle via `--remote`) | No | No | Only for cloud sessions |
 | **Persists if disconnected** | Yes | While terminal open | No | Depends |
-| **Permission modes** | Auto accept edits, Plan | Ask, Auto accept edits, Plan | All | Depends |
+| **Permission modes** | Auto accept edits, Plan | Ask, Auto accept edits, Plan | All modes | Depends |
 
-### Cloud Session: What's Available
-
-| Config item | Available in cloud | Why |
-| :--- | :--- | :--- |
-| Repo's `CLAUDE.md` | Yes | Part of the clone |
-| Repo's `.claude/settings.json` hooks | Yes | Part of the clone |
-| Repo's `.mcp.json` | Yes | Part of the clone |
-| Repo's `.claude/skills/`, `.claude/agents/` | Yes | Part of the clone |
-| Plugins in repo's `.claude/settings.json` | Yes | Installed at session start |
-| User `~/.claude/CLAUDE.md` | No | Lives on your machine |
-| User-scoped plugins (`~/.claude/settings.json`) | No | Not in repo |
-| MCP servers added via `claude mcp add` | No | Written to local user config |
-| Static API tokens / secrets | No | No secrets store yet |
-| Interactive auth (AWS SSO, etc.) | No | Not supported |
-
-### Cloud Session: Installed Tools
-
-| Category | Included |
-| :--- | :--- |
-| Python | 3.x with pip, poetry, uv, black, mypy, pytest, ruff |
-| Node.js | 20, 21, 22 via nvm; npm, yarn, pnpm, bun, eslint, prettier, chromedriver |
-| Ruby | 3.1, 3.2, 3.3 with gem, bundler, rbenv |
-| PHP | 8.4 with Composer |
-| Java | OpenJDK 21 with Maven and Gradle |
-| Go | Latest stable with module support |
-| Rust | rustc and cargo |
-| C/C++ | GCC, Clang, cmake, ninja, conan |
-| Docker | docker, dockerd, docker compose |
-| Databases | PostgreSQL 16, Redis 7.0 (not started by default) |
-| Utilities | git, jq, yq, ripgrep, tmux, vim, nano |
-
-Run `check-tools` in a cloud session for exact versions.
-
-**Resource limits (approximate):** 4 vCPUs, 16 GB RAM, 30 GB disk.
-
-### GitHub Auth for Cloud Sessions
+#### GitHub authentication options
 
 | Method | How | Best for |
 | :--- | :--- | :--- |
-| **GitHub App** | Authorize via browser onboarding at claude.ai/code | Browser setup; teams needing Auto-fix |
-| **`/web-setup`** | Run in Claude Code CLI to sync local `gh` token | Devs already using `gh` CLI |
+| **GitHub App** | Install via browser onboarding at claude.ai/code | Teams; required for Auto-fix PR |
+| **`/web-setup`** | Run in CLI — syncs local `gh` token to Claude account | Developers already using `gh` CLI |
 
-GitHub App is required for Auto-fix (PR webhooks). Either method grants access to any repo the connected account can see.
+#### Cloud environment: what's available
 
-### Network Access Levels
+| Item | Available | Why |
+| :--- | :--- | :--- |
+| Repo's `CLAUDE.md`, `.claude/settings.json`, `.mcp.json`, `.claude/rules/`, `.claude/skills/`, `.claude/agents/` | Yes | Part of the clone |
+| Plugins declared in `.claude/settings.json` | Yes | Installed at session start from marketplace |
+| User `~/.claude/CLAUDE.md` | No | Lives on your machine |
+| Plugins only in user settings | No | Declare in repo's `.claude/settings.json` instead |
+| MCP servers added with `claude mcp add` | No | Declare in `.mcp.json` instead |
+| Static API tokens / credentials | No | No secrets store yet; use env vars (visible to env editors) |
+| Interactive auth (AWS SSO, etc.) | No | Not supported |
+
+#### Pre-installed tools in cloud sessions
+
+| Category | Included |
+| :--- | :--- |
+| Python | 3.x, pip, poetry, uv, black, mypy, pytest, ruff |
+| Node.js | 20, 21, 22 via nvm; npm, yarn, pnpm, bun*, eslint, prettier, chromedriver |
+| Ruby | 3.1–3.3, gem, bundler, rbenv |
+| PHP | 8.4, Composer |
+| Java | OpenJDK 21, Maven, Gradle |
+| Go | Latest stable |
+| Rust | rustc, cargo |
+| C/C++ | GCC, Clang, cmake, ninja, conan |
+| Docker | docker, dockerd, docker compose |
+| Databases | PostgreSQL 16, Redis 7.0 (not running by default) |
+| Utilities | git, jq, yq, ripgrep, tmux, vim, nano |
+
+*Bun has known proxy compatibility issues for package fetching.
+
+Run `check-tools` inside a cloud session for exact versions.
+
+#### Network access levels
 
 | Level | Outbound connections |
 | :--- | :--- |
 | **None** | No outbound access |
-| **Trusted** | Default allowlist (package registries, GitHub, cloud SDKs) |
+| **Trusted** | Default allowlist: package registries, GitHub, cloud SDKs |
 | **Full** | Any domain |
-| **Custom** | Your own allowlist; optionally include defaults |
+| **Custom** | Your own allowlist, optionally including defaults |
 
-GitHub operations always go through a separate dedicated proxy regardless of access level.
+Use `*.` prefix for wildcard subdomain matching in Custom mode. GitHub operations always go through a separate dedicated proxy regardless of this setting.
 
-### Setup Scripts vs. SessionStart Hooks
+#### Resource limits (approximate, may change)
+
+- 4 vCPUs, 16 GB RAM, 30 GB disk
+
+#### Setup scripts vs. SessionStart hooks
 
 | | Setup scripts | SessionStart hooks |
 | :--- | :--- | :--- |
-| Attached to | Cloud environment | Your repository |
+| Attached to | Cloud environment | Repository |
 | Configured in | Cloud environment UI | `.claude/settings.json` in repo |
-| Runs | Before Claude Code launches (cached after first run) | After Claude Code launches, every session including resumed |
-| Scope | Cloud only | Both local and cloud |
+| Runs | Before Claude Code launches (cached) | After Claude launch, every session including resumed |
+| Scope | Cloud only | Local and cloud |
 
-**Environment caching:** setup script runs once; Anthropic snapshots the filesystem for future sessions. Cache rebuilt when script changes, allowed hosts change, or after ~7 days.
+Setup script tips: keep total runtime under ~5 minutes (enables environment caching); run independent installs in parallel with `&` and `wait`; append `|| true` to non-critical commands.
 
-**Cache contains files, not running processes.** Start services (PostgreSQL, Redis, Docker) per-session or via a SessionStart hook.
+Check `CLAUDE_CODE_REMOTE=true` in hooks to skip local execution. Persist env vars for subsequent Bash commands by writing to `$CLAUDE_ENV_FILE`.
 
-**Skip hook in local sessions** by checking `CLAUDE_CODE_REMOTE`:
-
-```bash
-if [ "$CLAUDE_CODE_REMOTE" != "true" ]; then exit 0; fi
-```
-
-### Move Tasks Between Web and Terminal
+#### Terminal ↔ web session handoff
 
 | Action | Command |
 | :--- | :--- |
-| Start a cloud session from terminal | `claude --remote "Fix the auth bug"` |
-| Parallel cloud tasks | Run multiple `claude --remote` commands |
-| Force local bundle (no GitHub) | `CCR_FORCE_BUNDLE=1 claude --remote "..."` |
-| Teleport cloud session to terminal | `claude --teleport` (interactive picker) or `claude --teleport <session-id>` |
-| Teleport within existing CLI session | `/teleport` or `/tp` |
-| View background sessions | `/tasks` (press `t` to teleport) |
-| Check session link | `echo "https://claude.ai/code/${CLAUDE_CODE_REMOTE_SESSION_ID/#cse_/session_}"` |
+| Start a new cloud session from terminal | `claude --remote "task description"` |
+| Pull a cloud session to terminal (interactive picker) | `claude --teleport` |
+| Pull a specific cloud session | `claude --teleport <session-id>` |
+| Pick from background sessions | `/tasks` then press `t` |
+| Check progress of background sessions | `/tasks` in CLI |
+| Set default environment for `--remote` | `/remote-env` in CLI |
 
-**`--remote` clones from GitHub at your current branch — push local commits first.**
+`--remote` clones from GitHub at the current branch — push local commits first. Force bundle upload (no GitHub needed): `CCR_FORCE_BUNDLE=1 claude --remote "..."`.
 
-**Teleport requirements:** clean git state, correct repository (not a fork), branch pushed to remote, same claude.ai account.
+Teleport requirements: clean git state, correct repository (not a fork), branch must be pushed to remote, same claude.ai account.
 
-**`--teleport` unavailable?** Requires claude.ai subscription auth. Run `/login` if using API key or Bedrock/Vertex.
+#### Session URL from inside cloud session
 
-### Pre-fill Web Sessions via URL
-
-```text
-https://claude.ai/code?prompt=Fix%20the%20login%20bug&repositories=acme/webapp
+```bash
+echo "https://claude.ai/code/${CLAUDE_CODE_REMOTE_SESSION_ID/#cse_/session_}"
 ```
 
-| Parameter | Description |
-| :--- | :--- |
-| `prompt` / `q` | Prefill prompt text |
-| `prompt_url` | URL to fetch prompt from (ignored if `prompt` set) |
-| `repositories` / `repo` | Comma-separated `owner/repo` slugs |
-| `environment` | Environment name or ID |
+#### Auto-fix pull requests
 
-### Auto-fix Pull Requests
+Requires the Claude GitHub App installed on the repository. Enable via:
+- Web: open CI status bar → **Auto-fix**
+- Terminal: `/autofix-pr` on the PR's branch
+- Mobile: tell Claude "watch this PR and fix CI failures or review comments"
+- Any session: paste PR URL and ask Claude to auto-fix it
 
-Requires the Claude GitHub App installed on the repository.
+Claude pushes clear fixes automatically; asks before acting on ambiguous or architectural changes. Replies on review threads appear under your GitHub username, labeled as coming from Claude Code.
 
-| How to enable | Method |
-| :--- | :--- |
-| PR created in Claude Code on the web | Open CI status bar → select Auto-fix |
-| From terminal | Run `/autofix-pr` on the PR's branch |
-| From mobile app | Tell Claude to auto-fix the PR |
-| Any existing PR | Paste PR URL into session and ask Claude to auto-fix |
+#### Context management in cloud sessions
 
-**How Claude responds:** confident fixes are pushed automatically; ambiguous requests prompt you first; duplicates/no-action events are noted and skipped.
-
-**Warning:** Claude may post replies to GitHub review threads under your username (labeled as Claude Code). This can trigger comment-triggered automation (Atlantis, Terraform Cloud, etc.).
-
-### Context Management in Cloud Sessions
-
-| Command | Available | Notes |
+| Command | Works | Notes |
 | :--- | :--- | :--- |
 | `/compact` | Yes | Optional focus: `/compact keep the test output` |
 | `/context` | Yes | Shows current context window contents |
-| `/clear` | No | Start new session from sidebar instead |
+| `/clear` | No | Start a new session from sidebar instead |
 
-Auto-compaction runs at ~95% capacity. Override with `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=70` in environment variables.
+Auto-compaction triggers at ~95% capacity. Override with `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=<pct>`. Adjust effective window for compaction with `CLAUDE_CODE_AUTO_COMPACT_WINDOW`.
 
-### Cloud Session Troubleshooting
+#### Pre-fill session URL parameters
 
-| Issue | Likely cause | Fix |
-| :--- | :--- | :--- |
-| `Session creation failed` | Capacity or GitHub access | Check status.claude.com; retry; verify GitHub auth |
-| `Remote Control session expired` | Short-lived token | Run `/login` locally to refresh |
-| `Environment expired` | Idle timeout | Reopen from claude.ai/code |
-| Setup script failed | Non-zero exit | Add `set -x`; append `|| true` to non-critical commands |
-| Sessions hang during setup | Script exceeds ~5-minute cache build budget | Parallelize with `&` / `wait`; move heavy downloads to SessionStart hook |
-| `--teleport` unavailable | Not using claude.ai subscription | Run `/login` |
-| Organization IP allowlist | Cloud sessions call Anthropic API from Anthropic infra | Contact Anthropic support to exempt |
+| Parameter | Description |
+| :--- | :--- |
+| `prompt` (alias `q`) | Prefill prompt text |
+| `prompt_url` | URL to fetch prompt from (must allow CORS); ignored if `prompt` is set |
+| `repositories` (alias `repo`) | Comma-separated `owner/repo` slugs to preselect |
+| `environment` | Name or ID of environment to preselect |
+
+Example: `https://claude.ai/code?prompt=Fix%20the%20login%20bug&repositories=acme/webapp`
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Run Claude Code programmatically](references/claude-code-headless.md) — `-p` flag, `--bare` mode, output formats, stdin piping, streaming, tool approval, commit workflows, system prompt customization, conversation continuation
-- [Use Claude Code on the web](references/claude-code-on-the-web.md) — GitHub auth, cloud environment config, installed tools, setup scripts, environment caching, network access levels, `--remote` and `--teleport`, session management, auto-fix PRs, security and isolation, limitations
-- [Get started with Claude Code on the web](references/claude-code-web-quickstart.md) — first-time setup, connecting GitHub, creating an environment, submitting tasks, reviewing diffs, inline comments, creating PRs, troubleshooting common setup issues
+- [Run Claude Code programmatically](references/claude-code-headless.md) — Headless mode via `claude -p`: basic usage, bare mode, piping, structured output, streaming, tool approval, system prompt customization, conversation continuation
+- [Use Claude Code on the web](references/claude-code-on-the-web.md) — Full reference for cloud sessions: GitHub auth, cloud environment, setup scripts, network access, session handoff (`--remote`, `--teleport`), auto-fix PRs, security, limitations
+- [Get started with Claude Code on the web](references/claude-code-web-quickstart.md) — Quickstart walkthrough: connecting GitHub, creating environments, submitting tasks, reviewing diffs, creating PRs, troubleshooting setup
 
 ## Sources
 

@@ -364,6 +364,10 @@
       {
         "url": "https://code.claude.com/docs/en/whats-new/2026-w19.md",
         "file": "claude-code-whats-new-2026-w19.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/whats-new/2026-w20.md",
+        "file": "claude-code-whats-new-2026-w20.md"
       }
     ],
     "features-doc": [
@@ -442,6 +446,10 @@
       {
         "url": "https://code.claude.com/docs/en/worktrees.md",
         "file": "claude-code-worktrees.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/prompt-caching.md",
+        "file": "claude-code-prompt-caching.md"
       }
     ],
     "errors-doc": [

@@ -2,6 +2,59 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.20
+
+**41 references updated across 11 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Bun single-file executable support in TypeScript SDK** — `extractFromBunfs()` helper (v0.3.144+) extracts the bundled CLI binary at runtime inside `bun build --compile` outputs; `pathToClaudeCodeExecutable` option wires it in (agent-sdk-doc)
+- **`model_not_found` error type** — new `SDKAssistantMessageError` variant when the selected model doesn't exist or isn't available to the account or deployment; also added to `StopFailure` hook matcher values (agent-sdk-doc, hooks-doc, cli-doc)
+- **`SDKResultMessage` diagnostic fields** — `api_error_status`, `ttft_ms`, `terminal_reason`, and `fast_mode_state` added to the result message type; `terminal_reason` lists 11 named exit reasons (agent-sdk-doc)
+- **`NonNullableUsage` gains cache breakdown and service fields** — `cache_creation` splits into `ephemeral_5m_input_tokens` / `ephemeral_1h_input_tokens`; new `server_tool_use`, `service_tier`, `speed`, `inference_geo`, and `iterations` fields added (agent-sdk-doc)
+- **`background_tasks` and `session_crons` in Stop/SubagentStop hooks** — arrays added to Stop and SubagentStop hook inputs (v2.1.145+) so hooks can tell whether the session is done or waiting for background work (hooks-doc)
+- **`/run`, `/verify`, `/run-skill-generator` bundled skills** — three new bundled skills (v2.1.145+) that launch and drive your app to confirm changes in the running process; `/run-skill-generator` records a per-project recipe at `.claude/skills/run-<name>/` (skills-doc, cli-doc)
+- **Community marketplace** — `anthropics/claude-plugins-community` is a new public marketplace for third-party plugins; add with `/plugin marketplace add anthropics/claude-plugins-community` and install as `@claude-community` (plugins-doc)
+- **`claude plugin validate --strict`** — flag added to treat unrecognized `plugin.json` fields as errors rather than warnings; useful in CI to catch misspelled or leftover fields before publishing (plugins-doc)
+- **`plugin.json` unrecognized-field tolerance** — Claude Code now ignores unrecognized top-level fields and loads the plugin; one-off typos surface as warnings with a suggested fix; enables sharing a manifest with VS Code, npm, or DXT tooling (plugins-doc)
+- **Settings live-reload documented** — settings files are now watched and most keys (permissions, hooks, `apiKeyHelper`) apply to the running session without restart; `model` and `outputStyle` still require restart or `/clear` (settings-doc)
+- **Env vars page restructured with precedence section** — page now has Set/Precedence/Variables sections; precedence rules between env vars, settings fields, CLI flags, and in-session commands documented (settings-doc)
+- **`hook_plugin_metrics` telemetry event** — new OTEL event emitted by official-marketplace plugin hooks with per-invocation metrics (finding rates, costs, durations); third-party and user hooks do not emit it (operations-doc)
+- **W3C `traceparent` header on Anthropic API requests** — when tracing is active and connected directly to Anthropic API, each model request carries a `traceparent` header linking the client span to the server trace (operations-doc)
+- **Week 20 digest entry** — agent view (`claude agents`), `/goal` command, Opus 4.7 fast mode default, and Rewind "Summarize up to here" highlighted (operations-doc)
+- **`/schedule` "Unknown command" troubleshooting** — new FAQ section listing causes: API-key auth, telemetry-disabling env vars, web sessions, or CLI older than v2.1.81 (features-doc)
+- **`WorktreeCreate` hook as git fallback** — worktree isolation now applies when no git repo is present if a `WorktreeCreate` hook is configured; non-git VCS users can hook into Claude's isolation (features-doc)
+- **Session model persistence on resume** — resumed sessions keep the model they had when the transcript was saved; retired models fall through to precedence order (features-doc)
+- **`/model` press `d` to save default** — picker now lets you press `d` to write the selected model to user settings as the new default for future sessions; `/model` itself is session-only as of v2.1.144 (features-doc, cli-doc)
+- **`/resume` shows background sessions** — as of v2.1.144, background sessions appear in the `/resume` picker marked with `bg` (cli-doc)
+- **`/feedback` gains `/share` alias** — `feedback` command description updated to include sharing conversation; `/share` listed as a new alias alongside `/bug` (cli-doc)
+- **`SDKTaskProgressMessage` gains `subagent_type` and `summary`** — fields added; `summary` is populated when `agentProgressSummaries` is enabled (agent-sdk-doc)
+- **Claude.ai connector auth requirement documented** — connectors load only when the active auth method is a Claude.ai subscription; troubleshooting steps added when `/mcp` doesn't list a connector (mcp-doc)
+- **Agent view terminal tab title** — tab title now shows awaiting-input count while agent view is open (features-doc)
+- **Agent view background session `--name` display** — session name from `--name` appears after the short ID in the backgrounded confirmation line (features-doc)
+- **`/add-dir` directories carry through on background** — directories added mid-session with `/add-dir` persist when the session is backgrounded (features-doc)
+- **Code intelligence listed in features overview** — LSP tool behavior (symbol navigation, live type errors) added to the extensions list (features-doc)
+
+### Changed
+
+- **`tools` / `disallowedTools` availability vs permission distinction clarified** — docs now distinguish availability (removes tool from context) vs permission (blocks call); bare-name deny rules change availability, scoped rules change permission only (agent-sdk-doc, settings-doc)
+- **`outputStyle` option moved from top-level `Options` to inline `settings`** — TypeScript SDK docs corrected: `outputStyle` goes in the inline `settings` object passed to `query()`, not as a top-level `Options` field (agent-sdk-doc)
+- **`Read` tool partial-file behavior updated** — whole-file reads that exceed the token limit now return the first page with a `PARTIAL view` notice instead of an error; explicit offset/limit reads that exceed the limit still return an error (cli-doc)
+- **`cat`/`head`/`tail`/`sed` satisfy read-before-edit requirement** — `head` and `tail` added alongside `cat` and `sed -n` as Bash commands that count as a read; pipe and redirect exclusions still apply (cli-doc)
+- **Bedrock prompt-caching note expanded** — note now advises checking Bedrock docs for supported models, regions, and limits when cache token counts stay at zero (cloud-providers-doc)
+- **PR badge behavior updated** — badge disappears on merge/close instead of turning purple; status now refreshes immediately after `gh pr` or `git push` commands (cli-doc)
+- **Delete session clarification** — deleting a session no longer removes the transcript; transcript remains available via `claude --resume` (features-doc)
+- **`outputStyle` cache interaction documented** — output style changes now link to prompt-caching docs explaining what a style change does to the cached prefix (features-doc)
+- **Deny rule behavior in permissions reference clarified** — bare tool name removes tool from context; scoped rule leaves tool available and blocks matching calls (settings-doc)
+- **Channel allowlist and submission process updated** — default allowlist is `claude-plugins-official` (Anthropic-curated); in-app form submits to community marketplace, not official; official listing requires Anthropic partner contact (features-doc)
+- **`outputStyle` Proactive description corrected** — described as "stronger autonomous-execution guidance" than auto mode rather than "applies the same guidance" (features-doc)
+- **`outputStyle` description updated** — changes take effect after `/clear` or new session; references prompt caching docs for cache impact (features-doc)
+- **Deny rule behavior clarified in `disallowedTools` docs** — allow rules affect only approval; bare-name deny rules change availability; scoped deny rules block calls but leave tool visible (agent-sdk-doc)
+
+### Removed
+
+- **Official marketplace submission process simplified** — submission form no longer described as adding plugins to the official marketplace; official marketplace is curated separately at Anthropic's discretion with no application process (plugins-doc)
+
 ## 26.5.19
 
 **43 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
