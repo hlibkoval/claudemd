@@ -2,6 +2,37 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.21
+
+**15 references updated across 7 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, settings-doc
+
+### New
+
+- **`ScheduleWakeup` tool** — new built-in tool that reschedules the next iteration of a self-paced `/loop`; Claude calls it automatically at the end of each iteration; not available on Bedrock, Vertex, or Foundry (cli-doc)
+- **`initialUserMessage` SessionStart hook field** — new JSON output field sets the first user message of a non-interactive session (`-p`); unlike `additionalContext`, this creates a new turn rather than attaching to an existing one (hooks-doc)
+- **`watchPaths` SessionStart hook field** — new JSON output field accepts an array of absolute paths to watch for `FileChanged` events during the session (hooks-doc)
+- **`suppressOriginalPrompt` UserPromptSubmit hook field** — when `true` alongside `decision: "block"`, omits the original prompt text from the block message shown to the user (hooks-doc)
+- **`strictPluginOnlyCustomization` managed setting** — new managed-only setting that blocks skills, agents, hooks, and MCP servers from user and project sources; accepts `true` to lock all four surfaces or an array of surface names; requires v2.1.82+ (settings-doc)
+- **`auto` permission mode** — added as a valid value for `setMode` in `PermissionRequest` hook `updatedPermissions` output (hooks-doc, settings-doc)
+- **`SessionStart`, `Setup`, `SubagentStart` in decision control table** — these events now appear in the hook decision table with a `Context only` pattern; `SessionStart` also documents `initialUserMessage` and `watchPaths` as decision fields (hooks-doc)
+- **`TeammateIdle` `continueOnBlock` support** — `ok: false` on `TeammateIdle` now supports `continueOnBlock: true` to feed the block reason back to the teammate instead of stopping it (hooks-doc)
+- **`PermissionDenied` prompt/agent hook limitations documented** — clarified that prompt and agent hooks run on `PermissionDenied` but their output is discarded; only command hooks can return `retry` (hooks-doc)
+- **`TeammateIdle` and `PermissionDenied` promoted to all-5-hook-types** — both events now support `command`, `http`, `mcp_tool`, `prompt`, and `agent` hook types (hooks-doc)
+
+### Changed
+
+- **`Esc`+`Esc` behavior updated** — double `Esc` now clears the prompt input draft when input contains text (saving it to history); opens the rewind menu only when input is empty (cli-doc, features-doc)
+- **`Ctrl+C` behavior clarified** — first press clears prompt input when idle; second press exits Claude Code; still interrupts a running operation (cli-doc)
+- **Exit 0 semantics in PreToolUse hooks** — exit 0 now explicitly documented as "no decision; normal permission flow applies" rather than "allow"; a hook staying silent does not approve the tool call (hooks-doc)
+- **`suppressOutput` behavior corrected** — `true` hides the hook's stdout from the transcript; stdout still appears in the debug log (previously described as omitting from debug log) (hooks-doc)
+- **`/desktop` requires Claude subscription** — command now documented as requiring macOS or Windows and an active Claude subscription; not available with API key auth or on Bedrock, Vertex, or Foundry (cli-doc, ide-doc)
+- **Interrupt and steer behavior detailed** — `Esc` stops Claude immediately and cancels the running tool call; typing a correction and pressing `Enter` sends without stopping the current action; Claude reads it after the current step completes (getting-started-doc, ide-doc)
+- **`/loop` built-in maintenance prompt availability** — docs now state the built-in prompt isn't available to everyone yet and not on Bedrock/Vertex/Foundry; `loop.md` follows the same availability (features-doc, cli-doc)
+- **`claude plugin validate` scoping clarified** — pointed at a marketplace directory it validates `marketplace.json` only; pointed at a plugin directory it validates `plugin.json` plus skill/agent/command/hook files (plugins-doc)
+- **`session_crons` source list updated** — Stop hook input `session_crons` now includes `ScheduleWakeup` as a source alongside `CronCreate` and `/loop` (hooks-doc)
+- **`strictPluginOnlyCustomization` added to admin controls table** — new row for customization lockdown surface alongside existing permission and MCP controls (settings-doc)
+- **`/simplify` renamed to `/code-review`** — command renamed with optional effort level argument (e.g. `/code-review high`) as of v2.1.146 (operations-doc)
+
 ## 26.5.20
 
 **41 references updated across 11 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
