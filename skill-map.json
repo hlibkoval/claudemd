@@ -48,6 +48,10 @@
       {
         "url": "https://code.claude.com/docs/en/plugin-dependencies.md",
         "file": "claude-code-plugin-dependencies.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/plugin-hints.md",
+        "file": "claude-code-plugin-hints.md"
       }
     ],
     "mcp-doc": [
@@ -450,6 +454,10 @@
       {
         "url": "https://code.claude.com/docs/en/prompt-caching.md",
         "file": "claude-code-prompt-caching.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/prompt-library.md",
+        "file": "claude-code-prompt-library.md"
       }
     ],
     "errors-doc": [
@@ -470,6 +478,10 @@
       {
         "url": "https://code.claude.com/docs/en/web-quickstart.md",
         "file": "claude-code-web-quickstart.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/sessions.md",
+        "file": "claude-code-sessions.md"
       }
     ],
     "agent-sdk-doc": [
@@ -588,6 +600,10 @@
       {
         "url": "https://code.claude.com/docs/en/agent-sdk/user-input.md",
         "file": "claude-code-agent-sdk-user-input.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/agent-sdk/session-storage.md",
+        "file": "claude-code-agent-sdk-session-storage.md"
       }
     ]
   }
