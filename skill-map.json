@@ -58,6 +58,10 @@
       {
         "url": "https://code.claude.com/docs/en/mcp.md",
         "file": "claude-code-mcp.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/managed-mcp.md",
+        "file": "claude-code-managed-mcp.md"
       }
     ],
     "memory-doc": [
@@ -298,6 +302,10 @@
       {
         "url": "https://code.claude.com/docs/en/zero-data-retention.md",
         "file": "claude-code-zero-data-retention.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/sandbox-environments.md",
+        "file": "claude-code-sandbox-environments.md"
       }
     ],
     "operations-doc": [
