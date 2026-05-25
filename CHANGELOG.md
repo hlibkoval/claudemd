@@ -2,6 +2,23 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.25
+
+**13 references updated across 8 skills:** agent-sdk-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, operations-doc, security-doc, sub-agents-doc
+
+### New
+
+- **`/clear` command in Agent SDK** — `/clear` resets conversation context in streaming-input mode and is now documented as available in the SDK (requires v2.1.117+); one-shot `query()` callers should start a new query instead (agent-sdk-doc)
+- **Shell aliases and functions in Bash tool** — Claude Code now sources `~/.zshrc`, `~/.bashrc`, or `~/.profile` at session start and applies captured aliases, functions, and shell options to every Bash command (cli-doc)
+- **`/code-review` local command note in CI/CD docs** — added note that `/code-review` can review a diff locally in-terminal without installing the GitHub App; replaces the previous Plugins marketplace cross-reference (ci-cd-doc)
+
+### Changed
+
+- **`allowedTools` reframed as "auto-approve"** — documentation now consistently describes `allowedTools` as auto-approving tools to skip permission prompts, rather than simply "granting access"; applies to MCP tools, subagents, and SDK quickstart examples (agent-sdk-doc)
+- **`slash_commands` list format changed** — SDK `init` message now returns bare command names (e.g., `["clear", "compact", "context"]`) instead of slash-prefixed strings (e.g., `["/compact", "/context"]`) (agent-sdk-doc)
+- **Subagent `isolation: worktree` base branch clarified** — worktrees for subagents branch from the repository's default branch by default, not the parent session's `HEAD`; overridable with `worktree.baseRef: "head"` (features-doc, sub-agents-doc)
+- **Sandbox git worktree write access documented** — sandbox now explicitly allows writes to the main repo's shared `.git` directory when the cwd is a linked worktree; `hooks/` and `config` inside remain denied (security-doc)
+
 ## 26.5.21
 
 **15 references updated across 7 skills:** cli-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, operations-doc, plugins-doc, settings-doc
