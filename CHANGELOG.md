@@ -2,6 +2,44 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.26
+
+**22 references updated across 11 skills:** agent-sdk-doc, ci-cd-doc, cli-doc, features-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Claude Security GHES support** — Claude Security added as a supported feature on GitHub Enterprise Server, available in public beta for Enterprise plans; enable it alongside Code Review from the admin settings page (ci-cd-doc)
+- **`/usage` breakdown by skill, subagent, plugin, and MCP server** — Pro, Max, Team, and Enterprise subscribers now see a usage attribution breakdown in `/usage`; press `d` or `w` to switch between 24-hour and 7-day views (cli-doc, operations-doc)
+- **Usage credits monthly spend limit via `/usage-credits`** — Pro and Max users can set a monthly cap on usage-credit spend; Claude Code prompts to raise or remove the limit if it's hit mid-session (operations-doc)
+- **`allowAllClaudeAiMcps` managed setting** — new managed-only setting that loads claude.ai connectors alongside a deployed `managed-mcp.json` instead of suppressing them; requires Claude Code v2.1.149 or later (mcp-doc, settings-doc)
+- **`CLAUDE_CODE_SYNC_SKILLS` and `CLAUDE_CODE_SYNC_SKILLS_WAIT_TIMEOUT_MS` env vars** — `CLAUDE_CODE_SYNC_SKILLS=1` downloads enabled claude.ai skills into `~/.claude/skills/` before the first query in non-interactive mode and resyncs every 10 minutes; set automatically in Claude Code on the web (settings-doc)
+- **Diff viewer pager-style scroll keybindings** — the diff detail view now binds `Space`, `Shift+Space`, `B`, `PageUp`, `PageDown`, `G`, `Shift+G`, `Home`, `End` for scrolling; `diff:previousFile` and `diff:nextFile` also gained `K`/`J` aliases (cli-doc)
+- **"How a skill gets its command name" section** — new reference table documents how the invocation name (what you type after `/`) is derived from file location vs. the `name` frontmatter field, with the plugin-root `SKILL.md` as the one exception (skills-doc)
+- **Tools unavailable to subagents explicitly listed** — `Agent`, `AskUserQuestion`, `EnterPlanMode`, `ExitPlanMode` (unless `permissionMode: plan`), `ScheduleWakeup`, and `WaitForMcpServers` are now documented as not available to subagents even when listed in `tools` (sub-agents-doc)
+- **Effort level added to prompt cache key** — effort level is now part of the cache key alongside model; switching with `/effort` invalidates the cache and triggers a confirmation dialog; new "Changing effort level" section added (features-doc)
+- **OTel headers helper error reporting** — errors from the headers helper script are now reported in `/doctor` output, the debug log, and stderr in non-interactive sessions (operations-doc)
+- **`todos/`, `statsig/`, `logs/` legacy directories documented** — these are now listed in the auto-cleanup table as legacy directories no longer written by current versions; the cleanup sweep removes them once empty (memory-doc)
+
+### Changed
+
+- **`Ctrl+C` behavior in agent view clarified** — while attached to a session, `Ctrl+C` cancels a running response or shell command rather than detaching; pressing it twice on an empty prompt detaches (features-doc)
+- **MCP reliability note replaced with reconnect tip** — removed "MCP connections can fail silently" warning; replaced with tip noting automatic reconnection for remote servers and a reference to the reconnection docs (features-doc)
+- **`env` option replaces rather than merges with `process.env`** — `query()` `env` option now documented as replacing the subprocess environment entirely; users must spread `process.env` to preserve inherited variables like `PATH` (agent-sdk-doc)
+- **`EnterWorktree`/`ExitWorktree` restriction scoped** — "not available to subagents" clarified to "not available to subagents that already run in their own working directory, such as with `isolation: worktree`" (cli-doc)
+- **`additionalDirectories` settings key does not load configuration** — `permissions.additionalDirectories` in settings files grants file access only; the configuration exceptions (skills, subagents, etc.) apply only to `--add-dir` flag and `/add-dir` command (settings-doc, skills-doc)
+- **Tool result OTel event semantics corrected** — `decision_type` on `claude_code.tool_result` is always `"accept"` since the event is not emitted for rejected calls; `"user_abort"` and `"user_reject"` sources cannot appear on this event (operations-doc)
+- **`user_reject` decision source refined** — in interactive CLI, `user_reject` is emitted only for the user's "No" choice itself; calls matching a deny rule in personal settings emit `"config"` instead; Agent SDK and `-p` sessions emit `"user_reject"` for deny-rule matches (operations-doc)
+- **Remote session title syncs from claude.ai rename** — renaming a session from claude.ai or the Claude app now also updates the local title shown in `claude --resume` (features-doc)
+- **`/output-style` removal note added** — deprecated in v2.1.73 and removed in v2.1.91; docs now include a versioned note directing users to `/config` or the `outputStyle` setting (features-doc)
+- **`name` frontmatter field description updated** — clarified that `name` sets the display label in skill listings, not the command name used to invoke the skill (skills-doc)
+
+### Removed
+
+- **MCP silent-failure reliability warning** — removed the caution that MCP connections can fail silently mid-session without warning, superseded by the automatic reconnection capability note (features-doc)
+- **`todos/` as a standalone "kept until you delete them" entry** — moved from the persistent paths table into the auto-cleanup legacy directories row (memory-doc)
+
+- Minor wording/formatting updates across features-doc (fast-mode dollar-sign escaping), plugins-doc (marketplace name correction)
+
 ## 26.5.25
 
 **13 references updated across 8 skills:** agent-sdk-doc, ci-cd-doc, cli-doc, features-doc, getting-started-doc, operations-doc, security-doc, sub-agents-doc
