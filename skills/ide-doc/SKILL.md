@@ -1,281 +1,259 @@
 ---
 name: ide-doc
-description: Complete official documentation for Claude Code IDE and surface integrations — Desktop app (macOS/Windows), VS Code extension, JetBrains plugin, Chrome browser extension, computer use (CLI and Desktop), and Desktop changelog. Covers installation, permission modes, parallel sessions, diff view, preview servers, SSH sessions, computer use setup and safety, Chrome automation, keyboard shortcuts, enterprise configuration, and troubleshooting.
+description: Complete official documentation for Claude Code IDE integrations — VS Code extension (install, keyboard shortcuts, settings, checkpoints, plugin management, built-in IDE MCP server), JetBrains plugin (IntelliJ, PyCharm, WebStorm, GoLand; diff viewing, selection context, WSL), Claude Desktop app (sessions, permission modes, diff view, preview servers, computer use, parallel sessions, SSH, enterprise config), Chrome browser integration (browser automation, console debugging, form filling), and computer use from the CLI (macOS screen control, per-app approval, safety guardrails).
 user-invocable: false
 ---
 
-# IDE and Surface Integrations Documentation
+# IDE and Surface Integration Documentation
 
-This skill provides the complete official documentation for Claude Code's IDE integrations and graphical surfaces.
+This skill provides the complete official documentation for Claude Code's IDE and surface integrations.
 
 ## Quick Reference
 
-### Surfaces at a Glance
+### Surface Overview
 
-| Surface | Platforms | How to get it |
+| Surface | Platform | Key Strength |
 | :--- | :--- | :--- |
-| **Desktop app** | macOS, Windows (not Linux) | Download from claude.ai/download |
-| **VS Code extension** | VS Code, Cursor, Windsurf, Kiro | `Cmd/Ctrl+Shift+X` → "Claude Code"; or Open VSX |
-| **JetBrains plugin** | IntelliJ, PyCharm, WebStorm, Android Studio, GoLand, PhpStorm | JetBrains Marketplace |
-| **Chrome integration** | Chrome, Edge (beta; not Brave/Arc/WSL) | Claude in Chrome extension v1.0.36+ + Claude Code v2.0.73+ |
-| **Computer use (CLI)** | macOS only (Pro/Max plan, v2.1.85+) | Enable `computer-use` server via `/mcp` |
-| **Computer use (Desktop)** | macOS and Windows (Pro/Max plan) | Settings → General → Computer use toggle |
+| **VS Code extension** | VS Code, Cursor, Windsurf, Kiro | Graphical panel, inline diffs, checkpoints, @-mentions with line ranges |
+| **JetBrains plugin** | IntelliJ, PyCharm, WebStorm, GoLand, etc. | IDE diff viewer, diagnostic sharing, quick-launch shortcut |
+| **Claude Desktop (Code tab)** | macOS, Windows (no Linux) | Parallel sessions, visual diff, app preview, computer use, GitHub PR monitoring |
+| **Chrome integration** | Chrome, Edge (beta) | Browser automation, console debug, form filling, authenticated web apps |
+| **Computer use (CLI)** | macOS only (Pro/Max, v2.1.85+) | Screen control for native apps, iOS Simulator, GUI-only tools |
 
----
+### VS Code Extension
 
-### Desktop App
+**Install:** search "Claude Code" in Extensions (`Cmd/Ctrl+Shift+X`), or install for [VS Code](vscode:extension/anthropic.claude-code) / [Cursor](cursor:extension/anthropic.claude-code). Also on Open VSX for Windsurf/Kiro.
 
-#### Session Environments
+**Requirements:** VS Code 1.98.0+, Anthropic account.
 
-| Environment | Where it runs | Persists when app closed? |
+**Key keyboard shortcuts:**
+
+| Shortcut (Mac / Win-Linux) | Action |
+| :--- | :--- |
+| `Cmd+Esc` / `Ctrl+Esc` | Toggle focus between editor and Claude |
+| `Cmd+Shift+Esc` / `Ctrl+Shift+Esc` | Open new conversation as editor tab |
+| `Option+K` / `Alt+K` | Insert @-mention reference for current file/selection |
+| `Cmd+N` / `Ctrl+N` | New conversation (requires `enableNewConversationShortcut: true`) |
+| `Cmd+Shift+T` / `Ctrl+Shift+T` | Reopen most-recently-closed Claude session tab |
+
+**Permission modes:** `default` (ask each time) | `plan` (describe then wait for approval) | `acceptEdits` (auto-accept edits) | `bypassPermissions` (no prompts — sandboxes only).
+
+**Extension settings (VS Code → Extensions → Claude Code):**
+
+| Setting | Default | Notes |
 | :--- | :--- | :--- |
-| **Local** | Your machine | No |
-| **Remote** | Anthropic cloud | Yes |
-| **SSH** | Remote machine over SSH | No |
+| `useTerminal` | `false` | Launch in terminal mode instead of graphical panel |
+| `initialPermissionMode` | `default` | Starting permission mode for new conversations |
+| `preferredLocation` | `panel` | `sidebar` or `panel` |
+| `autosave` | `true` | Auto-save before Claude reads/writes files |
+| `useCtrlEnterToSend` | `false` | Use Ctrl/Cmd+Enter instead of Enter to send |
+| `enableNewConversationShortcut` | `false` | Enable Cmd/Ctrl+N for new conversation |
+| `enableReopenClosedSessionShortcut` | `true` | Cmd/Ctrl+Shift+T reopens last Claude session tab |
+| `allowDangerouslySkipPermissions` | `false` | Adds Auto mode and Bypass to mode selector |
+| `disableLoginPrompt` | `false` | Skip auth prompts (third-party provider setups) |
+| `usePythonEnvironment` | `true` | Activate workspace Python env (requires Python ext) |
 
-#### Permission Modes
+**Checkpoints (rewind):** hover any message to reveal rewind button. Options: Fork conversation from here | Rewind code to here | Fork conversation and rewind code.
+
+**Built-in IDE MCP server (`ide`):** auto-connects when extension is active. Hidden from `/mcp`. Exposes two tools to the model:
+
+| Tool | What it does | Writes? |
+| :--- | :--- | :--- |
+| `mcp__ide__getDiagnostics` | Language-server errors/warnings (Problems panel), optionally scoped to one file | No |
+| `mcp__ide__executeCode` | Run Python in the active Jupyter notebook kernel — always shows a Quick Pick confirmation first | Yes |
+
+Security: binds to `127.0.0.1` on a random port; fresh auth token per activation stored in `~/.claude/ide/` (0600 / 0700).
+
+**Plugin management:** type `/plugins` in the prompt box to open the graphical plugin manager. Install scopes: user (all projects), project (shared), local (repo-only).
+
+**Launch a tab from external tools:** `vscode://anthropic.claude-code/open` URI handler. Optional query params: `prompt` (URL-encoded text to pre-fill) and `session` (session ID to resume).
+
+**VS Code extension vs. CLI feature gaps:**
+
+| Feature | CLI | VS Code Extension |
+| :--- | :--- | :--- |
+| All commands/skills | Yes | Subset (see `/` menu) |
+| MCP server config | Full | Add via CLI; manage via `/mcp` |
+| Checkpoints | Yes | Yes |
+| `!` bash shortcut | Yes | No |
+| Tab completion | Yes | No |
+
+### JetBrains Plugin
+
+**Supported IDEs:** IntelliJ IDEA, PyCharm, Android Studio, WebStorm, PhpStorm, GoLand.
+
+**Install:** [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/27310-claude-code-beta-). Restart IDE after install. For Remote Development, install on the **remote host** (Settings → Plugin (Host)).
+
+**Features:** quick-launch `Cmd+Esc` / `Ctrl+Esc`; IDE diff viewer; selection/tab context auto-shared; `Cmd+Option+K` / `Alt+Ctrl+K` for file references (`@src/auth.ts#L1-99`); diagnostic sharing.
+
+**Diff tool setting:** run `claude` → `/config` → set diff tool to `auto` (IDE) or `terminal`.
+
+**Plugin settings (Settings → Tools → Claude Code [Beta]):**
+- **Claude command:** custom path, e.g. `/usr/local/bin/claude` or `npx @anthropic-ai/claude-code`
+- WSL users: `wsl -d Ubuntu -- bash -lic "claude"`
+- **Enable automatic updates:** check for/install updates on restart
+
+**ESC key fix:** Settings → Tools → Terminal → uncheck "Move focus to the editor with Escape" (or delete the "Switch focus to Editor" keybinding).
+
+**WSL2 connectivity fix:**
+1. Get WSL2 IP: `hostname -I`
+2. Add firewall rule in PowerShell (Admin): `New-NetFirewallRule -DisplayName "Allow WSL2 Internal Traffic" -Direction Inbound -Protocol TCP -Action Allow -RemoteAddress <subnet> -LocalAddress <subnet>`
+3. Alternative: set `networkingMode=mirrored` in `.wslconfig` (Windows 11 22H2+)
+
+### Claude Desktop App (Code Tab)
+
+**Platforms:** macOS (universal), Windows x64/ARM64. Not available on Linux — use CLI instead.
+
+**Requirements:** Pro, Max, Team, or Enterprise subscription.
+
+**Session setup:** choose Environment (Local / Remote / SSH) + Project folder + Model + Permission mode before sending first message.
+
+**Permission modes:**
 
 | Mode | Settings key | Behavior |
 | :--- | :--- | :--- |
-| **Ask permissions** | `default` | Asks before every file edit or command |
-| **Auto accept edits** | `acceptEdits` | Auto-accepts file edits and common filesystem commands |
-| **Plan mode** | `plan` | Proposes a plan without editing source code |
-| **Auto** | `auto` | Background safety checks; reduces prompts. Requires Sonnet 4.6, Opus 4.6, or Opus 4.7 via Anthropic API |
-| **Bypass permissions** | `bypassPermissions` | No prompts. Enable in Settings → Claude Code. Admins can disable. |
+| Ask permissions | `default` | Ask before every edit or command |
+| Auto accept edits | `acceptEdits` | Auto-accept file edits and common fs commands |
+| Plan mode | `plan` | Explore and propose; no source edits until approved |
+| Auto | `auto` | Background safety checks; requires Sonnet 4.6/Opus 4.6/4.7 |
+| Bypass permissions | `bypassPermissions` | No prompts — sandboxed VMs only |
 
-#### Keyboard Shortcuts (Desktop Code Tab)
+**Keyboard shortcuts (macOS; use Ctrl instead of Cmd on Windows):**
 
-| Shortcut (macOS) | Action |
+| Shortcut | Action |
 | :--- | :--- |
-| `Cmd+/` | Show keyboard shortcuts |
-| `Cmd+N` | New session |
-| `Cmd+W` | Close session |
-| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Next/previous session |
+| `Cmd /` | Show all shortcuts |
+| `Cmd N` | New session |
+| `Cmd W` | Close session |
+| `Ctrl Tab` / `Ctrl Shift Tab` | Next/previous session |
+| `Cmd Shift D` | Toggle diff pane |
+| `Cmd Shift P` | Toggle preview pane |
+| `Ctrl \`` | Toggle terminal pane |
+| `Cmd \` | Close focused pane |
+| `Cmd ;` | Open side chat |
+| `Ctrl O` | Cycle view modes (Normal / Verbose / Summary) |
+| `Cmd Shift M` | Open permission mode menu |
+| `Cmd Shift I` | Open model menu |
 | `Esc` | Stop Claude's response |
-| `Cmd+Shift+D` | Toggle diff pane |
-| `Cmd+Shift+P` | Toggle preview pane |
-| `Ctrl+\`` | Toggle terminal pane |
-| `Cmd+\` | Close focused pane |
-| `Cmd+;` | Open side chat |
-| `Ctrl+O` | Cycle view modes |
 
-#### View Modes
+**Diff view:** click `+12 -1` indicator → file list left, changes right. Click any line to comment. Submit all comments: `Cmd+Enter` (Mac) / `Ctrl+Enter` (Win). Click **Review code** for Claude to leave inline review comments.
 
-| Mode | Shows |
+**PR monitoring:** after opening a PR, CI status bar appears. **Auto-fix** toggle: Claude reads failures and iterates. **Auto-merge** toggle: merges once all checks pass (squash; requires GitHub repo setting). Requires `gh` CLI.
+
+**Preview servers (`.claude/launch.json`):**
+
+```json
+{
+  "version": "0.0.1",
+  "autoVerify": true,
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    }
+  ]
+}
+```
+
+Key fields: `name`, `runtimeExecutable`, `runtimeArgs`, `port` (default 3000), `cwd`, `env`, `autoPort` (true/false/unset), `program` (node script), `args`. Use `program` for standalone Node scripts; use `runtimeExecutable` for package-manager commands. `autoVerify: false` disables automatic post-edit verification.
+
+**Parallel sessions:** each session gets its own Git worktree under `.claude/worktrees/`. Press `Cmd+N` to add a session. Hold `Cmd` and click a sidebar session to split view. Worktree location and branch prefix configurable in Settings → Claude Code.
+
+**Side chat:** `Cmd+;` or `/btw` — reads main thread context but adds nothing back.
+
+**Remote sessions:** run on Anthropic cloud; continue after app closes. Multi-repo: click `+` next to repo pill. Monitor from claude.ai/code or Claude iOS app.
+
+**SSH sessions:** add via environment dropdown → "+ Add SSH connection". Fields: Name, SSH Host (`user@hostname`), SSH Port (default 22), Identity File. Desktop installs Claude Code on remote automatically. Remote must run Linux or macOS.
+
+**Environment variables (local):** open environment dropdown → hover Local → gear icon → local environment editor (encrypted, applies to sessions and preview servers). Or add to `env` key in `~/.claude/settings.json` (Claude sessions only, not dev servers).
+
+**Continue in another surface:** VS Code icon in session toolbar → "Claude Code on the Web" (push branch + summary, start remote session) or "Your IDE" (open project in installed editor).
+
+### Chrome Integration (Beta)
+
+**Requirements:** Chrome or Edge browser; Claude in Chrome extension v1.0.36+; Claude Code v2.0.73+; Pro/Max/Team/Enterprise plan via Anthropic (not third-party providers).
+
+**CLI usage:**
+```text
+claude --chrome
+```
+Or enable from within a session: `/chrome`. Run `/chrome` to check status, manage permissions, reconnect.
+
+**VS Code:** use `@browser` in the prompt box followed by what you want Claude to do — no flag needed when Chrome extension is installed.
+
+**Enable by default:** run `/chrome` → select "Enabled by default". Note: increases context usage.
+
+**Capabilities:** live console debug, DOM inspection, form filling, data extraction, multi-site workflows, GIF session recording, authenticated web app interaction (inherits your browser login state).
+
+**Common error messages:**
+
+| Error | Fix |
 | :--- | :--- |
-| **Normal** | Tool calls collapsed into summaries, full text responses |
-| **Verbose** | Every tool call, file read, and intermediate step |
-| **Summary** | Only Claude's final responses and changes made |
+| "Browser extension is not connected" | Restart Chrome and Claude Code, run `/chrome` to reconnect |
+| "Extension not detected" | Install/enable extension in `chrome://extensions` |
+| "No tab available" | Ask Claude to create a new tab and retry |
+| "Receiving end does not exist" | Run `/chrome` → "Reconnect extension" (service worker went idle) |
 
-#### Preview Server `launch.json` Fields
+### Computer Use (CLI, macOS only)
 
-| Field | Type | Description |
-| :--- | :--- | :--- |
-| `name` | string | Unique identifier for this server |
-| `runtimeExecutable` | string | Command to run (`npm`, `yarn`, `node`) |
-| `runtimeArgs` | string[] | Arguments to `runtimeExecutable` |
-| `port` | number | Port to listen on (default 3000) |
-| `cwd` | string | Working directory relative to project root |
-| `env` | object | Environment variables as key-value pairs |
-| `autoPort` | boolean | `true` = find free port; `false` = fail if busy; omitted = ask |
-| `program` | string | Node script to run directly (alternative to `runtimeExecutable`) |
-| `args` | string[] | Arguments to `program` |
-| `autoVerify` | boolean | Top-level flag; `false` disables auto-verification after edits |
+**Requirements:** macOS; Pro or Max plan; Claude Code v2.1.85+; interactive session (not `-p` flag); not available with third-party providers.
 
-#### Computer Use App Permission Tiers (Desktop)
+**Enable:** run `/mcp` in an interactive session → select `computer-use` → **Enable** (persists per project). Grant macOS Accessibility and Screen Recording permissions when prompted.
+
+**Per-session app approval:** first time Claude needs an app, a terminal prompt appears. Choose **Allow for this session** or **Deny**. Approvals last the session.
+
+**App control tiers:**
 
 | Tier | What Claude can do | Applies to |
 | :--- | :--- | :--- |
 | View only | See app in screenshots | Browsers, trading platforms |
-| Click only | Click and scroll, no typing | Terminals, IDEs |
+| Click only | Click and scroll; no typing | Terminals, IDEs |
 | Full control | Click, type, drag, keyboard shortcuts | Everything else |
 
-#### SSH Config Fields (`sshConfigs` in managed settings)
+**Safety guardrails:** per-app approval; sentinel warnings for terminals/Finder/System Settings; terminal excluded from screenshots; global `Esc` to abort; machine-wide lock (one session at a time).
 
-| Field | Required | Description |
-| :--- | :--- | :--- |
-| `id` | Yes | Unique identifier |
-| `name` | Yes | Display label |
-| `sshHost` | Yes | `user@hostname` or SSH config alias |
-| `sshPort` | No | Defaults to 22 |
-| `sshIdentityFile` | No | Path to private key |
-| `startDirectory` | No | Initial working directory on remote |
+**Stop:** press `Esc` anywhere or `Ctrl+C` in terminal. macOS notification appears when Claude starts and finishes.
 
-#### CLI Flag Equivalents in Desktop
-
-| CLI flag | Desktop equivalent |
-| :--- | :--- |
-| `--model sonnet` | Model dropdown next to send button |
-| `--resume`, `--continue` | Click session in sidebar |
-| `--permission-mode` | Mode selector next to send button |
-| `--dangerously-skip-permissions` | Bypass permissions mode (enable in Settings) |
-| `--verbose` | Verbose view mode in Transcript view dropdown |
-| `--print`, `--output-format` | Not available (Desktop is interactive only) |
-
----
-
-### VS Code Extension
-
-#### Extension Settings
-
-| Setting | Default | Description |
-| :--- | :--- | :--- |
-| `useTerminal` | `false` | Launch Claude in terminal mode instead of graphical panel |
-| `initialPermissionMode` | `default` | Default permission mode for new conversations |
-| `preferredLocation` | `panel` | Where Claude opens: `sidebar` or `panel` |
-| `autosave` | `true` | Auto-save files before Claude reads/writes |
-| `useCtrlEnterToSend` | `false` | Use Ctrl/Cmd+Enter instead of Enter to send |
-| `enableNewConversationShortcut` | `false` | Enable Cmd/Ctrl+N for new conversation |
-| `enableReopenClosedSessionShortcut` | `true` | Cmd/Ctrl+Shift+T reopens last closed Claude session tab |
-| `hideOnboarding` | `false` | Hide the onboarding checklist |
-| `respectGitIgnore` | `true` | Exclude .gitignore patterns from file searches |
-| `usePythonEnvironment` | `true` | Activate workspace Python env (requires Python extension) |
-| `disableLoginPrompt` | `false` | Skip auth prompts (for third-party provider setups) |
-| `allowDangerouslySkipPermissions` | `false` | Adds Auto mode and Bypass permissions to mode selector |
-
-#### VS Code Keyboard Shortcuts
-
-| Command | Shortcut (macOS) | Description |
-| :--- | :--- | :--- |
-| Focus Input | `Cmd+Esc` | Toggle focus between editor and Claude |
-| Open in New Tab | `Cmd+Shift+Esc` | Open new conversation as editor tab |
-| New Conversation | `Cmd+N` | Requires `enableNewConversationShortcut: true` |
-| Reopen Closed Session | `Cmd+Shift+T` | Reopen most recently closed Claude session tab |
-| Insert @-Mention Reference | `Option+K` | Insert file + line range reference (editor must be focused) |
-
-#### IDE MCP Server Tools (VS Code)
-
-| Tool name | What it does | Writes? |
-| :--- | :--- | :--- |
-| `mcp__ide__getDiagnostics` | Returns language-server diagnostics (Problems panel) | No |
-| `mcp__ide__executeCode` | Runs Python code in active Jupyter notebook kernel (always prompts) | Yes |
-
-#### CLI vs. VS Code Extension Feature Comparison
-
-| Feature | CLI | VS Code Extension |
-| :--- | :--- | :--- |
-| Commands and skills | All | Subset (type `/` to see available) |
-| MCP server config | Full | Partial (add via CLI; manage via `/mcp`) |
-| Checkpoints / rewind | Yes | Yes |
-| `!` bash shortcut | Yes | No |
-| Tab completion | Yes | No |
-
----
-
-### JetBrains Plugin
-
-#### Key Features
-
-- Quick launch: `Cmd+Esc` (Mac) / `Ctrl+Esc` (Windows/Linux) to open Claude Code from the editor
-- Diff viewing in IDE diff viewer (set diff tool to `auto` via `/config`)
-- Automatic selection context sharing with Claude (blocked by `Read` deny rules)
-- File reference shortcut: `Cmd+Option+K` (Mac) / `Alt+Ctrl+K` (Linux/Windows) for `@src/file.ts#L1-99` format
-- Automatic diagnostic (lint/syntax error) sharing
-
-#### Plugin Settings Path
-
-Settings → Tools → Claude Code [Beta]
-
-| Setting | Notes |
-| :--- | :--- |
-| Claude command | Custom path, e.g. `claude`, `/usr/local/bin/claude`, or `npx @anthropic-ai/claude-code` |
-| WSL command format | `wsl -d Ubuntu -- bash -lic "claude"` |
-| Enable automatic updates | Applied on restart |
-| ESC key fix | Settings → Tools → Terminal → uncheck "Move focus to the editor with Escape" |
-
-#### Remote Development
-
-Must install the plugin on the **remote host** (Settings → Plugin (Host)), not the local client.
-
-#### WSL2 + JetBrains ("No available IDEs detected")
-
-Option A — Add Windows Firewall rule to allow WSL2 subnet:
-```powershell
-New-NetFirewallRule -DisplayName "Allow WSL2 Internal Traffic" -Direction Inbound -Protocol TCP -Action Allow -RemoteAddress 172.21.0.0/16 -LocalAddress 172.21.0.0/16
-```
-
-Option B — Switch to mirrored networking (Windows 11 22H2+): add `networkingMode=mirrored` to `.wslconfig`, then `wsl --shutdown`.
-
----
-
-### Chrome Integration
-
-#### Prerequisites
-
-- Google Chrome or Microsoft Edge (not Brave, Arc, or other Chromium; not WSL)
-- Claude in Chrome extension v1.0.36+ (Chrome Web Store)
-- Claude Code v2.0.73+
-- Direct Anthropic plan (Pro, Max, Team, or Enterprise) — not available via Bedrock/Vertex/Foundry
-
-#### Usage
-
-```bash
-claude --chrome          # Start with Chrome enabled
-```
-
-Or run `/chrome` inside an existing session to connect, check status, or reconnect. Run `/mcp` → `claude-in-chrome` to see all available browser tools.
-
-To enable Chrome by default: run `/chrome` → "Enabled by default". Note: increases context usage since browser tools always load.
-
-#### Chrome Integration Common Errors
-
-| Error | Cause | Fix |
-| :--- | :--- | :--- |
-| "Browser extension is not connected" | Native messaging host can't reach extension | Restart Chrome and Claude Code, run `/chrome` to reconnect |
-| "Extension not detected" | Extension not installed or disabled | Install/enable in `chrome://extensions` |
-| "No tab available" | Claude acted before a tab was ready | Ask Claude to create a new tab and retry |
-| "Receiving end does not exist" | Extension service worker went idle | Run `/chrome` → "Reconnect extension" |
-
-#### Native Messaging Host Config File Locations
-
-| Browser | macOS | Linux |
-| :--- | :--- | :--- |
-| Chrome | `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json` | `~/.config/google-chrome/NativeMessagingHosts/…` |
-| Edge | `~/Library/Application Support/Microsoft Edge/NativeMessagingHosts/…` | `~/.config/microsoft-edge/NativeMessagingHosts/…` |
-
----
-
-### Computer Use
-
-#### When Claude Uses Computer Use vs. Other Tools
-
-Claude tries the most precise tool first, in this order:
-1. MCP server (if configured for the service)
-2. Bash (if task is a shell command)
-3. Claude in Chrome (if task is browser work and Chrome is set up)
-4. Computer use (last resort — native apps, simulators, GUI-only tools)
-
-#### Differences: CLI vs. Desktop Computer Use
+**CLI vs Desktop differences:**
 
 | Feature | Desktop | CLI |
 | :--- | :--- | :--- |
 | Platforms | macOS and Windows | macOS only |
-| Enable | Settings → General → Computer use toggle | Enable `computer-use` in `/mcp` |
+| Enable | Settings > General toggle | `/mcp` → enable `computer-use` |
 | Denied apps list | Configurable in Settings | Not yet available |
-| Auto-unhide toggle | Optional | Always on |
-| Requirements | Pro or Max plan | Pro or Max plan, Claude Code v2.1.85+, interactive session (no `-p` flag) |
+| Auto-unhide | Optional toggle | Always on |
 
-#### Safety Guardrails (Computer Use)
+### Enterprise Configuration (Desktop)
 
-- Per-app approval required each session (Desktop: 30-min expiry for Dispatch-spawned sessions)
-- Apps with broad reach (terminals, Finder, System Settings) show extra warning before approval
-- Terminal excluded from screenshots — Claude never sees its own output
-- Press `Esc` anywhere to abort immediately; lock is released and hidden apps are restored
-- Machine-wide lock: only one Claude session can use computer use at a time
+**Admin console controls:** enable/disable Code in Desktop, Code on Web, Remote Control; disable Bypass permissions mode.
 
----
+**Managed settings keys:**
+
+| Key | Description |
+| :--- | :--- |
+| `permissions.disableBypassPermissionsMode` | Set to `"disable"` to block Bypass mode |
+| `disableAutoMode` | Set to `"disable"` to remove Auto from mode selector |
+| `autoMode` | Customize auto mode classifier rules organization-wide |
+| `sshConfigs` | Pre-configure SSH connections for all users (managed, non-editable) |
+| `sshHostAllowlist` | Restrict SSH sessions to approved host patterns; `[]` disables SSH |
+| `managedMcpServers` | Push MCP server configs to all users (third-party deployments only) |
+
+**Device management:** macOS via `com.anthropic.Claude` preference domain (Jamf, Kandji); Windows via registry at `SOFTWARE\Policies\Claude`.
+
+**SSH host allowlist patterns:** case-insensitive; `*` matches any host; `*.example.com` matches domain and subdomains; otherwise exact match. Read from managed settings only.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Desktop application](references/claude-code-desktop.md) — permission modes, parallel sessions, diff view, preview servers, SSH sessions, computer use, enterprise configuration, CLI comparison
-- [Get started with the desktop app](references/claude-code-desktop-quickstart.md) — install, first session walkthrough, key features overview
-- [Use Claude Code in VS Code](references/claude-code-vs-code.md) — extension install, prompt box, @-mentions, plugin manager, Chrome integration, settings reference, built-in IDE MCP server, CLI comparison
-- [JetBrains IDEs](references/claude-code-jetbrains.md) — plugin install, features, configuration, WSL2 troubleshooting, remote development
-- [Use Claude Code with Chrome (beta)](references/claude-code-chrome.md) — setup, capabilities, example workflows, troubleshooting
-- [Let Claude use your computer from the CLI](references/claude-code-computer-use.md) — enable via `/mcp`, app approvals, safety, CLI vs. Desktop differences
-- [Desktop changelog](references/claude-code-desktop-changelog.md) — release notes for Desktop app versions
+- [Desktop application](references/claude-code-desktop.md) — full reference for the Code tab: sessions, permission modes, diff view, PR monitoring, preview servers, computer use, parallel sessions, SSH, enterprise config, CLI comparison
+- [Get started with the desktop app](references/claude-code-desktop-quickstart.md) — install, first session walkthrough, quick feature tour
+- [Use Claude Code in VS Code](references/claude-code-vs-code.md) — install, panel usage, @-mentions, plugin management, Chrome integration, built-in IDE MCP server, extension settings, checkpoints, CLI comparison
+- [JetBrains IDEs](references/claude-code-jetbrains.md) — plugin install, features, configuration, WSL2 fix, troubleshooting
+- [Use Claude Code with Chrome](references/claude-code-chrome.md) — capabilities, prerequisites, CLI and VS Code usage, example workflows, troubleshooting
+- [Let Claude use your computer from the CLI](references/claude-code-computer-use.md) — enable, per-app approval, app tiers, safety, CLI vs Desktop differences, troubleshooting
 
 ## Sources
 
@@ -283,6 +261,5 @@ For the complete official documentation, see the reference files:
 - Get started with the desktop app: https://code.claude.com/docs/en/desktop-quickstart.md
 - Use Claude Code in VS Code: https://code.claude.com/docs/en/vs-code.md
 - JetBrains IDEs: https://code.claude.com/docs/en/jetbrains.md
-- Use Claude Code with Chrome (beta): https://code.claude.com/docs/en/chrome.md
+- Use Claude Code with Chrome: https://code.claude.com/docs/en/chrome.md
 - Let Claude use your computer from the CLI: https://code.claude.com/docs/en/computer-use.md
-- Desktop changelog: https://code.claude.com/docs/en/desktop-changelog.md

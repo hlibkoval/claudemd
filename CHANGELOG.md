@@ -2,6 +2,36 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.27
+
+**18 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc
+
+### New
+
+- **CLI v2.1.152 release** — `/code-review --fix` applies findings to the working tree; `disallowed-tools` frontmatter for skills/commands; `/reload-skills` command; `SessionStart` hook can return `reloadSkills: true` and set `sessionTitle`; `MessageDisplay` hook event; `pluginSuggestionMarketplaces` managed setting; `--fallback-model` now switches for the rest of the session instead of failing; auto mode no longer requires opt-in; and many bug fixes (operations-doc)
+- **`security-guidance` plugin** — new plugin that reviews each code change Claude makes for common vulnerabilities and fixes them in the same session; documented in the plugin discovery page and security related resources (plugins-doc, security-doc)
+- **Adversarial review step guidance** — new best-practices section recommends using a subagent to review the diff against the plan before marking work done, with advice on scoping findings to avoid over-engineering (best-practices-doc)
+- **Show evidence rather than asserting success** — new best-practices tip advising Claude to show test output, command results, or a screenshot rather than just claiming success (best-practices-doc)
+
+### Changed
+
+- **CLAUDE.md max import depth changed from 5 to 4 hops** — imported files can now recursively import other files up to four levels deep, down from five (memory-doc)
+- **`/login` command no longer disabled on cloud providers** — Bedrock, Vertex AI, and Microsoft Foundry docs now say only `/logout` is unavailable; `/login` is no longer listed as disabled (cloud-providers-doc)
+- **MCP scope hierarchy: fields not merged across scopes** — clarified that when the same server is defined in multiple scopes, the entire entry from the highest-precedence source is used; fields are not merged (mcp-doc)
+- **`--include-hook-events` and `--include-partial-messages` examples now include `--verbose`** — CLI flag reference examples updated to show `--verbose` is required alongside `--output-format stream-json` (cli-doc)
+- **Plugin init message now surfaces a `skills` field** — SDK `init` message now includes a `skills` list (e.g., `["my-plugin:greet"]`) alongside `slash_commands`; plugin skills appear in both lists (agent-sdk-doc)
+- **`PreToolUse` hook recommended for enforcing actions** — memory docs now note that to block an action regardless of what Claude decides, a `PreToolUse` hook should be used rather than CLAUDE.md instructions (memory-doc)
+- **Spec writing guidance expanded** — best-practices spec section adds advice that the most useful specs are self-contained, name files and interfaces, state out-of-scope items, and end with an end-to-end verification step (best-practices-doc)
+- **`--output-format stream-json` examples updated to include `--verbose`** — non-interactive streaming examples in best-practices docs now show `--output-format stream-json --verbose` (best-practices-doc)
+- **hooks-doc links to security-guidance plugin** — hooks guide now references the `security-guidance` plugin as a production example of hooks running a separate model review (hooks-doc)
+- **Monorepos link added to memory and admin-setup docs** — both docs now link to the new "Monorepos and large repos" page for per-directory CLAUDE.md layout and configuration patterns (memory-doc, settings-doc)
+
+### Removed
+
+- **Desktop changelog reference file deleted** — `skills/ide-doc/references/claude-code-desktop-changelog.md` removed from the plugin (ide-doc)
+
+- Minor wording/formatting updates across agent-sdk-doc (plugin description and troubleshooting phrasing), best-practices-doc (CLAUDE.md child-directory trigger wording), plugins-doc (example plugin name in cost output)
+
 ## 26.5.26
 
 **22 references updated across 11 skills:** agent-sdk-doc, ci-cd-doc, cli-doc, features-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc

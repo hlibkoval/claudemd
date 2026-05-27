@@ -184,6 +184,10 @@
         "file": "claude-code-best-practices.md"
       },
       {
+        "url": "https://code.claude.com/docs/en/large-codebases.md",
+        "file": "claude-code-large-codebases.md"
+      },
+      {
         "url": "https://code.claude.com/docs/en/common-workflows.md",
         "file": "claude-code-common-workflows.md"
       },
@@ -220,10 +224,6 @@
       {
         "url": "https://code.claude.com/docs/en/computer-use.md",
         "file": "claude-code-computer-use.md"
-      },
-      {
-        "url": "https://code.claude.com/docs/en/desktop-changelog.md",
-        "file": "claude-code-desktop-changelog.md"
       }
     ],
     "cloud-providers-doc": [
@@ -306,6 +306,10 @@
       {
         "url": "https://code.claude.com/docs/en/sandbox-environments.md",
         "file": "claude-code-sandbox-environments.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/security-guidance.md",
+        "file": "claude-code-security-guidance.md"
       }
     ],
     "operations-doc": [

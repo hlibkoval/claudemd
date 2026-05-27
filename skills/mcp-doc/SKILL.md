@@ -1,158 +1,175 @@
 ---
 name: mcp-doc
-description: Complete official documentation for MCP (Model Context Protocol) in Claude Code — transports (HTTP, SSE, stdio), installation scopes (local/project/user), CLI commands, OAuth 2.0 authentication, dynamic headers, tool search, output limits, MCP resources, prompts-as-commands, managed MCP configuration, allowlists/denylists, and enterprise policy controls.
+description: Complete official documentation for Model Context Protocol (MCP) in Claude Code — transports (HTTP, SSE, stdio), installation scopes (local/project/user), OAuth authentication, dynamic headers, JSON config, Claude Desktop import, claude.ai connectors, Claude Code as MCP server, tool search/deferral, resources, elicitation, prompts as commands, managed MCP (managed-mcp.json, allowlists, denylists, org restrictions).
 user-invocable: false
 ---
 
 # MCP Documentation
 
-This skill provides the complete official documentation for connecting Claude Code to external tools and services via the Model Context Protocol (MCP).
+This skill provides the complete official documentation for Model Context Protocol (MCP) in Claude Code.
 
 ## Quick Reference
 
-### What MCP Is
-
-MCP (Model Context Protocol) is an open standard for AI-tool integrations. Claude Code uses it to connect to external tools, databases, and APIs. Use MCP servers when you would otherwise copy data into chat from another tool.
-
 ### Transport Types
 
-| Transport | CLI flag | Notes |
+| Transport | Command syntax | Use for |
 | :--- | :--- | :--- |
-| HTTP (Streamable HTTP) | `--transport http` | Recommended for remote servers; `streamable-http` is a valid alias in JSON config |
-| SSE | `--transport sse` | Deprecated; use HTTP where available |
-| stdio | `--transport stdio` (default) | Local process; `CLAUDE_PROJECT_DIR` injected into server environment |
+| **HTTP** (recommended) | `claude mcp add --transport http <name> <url>` | Remote cloud services |
+| **SSE** (deprecated) | `claude mcp add --transport sse <name> <url>` | Legacy remote servers |
+| **stdio** | `claude mcp add [--transport stdio] <name> -- <cmd> [args...]` | Local processes needing system access |
 
-### CLI Commands
-
-```bash
-claude mcp add --transport http <name> <url>               # add remote HTTP server
-claude mcp add --transport http <name> <url> \
-  --header "Authorization: Bearer token"                   # with auth header
-claude mcp add --transport stdio <name> -- <command> [args]  # add local stdio server
-  --env KEY=value                                           # pass env var to server
-  --scope local|project|user                               # set scope (default: local)
-claude mcp add-json <name> '<json>'                        # add from JSON config
-claude mcp add-from-claude-desktop                         # import from Claude Desktop (macOS/WSL)
-claude mcp list                                            # list configured servers
-claude mcp get <name>                                      # show server details
-claude mcp remove <name>                                   # remove server
-claude mcp reset-project-choices                           # reset project-scope approvals
-/mcp                                                       # in-session: status panel + OAuth auth
-```
-
-**Option ordering for stdio:** all flags (`--transport`, `--env`, `--scope`) must appear before the server name; `--` separates the server name from the command and its arguments.
+In `.mcp.json`, `type: "streamable-http"` is an alias for `"http"`.
 
 ### Installation Scopes
 
-| Scope | Loads in | Shared with team | Stored in |
+| Scope | Loads in | Shared | Stored in |
 | :--- | :--- | :--- | :--- |
-| `local` (default) | Current project only | No | `~/.claude.json` |
-| `project` | Current project only | Yes, via `.mcp.json` in repo | `.mcp.json` |
+| `local` (default) | Current project only | No | `~/.claude.json` (under project path) |
+| `project` | Current project only | Yes, via `.mcp.json` in repo root | `.mcp.json` (commit to VCS) |
 | `user` | All your projects | No | `~/.claude.json` |
 
-Precedence when the same server is defined in multiple places: local > project > user > plugin-provided > claude.ai connectors.
+Precedence (highest wins): local → project → user → plugin-provided → claude.ai connectors.
 
-### `.mcp.json` Format
+Specifying scope: `claude mcp add --scope <local|project|user> ...`
+
+### Key Management Commands
+
+```bash
+claude mcp add --transport http <name> <url>          # add HTTP server
+claude mcp add --transport http <name> <url> \
+  --header "Authorization: Bearer <token>"            # with auth header
+claude mcp add --transport stdio <name> -- <cmd>      # add stdio server
+claude mcp add --env KEY=value <name> -- <cmd>        # with env var
+claude mcp add-json <name> '<json>'                   # add from JSON
+claude mcp add-from-claude-desktop                    # import from Desktop (macOS/WSL)
+claude mcp list                                       # list all servers
+claude mcp get <name>                                 # details for one server
+claude mcp remove <name>                              # remove a server
+claude mcp reset-project-choices                      # reset project-scope approvals
+claude mcp serve                                      # run Claude Code as MCP server
+/mcp                                                  # in-session panel: status, auth, reconnect
+```
+
+### Environment Variables for MCP
+
+| Variable | Effect |
+| :--- | :--- |
+| `MCP_TIMEOUT` | Startup timeout in ms (e.g. `MCP_TIMEOUT=10000`) |
+| `MCP_TOOL_TIMEOUT` | Per-server default tool execution timeout (ms) |
+| `MAX_MCP_OUTPUT_TOKENS` | Warning threshold and default max (default: 25,000) |
+| `ENABLE_TOOL_SEARCH` | Tool deferral control (see Tool Search table) |
+| `ENABLE_CLAUDEAI_MCP_SERVERS` | Set `false` to disable claude.ai connectors |
+
+Per-server `timeout` in `.mcp.json` (ms) overrides `MCP_TOOL_TIMEOUT` for that server only.
+
+### Environment Variable Expansion in `.mcp.json`
+
+Supported in `command`, `args`, `env`, `url`, `headers`:
+
+| Syntax | Meaning |
+| :--- | :--- |
+| `${VAR}` | Expand env var; fail if unset |
+| `${VAR:-default}` | Expand env var; use `default` if unset |
+
+Stdio servers receive `CLAUDE_PROJECT_DIR` pointing to the project root. In `.mcp.json` `command`/`args`, use `${CLAUDE_PROJECT_DIR:-.}` as the default.
+
+### OAuth Authentication
+
+Triggered automatically when server responds with `401` or `403`. Use `/mcp` to complete the browser flow.
+
+| Flag | Purpose |
+| :--- | :--- |
+| `--callback-port <port>` | Fix OAuth callback port to a pre-registered redirect URI |
+| `--client-id <id>` | Pre-configured OAuth client ID |
+| `--client-secret` | Prompt for client secret (masked input) |
+| `MCP_CLIENT_SECRET=<secret>` | Pass secret via env var (non-interactive) |
+
+Set `authServerMetadataUrl` in the `oauth` object of `.mcp.json` to override discovery. Set `oauth.scopes` to pin the scopes requested. OAuth tokens are stored in the system keychain; use "Clear authentication" in `/mcp` to revoke.
+
+### Dynamic Headers (Non-OAuth Auth)
+
+Use `headersHelper` in `.mcp.json` to run a shell command that outputs a JSON object of header key-value pairs at connection time:
 
 ```json
 {
   "mcpServers": {
-    "server-name": {
+    "internal-api": {
       "type": "http",
-      "url": "https://mcp.example.com/mcp",
-      "headers": { "Authorization": "Bearer ${API_KEY}" },
-      "timeout": 600000,
-      "alwaysLoad": true
-    },
-    "local-server": {
-      "type": "stdio",
-      "command": "/path/to/server",
-      "args": ["--flag"],
-      "env": { "KEY": "${VAR:-default}" }
+      "url": "https://mcp.internal.example.com",
+      "headersHelper": "/opt/bin/get-mcp-auth-headers.sh"
     }
   }
 }
 ```
 
-Environment variable expansion supported in `command`, `args`, `env`, `url`, `headers`: `${VAR}` and `${VAR:-default}`.
+Helper receives `CLAUDE_CODE_MCP_SERVER_NAME` and `CLAUDE_CODE_MCP_SERVER_URL`. Runs fresh on each connection; 10-second timeout.
 
-### OAuth 2.0 Authentication
+### Tool Search (Deferral)
 
-| Scenario | Approach |
-| :--- | :--- |
-| Standard OAuth (automatic discovery) | Run `/mcp` after adding server; Claude detects 401/403 |
-| Fixed callback port | `--callback-port PORT` |
-| Pre-configured credentials | `--client-id <id> --client-secret --callback-port PORT` |
-| Restrict scopes | `"oauth": {"scopes": "scope1 scope2"}` in `.mcp.json` |
-| Custom auth metadata URL | `"oauth": {"authServerMetadataUrl": "..."}` in `.mcp.json` (v2.1.64+) |
-| Dynamic headers (non-OAuth) | `"headersHelper": "/path/to/script.sh"` in `.mcp.json` |
-
-`headersHelper` script must output a JSON object of string key-value pairs; runs at connection time with `CLAUDE_CODE_MCP_SERVER_NAME` and `CLAUDE_CODE_MCP_SERVER_URL` in environment.
-
-### Tool Search (MCP Tool Deferral)
-
-Tool search is on by default. Tool schemas are deferred and only loaded when Claude needs them, keeping context usage low.
+Tool search is enabled by default: only tool names load at session start; schemas are fetched on demand via `ToolSearch`. Reduces context usage when many MCP servers are connected.
 
 | `ENABLE_TOOL_SEARCH` value | Behavior |
 | :--- | :--- |
-| (unset) | All tools deferred; falls back to upfront on Vertex AI or non-first-party `ANTHROPIC_BASE_URL` |
-| `true` | All tools deferred, even on Vertex AI |
-| `auto` | Load upfront if ≤10% of context window; defer overflow |
-| `auto:N` | Threshold mode with custom percentage N |
+| (unset) | Deferred (default); falls back to upfront on Vertex AI or non-first-party `ANTHROPIC_BASE_URL` |
+| `true` | Force deferred everywhere (may fail on older Vertex models or unsupporting proxies) |
+| `auto` | Threshold mode: upfront if tools fit within 10% of context window |
+| `auto:N` | Threshold mode with custom N% (0–100) |
 | `false` | All tools loaded upfront |
 
-Requires Sonnet 4+ or Opus 4+ (not Haiku). On Vertex AI: Sonnet 4.5+ or Opus 4.5+.
+Requires models that support `tool_reference` blocks: Sonnet 4 or later, Opus 4 or later. Not supported on Haiku.
 
-To exempt a specific server from deferral: set `"alwaysLoad": true` in `.mcp.json` (v2.1.121+). Individual tools can use `"anthropic/alwaysLoad": true` in their `_meta`.
+Set `alwaysLoad: true` on a server entry in `.mcp.json` to always load that server's tools upfront (requires v2.1.121+). Individual tools can set `"anthropic/alwaysLoad": true` in their `_meta` object.
 
 ### Output Limits
 
-| Setting | Default | Notes |
-| :--- | :--- | :--- |
-| Warning threshold | 10,000 tokens | Warning displayed when exceeded |
-| Max output (`MAX_MCP_OUTPUT_TOKENS`) | 25,000 tokens | Applies to tools without `anthropic/maxResultSizeChars` |
-| Per-tool limit | Set in `_meta["anthropic/maxResultSizeChars"]` | Up to 500,000 chars; text only (images still use token limit) |
+| Setting | Default |
+| :--- | :--- |
+| Warning threshold | 10,000 tokens |
+| Maximum tokens (`MAX_MCP_OUTPUT_TOKENS`) | 25,000 |
+| Per-tool override via `_meta["anthropic/maxResultSizeChars"]` | Up to 500,000 chars |
 
-### MCP Resources (@ mentions)
-
-Reference MCP server resources using `@server:protocol://resource/path` syntax in prompts. Type `@` to see available resources in autocomplete. Multiple resources can be referenced in one prompt.
+`anthropic/maxResultSizeChars` applies only to text content; image content is always subject to `MAX_MCP_OUTPUT_TOKENS`.
 
 ### MCP Prompts as Commands
 
-MCP-exposed prompts appear as `/mcp__servername__promptname` commands. Execute with arguments space-separated: `/mcp__github__pr_review 456`.
+MCP prompts appear as slash commands in the format `/mcp__<servername>__<promptname>`. Pass arguments space-separated after the command name. Server and prompt names are normalized (spaces become underscores).
+
+### MCP Resources
+
+Reference exposed resources via `@<server>:<protocol>://<path>` in prompts. Type `@` to see the autocomplete list.
 
 ### Plugin-Provided MCP Servers
 
-Plugins can bundle MCP servers in `.mcp.json` at plugin root or inline in `plugin.json`. Use `${CLAUDE_PLUGIN_ROOT}` for plugin files, `${CLAUDE_PLUGIN_DATA}` for persistent state, `${CLAUDE_PROJECT_DIR}` for project root. Run `/reload-plugins` after enabling/disabling a plugin to connect/disconnect its servers.
+Plugins can bundle MCP servers in `.mcp.json` at plugin root or inline in `plugin.json`. Use `${CLAUDE_PLUGIN_ROOT}` for bundled files, `${CLAUDE_PLUGIN_DATA}` for persistent state, `${CLAUDE_PROJECT_DIR}` for the project root. Plugin servers appear in `/mcp` with a plugin indicator. Run `/reload-plugins` to connect/disconnect after enabling/disabling a plugin mid-session.
+
+### Claude Code as MCP Server
+
+```bash
+claude mcp serve          # start as stdio MCP server
+```
+
+Add to Claude Desktop's `claude_desktop_config.json` under `mcpServers` with `"command": "claude"` and `"args": ["mcp", "serve"]`.
 
 ### Reconnection Behavior
 
-HTTP/SSE servers reconnect on disconnect with exponential backoff (up to 5 attempts, starting at 1 second, doubling each time). Initial connection is retried up to 3 times on transient errors (5xx, connection refused, timeout). Stdio servers are not auto-reconnected.
+HTTP/SSE servers: exponential backoff, up to 5 attempts (1s, 2s, 4s, 8s, 16s), then marked failed. Initial connection: up to 3 retries on transient errors (5xx, connection refused, timeout). Use `/mcp` to retry manually. Stdio servers are not auto-reconnected.
 
-### Environment Variables
+---
 
-| Variable | Effect |
+## Managed MCP (Admin Control)
+
+### Restriction Patterns
+
+| Pattern | Configuration |
 | :--- | :--- |
-| `MCP_TIMEOUT` | Server startup timeout in ms (e.g., `MCP_TIMEOUT=10000`) |
-| `MAX_MCP_OUTPUT_TOKENS` | Max output tokens per tool call |
-| `ENABLE_TOOL_SEARCH` | Control tool deferral mode |
-| `ENABLE_CLAUDEAI_MCP_SERVERS` | Set to `false` to disable claude.ai connectors |
-| `CLAUDE_PROJECT_DIR` | Injected into stdio server environment; use `${CLAUDE_PROJECT_DIR:-.}` in `.mcp.json` expansion |
+| Disable MCP entirely | `managed-mcp.json` with `{ "mcpServers": {} }` |
+| Fixed server set | `managed-mcp.json` with desired servers |
+| Approved catalog | `allowedMcpServers` + `allowManagedMcpServersOnly: true` |
+| Plugin servers only | `strictPluginOnlyCustomization` with `mcp` in the list |
+| Soft allowlist | `allowedMcpServers` without `allowManagedMcpServersOnly` |
+| Denylist only | `deniedMcpServers` |
 
-## Managed MCP (Enterprise)
-
-### Control Patterns
-
-| Pattern | What it does | Configure |
-| :--- | :--- | :--- |
-| **Disable MCP** | No servers load anywhere | `managed-mcp.json` with empty `mcpServers: {}` |
-| **Fixed deployment** | Every user gets the same servers; can't add others | `managed-mcp.json` with the servers you want |
-| **Approved catalog** | Users add from an approved list only | `allowedMcpServers` + `allowManagedMcpServersOnly: true` |
-| **Plugin servers only** | Servers only from plugins | `strictPluginOnlyCustomization` with `mcp` |
-| **Soft allowlist** | Allowlist users can widen in their own settings | `allowedMcpServers` without `allowManagedMcpServersOnly` |
-| **Denylist only** | Block known-bad servers | `deniedMcpServers` |
-
-### `managed-mcp.json` Paths
+### managed-mcp.json Paths
 
 | Platform | Path |
 | :--- | :--- |
@@ -160,39 +177,57 @@ HTTP/SSE servers reconnect on disconnect with exponential backoff (up to 5 attem
 | Linux and WSL | `/etc/claude-code/managed-mcp.json` |
 | Windows | `C:\Program Files\ClaudeCode\managed-mcp.json` |
 
-Same format as `.mcp.json`. When present, users cannot add, modify, or use any other MCP servers. Deploy via MDM (Jamf, Intune, Group Policy) or any process with administrator privileges.
+When present, `managed-mcp.json` grants exclusive control: users cannot add, modify, or use any other MCP servers. Claude.ai connectors are also suppressed unless `allowAllClaudeAiMcps: true` is set in a managed settings source (requires v2.1.149+).
 
-### Allowlist / Denylist Match Keys
+### Allowlist/Denylist Match Keys
 
-| Key | Matches | Notes |
+| Key | Matches | Use for |
 | :--- | :--- | :--- |
-| `serverUrl` | Remote server URL; `*` wildcards supported anywhere | Use for HTTP/SSE servers |
-| `serverCommand` | Exact command array including all arguments | Use for stdio servers |
-| `serverName` | User-assigned label; exact match only | Weak — use with URL or command entries |
+| `serverUrl` | Remote server URL (exact or `*` wildcard) | HTTP and SSE servers |
+| `serverCommand` | Exact command array including all args | Stdio servers |
+| `serverName` | User-assigned label (exact, no wildcards) | Fallback only; not a security control |
 
-`allowedMcpServers: []` (empty array) blocks all servers. Unset = all allowed. Denylists always merge from all settings sources; allowlists merge unless `allowManagedMcpServersOnly: true`.
+`allowedMcpServers: []` blocks all servers. Unset = all servers allowed.  
+Denylist always takes precedence over allowlist. Denylist entries merge from all settings sources.  
+`allowManagedMcpServersOnly: true` locks the allowlist to managed sources only.
 
-### Evaluation Order
+### URL Wildcard Patterns
 
-1. Merge lists (managed allowlist only if `allowManagedMcpServersOnly: true`)
-2. Check denylist — match blocks unconditionally
-3. Check allowlist — remote servers need `serverUrl` match; stdio servers need `serverCommand` match; `serverName` only counts when no stricter entries exist for that type
+| Pattern | Matches |
+| :--- | :--- |
+| `https://mcp.example.com/*` | All paths on that domain |
+| `https://mcp.example.com` | Also all paths (no-path pattern matches any path) |
+| `https://*.example.com/*` | Any subdomain |
+| `http://localhost:*/*` | Any port on localhost |
+| `*://mcp.example.com/*` | Any scheme |
 
-### User-Visible Messages
+Hostname matching is case-insensitive. Command matching is exact (all args in order).
+
+### Error Messages Users See
 
 | Situation | Message |
 | :--- | :--- |
 | `managed-mcp.json` present, user runs `claude mcp add` | `Cannot add MCP server: enterprise MCP configuration is active and has exclusive control over MCP servers` |
-| Server on denylist | `Cannot add MCP server "<name>": server is explicitly blocked by enterprise policy` |
-| Server not on allowlist | `Cannot add MCP server "<name>": not allowed by enterprise policy` |
-| Previously configured server now blocked | Server silently disappears from `/mcp` — no warning |
+| Server on denylist, user runs `claude mcp add` | `Cannot add MCP server "<name>": server is explicitly blocked by enterprise policy` |
+| Server not on allowlist, user runs `claude mcp add` | `Cannot add MCP server "<name>": not allowed by enterprise policy` |
+| Previously configured server now blocked | Server silently disappears from `/mcp` and `claude mcp list` |
+
+### Managed MCP Settings Summary
+
+| Setting | Controls | Delivered via |
+| :--- | :--- | :--- |
+| `managed-mcp.json` | Fixed server set, exclusive control | MDM / GPO / fleet management (system path) |
+| `allowedMcpServers` | Allowlist (merge unless `allowManagedMcpServersOnly`) | Any settings file; use managed source for enforcement |
+| `deniedMcpServers` | Denylist (always merges from all sources) | Any settings file |
+| `allowManagedMcpServersOnly` | Locks allowlist to managed sources | Managed settings sources only |
+| `allowAllClaudeAiMcps` | Load claude.ai connectors alongside managed set | Managed settings sources only |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Connect Claude Code to tools via MCP](references/claude-code-mcp.md) — transports, scopes, CLI commands, OAuth, tool search, output limits, resources, prompts, plugin MCP servers, channels, and elicitation
-- [Control MCP server access for your organization](references/claude-code-managed-mcp.md) — managed-mcp.json, allowlists, denylists, enterprise patterns, and monitoring MCP usage
+- [Connect Claude Code to tools via MCP](references/claude-code-mcp.md) — transports, scopes, OAuth, headersHelper, tool search, resources, elicitation, prompts as commands, plugin-provided servers, Claude Code as MCP server
+- [Control MCP server access for your organization](references/claude-code-managed-mcp.md) — managed-mcp.json, allowlists, denylists, restriction patterns, user-facing errors, monitoring
 
 ## Sources
 
