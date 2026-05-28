@@ -2,6 +2,49 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.28
+
+**37 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
+
+### New
+
+- **`MessageDisplay` hook event** — new hook that fires while assistant message text streams to screen; return `displayContent` to replace the displayed text without affecting the transcript or what Claude sees; fires once per batch in interactive mode, once per full message in SDK/`-p` mode (hooks-doc, agent-sdk-doc, plugins-doc)
+- **`disallowed-tools` skill frontmatter field** — skills can now declare tools to remove from Claude's available pool while the skill is active; restriction clears on the next user message (skills-doc)
+- **`/reload-skills` command** — re-scans skill directories without restarting the session; `SessionStart` hooks can also trigger this via `reloadSkills: true` in hook output (cli-doc, hooks-doc)
+- **`sessionTitle` in `SessionStart` hook output** — hooks can now set the session title on startup and resume via `hookSpecificOutput.sessionTitle`; the `session_title` input field lets hooks check the existing title before overwriting it (hooks-doc)
+- **`reloadSkills` in `SessionStart` hook output** — when `true`, Claude Code re-scans skill directories after hooks complete so skills installed by the hook are available in the same session (hooks-doc)
+- **`/code-review --fix` applies findings to working tree** — `/code-review --fix` now applies review findings after the review; `/simplify` now invokes `/code-review --fix`; `/code-review ultra --fix` runs ultrareview then applies findings (ci-cd-doc, cli-doc)
+- **`/ultrareview` renamed to `/code-review ultra`** — `/ultrareview` remains as an alias; PR mode now supports GitHub Enterprise Server instances in addition to github.com (best-practices-doc, ci-cd-doc)
+- **`security-guidance` plugin documented** — new official plugin that reviews each change Claude makes for common vulnerabilities and instructs Claude to fix them in the same session (plugins-doc, security-doc)
+- **`CLAUDE_CODE_PROPAGATE_TRACEPARENT` env var** — opt-in flag to propagate W3C trace context through a custom `ANTHROPIC_BASE_URL` proxy; by default propagation is only enabled for direct Anthropic API connections (settings-doc, operations-doc)
+- **`OTEL_METRICS_INCLUDE_ENTRYPOINT` env var and `app.entrypoint` metric attribute** — opt-in attribute recording how the session was launched (`cli`, `sdk-ts`, `sdk-py`, `claude-vscode`, etc.) (settings-doc, operations-doc)
+- **`mcp_server.name` and `mcp_tool.name` OTel metric attributes** — new attribution attributes on cost counter, token counter, and related events tracking which MCP server and tool ran in the turn (operations-doc)
+- **`failIfUnavailable` sandbox option** — new `SandboxSettings` field; TypeScript SDK defaults to `true` (fail at startup if sandbox unavailable), Python SDK defaults to `false` (run unsandboxed with warning); behavior on unavailability now documented for both SDKs (agent-sdk-doc)
+- **`pluginSuggestionMarketplaces` managed setting** — allowlist of org marketplace names whose plugins can appear as contextual install suggestions (settings-doc)
+- **`--scope` option on `claude plugin marketplace remove`** — restrict removal to a single settings scope; without the flag, the declaration is removed from all editable scopes (plugins-doc)
+- **`traceparent` propagation to HTTP MCP requests** — outbound HTTP MCP requests now carry `traceparent` the same way model requests do (operations-doc)
+- **Adversarial review step guidance** — new best-practices section recommending a subagent reviewer in a fresh context to check diffs against stated requirements before treating work as done (best-practices-doc)
+- **"Review a diff locally" section in Code Review docs** — added standalone section documenting the `/code-review` command as a way to review without the GitHub App (ci-cd-doc)
+
+### Changed
+
+- **`--fallback-model` extended to retired models** — flag description updated to clarify it also activates when the primary model is not found (e.g., a retired model), not only when overloaded; and the session now switches to the fallback for the rest of the session (cli-doc, operations-doc)
+- **`--include-hook-events` and `--include-partial-messages` now require `--verbose`** — examples in CLI reference updated to include `--verbose` alongside `--output-format stream-json` (cli-doc)
+- **`--replay-user-messages` example updated with `--verbose`** — CLI reference example now includes `--verbose` flag (cli-doc)
+- **`--output-format stream-json` examples updated with `--verbose`** — best-practices guide and headless docs updated to add `--verbose` to streaming examples (best-practices-doc, headless-doc)
+- **`/logout` correction for cloud providers** — Bedrock, Vertex AI, and Foundry docs previously said `/login` and `/logout` were disabled; now correctly states only `/logout` is unavailable (cloud-providers-doc)
+- **Agent view PR status indicator redesigned** — `●` dot replaced by `⧉ PR #N` label with `+N` suffix for multiple PRs; label persists when a follow-up is sent; color semantics preserved (features-doc)
+- **CLAUDE.md import depth reduced** — maximum recursive import depth changed from five hops to four hops (memory-doc)
+- **`SessionStart` input gains `session_title` and `agent_type` fields** — hook input now includes the current session title and agent name (hooks-doc)
+- **Plugin init message now exposes `skills` list** — SDK init messages now include a `skills` field listing namespaced plugin skills alongside `slash_commands` (agent-sdk-doc)
+- **Plugin description updated** — plugins now described as extending Claude Code with "skills, agents, hooks, and MCP servers" rather than "commands, agents, skills, and hooks" (agent-sdk-doc)
+- **MCP scope precedence clarified** — when the same server appears in multiple scopes, the entire entry from the highest-precedence scope is used; fields are not merged across scopes (mcp-doc)
+- **`/code-review` command description updated** — now mentions reuse/simplification/efficiency cleanups in addition to correctness bugs, and notes `--fix` and `ultra` options (cli-doc)
+
+### Removed
+
+- **Desktop changelog reference file deleted** — `skills/ide-doc/references/claude-code-desktop-changelog.md` removed from the ide-doc skill (ide-doc)
+
 ## 26.5.26
 
 **22 references updated across 11 skills:** agent-sdk-doc, ci-cd-doc, cli-doc, features-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
