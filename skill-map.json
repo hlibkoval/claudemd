@@ -196,6 +196,10 @@
         "file": "claude-code-ultrareview.md"
       },
       {
+        "url": "https://code.claude.com/docs/en/workflows.md",
+        "file": "claude-code-workflows.md"
+      },
+      {
         "url": "https://code.claude.com/docs/en/large-codebases.md",
         "file": "claude-code-large-codebases.md"
       }
