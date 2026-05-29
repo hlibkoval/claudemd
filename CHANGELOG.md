@@ -2,6 +2,38 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.5.29
+
+**38 references updated across 16 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Dynamic workflows** — new feature and new reference page (`workflows.md`); ask Claude to create a workflow that orchestrates tens to hundreds of subagents in the background; run `/workflows` to track runs; added to agent parallelism comparison table alongside subagents, agent view, and agent teams (best-practices-doc, features-doc)
+- **Opus 4.8 launch** — Claude Opus 4.8 is now available; defaults to high effort (`/effort xhigh` for maximum); fast mode on Opus 4.8 available at 2× standard rate for 2.5× speed; `claude-opus-4-8` is now the example full model ID in subagent docs; `CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` deprecated, removal on 2026-06-01 (features-doc, sub-agents-doc, operations-doc)
+- **`defaultEnabled: false` for plugins** — plugins can declare `defaultEnabled: false` in `plugin.json` or a marketplace entry; enable with `/plugin` or `claude plugin enable`; plugin dependencies of enabled plugins are still enabled automatically (plugins-doc)
+- **`! <command>` in `claude agents`** — type `! <cmd>` in the agents dispatch input to run a shell command as a background session you can attach to and detach from; also available as `claude --bg --exec '<command>'` (cli-doc, features-doc)
+- **MCP restrictions now cover subagent frontmatter servers** — `--strict-mcp-config`, `--bare`, enterprise managed MCP config, and `allowedMcpServers`/`deniedMcpServers` policies all apply to servers declared in subagent frontmatter as of v2.1.153; blocked servers surface a visible warning (sub-agents-doc, mcp-doc)
+- **Tools unavailable to subagents documented** — explicit list added: `Agent`, `AskUserQuestion`, `EnterPlanMode`, `ExitPlanMode` (unless `permissionMode: plan`), `ScheduleWakeup`, `WaitForMcpServers` are never available inside subagents even if listed in `tools` (sub-agents-doc)
+- **Status line `COLUMNS`/`LINES` env vars** — status line commands now receive terminal dimensions as environment variables so scripts can size their output (features-doc, settings-doc)
+- **`skipLfs` marketplace source option** — `github`/`git` plugin marketplace sources accept a new `skipLfs` flag to skip Git LFS downloads during clone and update (plugins-doc)
+- **Plugin Discover tab contextual pinning** — the `/plugin` Discover tab now pins plugins whose relevance signals match the current directory with a "suggested for this directory" annotation (plugins-doc)
+- **Chrome browser selection** — Claude in Chrome: pick which connected browser to use via `/chrome` → "Select browser…", or in-chat when a browser action runs with multiple browsers connected (ide-doc)
+- **`claude doctor` last-update result** — `/doctor` now shows the result of your last update attempt (operations-doc)
+
+### Changed
+
+- **`/simplify` is now cleanup-only** — no longer runs the full bug-hunting review; now runs reuse, simplification, efficiency, and altitude cleanup only and applies the fixes (best-practices-doc, ci-cd-doc)
+- **Lean system prompt now default** — lean system prompt is now default for all models except Haiku, Sonnet, and Opus 4.7 and earlier (features-doc, settings-doc)
+- **`/model` saves selection as default** — selecting a model in the picker now saves it as the default for new sessions; press `s` to switch for the current session only; `modelPicker:setAsDefault` keybinding renamed to `modelPicker:thisSessionOnly` (cli-doc, features-doc)
+- **Streaming tool execution always enabled** — no longer behind a feature flag; applies even when telemetry is disabled or on Bedrock/Vertex/Foundry (features-doc)
+- **Subagent `isolation: worktree` base branch clarified** — isolated worktrees now branch from the default branch rather than the parent session's `HEAD` (sub-agents-doc)
+- **Auto mode consent removed** — auto mode no longer requires opt-in consent (settings-doc)
+- **`--strict-mcp-config` scope clarified** — does not filter servers passed inline via `--agents` or SDK `agents` option (sub-agents-doc)
+
+### Removed
+
+- Minor wording/formatting updates across cli-doc, cloud-providers-doc, errors-doc, getting-started-doc, hooks-doc, ide-doc, memory-doc, operations-doc, settings-doc, skills-doc docs
+
 ## 26.5.28
 
 **37 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc
