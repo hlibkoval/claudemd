@@ -146,20 +146,27 @@ Session utilities — Python: `list_sessions()`, `get_session_messages()`, `get_
 | `PreToolUse` | Yes | Yes | Block/modify tool calls before execution |
 | `PostToolUse` | Yes | Yes | Audit outputs, trigger side effects |
 | `PostToolUseFailure` | Yes | Yes | Handle tool errors |
+| `PostToolBatch` | No | Yes | Inject context once after a parallel batch |
 | `UserPromptSubmit` | Yes | Yes | Inject context into prompts |
+| `MessageDisplay` | No | Yes | Redact/reformat displayed assistant messages |
 | `Stop` | Yes | Yes | Validate result, save state |
 | `SubagentStart` / `SubagentStop` | Yes | Yes | Track parallel tasks |
 | `PreCompact` | Yes | Yes | Archive transcript before compaction |
 | `PermissionRequest` | Yes | Yes | Custom permission handling |
 | `Notification` | Yes | Yes | Forward agent status to Slack, etc. |
 | `SessionStart` / `SessionEnd` | No (file hooks only) | Yes | Session lifecycle |
-| `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PostToolBatch`, `MessageDisplay`, `Setup` | No | Yes | Additional TypeScript-only events |
+| `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `Setup` | No | Yes | TypeScript-only lifecycle events |
 
 Hook callback signature (Python): `async def my_hook(input_data, tool_use_id, context) -> dict`
 
 Hook callback signature (TypeScript): `async (input: HookInput, toolUseID, { signal }) => Promise<HookJSONOutput>`
 
-Return `{}` to allow. Return `{"hookSpecificOutput": {"hookEventName": "...", "permissionDecision": "deny", "permissionDecisionReason": "..."}}` to block.
+**Return values:**
+- `{}` — allow with no change
+- `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "..."}}` — block tool call
+- `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {...}}}` — rewrite tool input
+- `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "..."}}` — inject context after tool
+- `{"async": true}` / `{"async_": True}` — return immediately, run hook as background side-effect
 
 Hook priority when multiple hooks apply: deny > defer > ask > allow.
 
