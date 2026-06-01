@@ -330,12 +330,11 @@ Set `enable_file_checkpointing=True` / `enableFileCheckpointing: true`. Then cal
 
 ### Secure Deployment Key Points
 
-- Run SDK in sandboxed containers (Modal, E2B, Fly Machines, Docker, etc.)
+- Run the SDK in sandboxed containers (Modal, E2B, Fly Machines, Docker, etc.)
 - Recommended per-instance: 1 GiB RAM, 5 GiB disk, 1 CPU
 - Multi-tenant isolation: `settingSources: []`, `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`, separate filesystem per tenant
-- Manage credentials via proxy (agent makes API calls without seeing keys)
 - Use `disallowedTools` and scoped deny rules like `"Bash(curl *)"` for network restrictions
-- Hooks run before permission mode, allowing in-process enforcement
+- Hooks run in-process before permission mode, enabling fine-grained enforcement
 
 ### API Timeout Env Vars (pass via `env` option)
 

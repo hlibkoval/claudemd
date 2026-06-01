@@ -32,82 +32,125 @@ This skill provides the complete official documentation for Claude Code features
 | MCP tool results | Tool output tokens |
 | Hooks | Zero (run out-of-band) |
 
-### Agent Parallelism Approaches
+---
 
-| Approach | Coordinator | Workers communicate? | File isolation |
-|:---------|:-----------|:--------------------|:--------------|
-| **Subagents** | Claude (inside one session) | Return results to parent only | Optional (worktrees) |
-| **Agent view** (`claude agents`) | You (hand off, check back) | No | Auto worktree per session |
-| **Agent teams** | Claude (lead assigns, supervises) | Shared task list + peer messaging | No — partition files manually |
-| **Dynamic workflows** | Script (not Claude's turn-by-turn judgment) | Script coordinates | Per-subagent worktrees |
+### Parallel Agents Overview
 
-### Agent View (`claude agents`)
+| Approach | Who coordinates | Workers talk? | File isolation |
+|:---------|:---------------|:--------------|:---------------|
+| Subagents | Claude (inside one session) | No | Optional (`isolation: worktree`) |
+| Agent view (`claude agents`) | You | No | Automatic worktrees |
+| Agent teams | Claude (lead + teammates) | Yes (shared task list) | Manual partitioning |
+| Dynamic workflows | Script | Via workflow logic | Per-subagent worktrees |
 
-| Action | How |
-|:-------|:----|
-| Open agent view | `claude agents` or `/agents` (from session) |
-| Launch session in background | `claude --bg "your task"` |
-| Dispatch from agent view | `n` — new session, `d` — dispatch to existing |
-| Peek at running session | `p` |
-| Attach to session | `Enter` or `a` |
-| Stop session | `s` |
-| Session states | `●` running, `◐` waiting for you, `○` idle, `✓` done, `✗` failed |
+**Check running work:**
+
+| Command | What it shows |
+|:--------|:-------------|
+| `claude agents` | All background sessions and their state |
+| `/agents` | Running subagents + custom subagent library |
+| `/tasks` | Items running in the background of current session |
+| `/workflows` | Running/completed dynamic workflow runs |
+
+---
+
+### Agent View (`claude agents`) — Session States and Shortcuts
+
+| State | Meaning |
+|:------|:--------|
+| Running | Actively working |
+| Waiting for input | Needs your response |
+| Paused | Temporarily suspended |
+| Complete | Finished successfully |
+| Error | Exited with error |
+
+**Keyboard shortcuts:**
+
+| Key | Action |
+|:----|:-------|
+| `↑ / ↓` | Navigate sessions |
+| `Enter` | Attach to session |
+| `n` | New session |
+| `d` | Dispatch task |
+| `p` | Pause/resume |
+| `s` | Stop session |
+| `q` | Quit agent view |
+| `?` | Help |
+
+---
 
 ### Worktrees
 
+**Start Claude in a worktree:**
+
+```bash
+claude --worktree feature-auth        # named worktree, branch worktree-feature-auth
+claude --worktree "#1234"             # from PR #1234
+claude --worktree                     # auto-generated name
+```
+
 | Concept | Detail |
 |:--------|:-------|
-| Start in new worktree | `claude --worktree <name>` or `-w <name>` |
 | Default location | `.claude/worktrees/<name>/` |
 | Default branch | `worktree-<name>` |
 | Base branch default | `origin/HEAD` (clean remote state) |
 | Branch from local HEAD | Set `worktree.baseRef: "head"` in settings |
-| Branch from a PR | `claude --worktree "#1234"` |
-| Copy gitignored files in | List patterns in `.worktreeinclude` at project root |
+| Copy gitignored files | List patterns in `.worktreeinclude` at project root |
 | Subagent isolation | `isolation: worktree` in subagent frontmatter |
 | Non-git VCS | Configure `WorktreeCreate`/`WorktreeRemove` hooks |
 | Gitignore worktrees dir | Add `.claude/worktrees/` to `.gitignore` |
 
+**Cleanup:** Worktrees with no uncommitted changes, untracked files, or new commits are removed automatically on exit. Subagent/background worktrees older than `cleanupPeriodDays` (with no local changes) are swept automatically. `--worktree` sessions are never auto-swept. Non-interactive (`-p`) sessions require manual `git worktree remove`.
+
+---
+
 ### Model Configuration
 
-#### Model Aliases
+**Model aliases:**
 
 | Alias | Resolves to |
-|:------|:-----------|
+|:------|:------------|
 | `default` | Current default model |
-| `best` | Highest-capability model available |
-| `sonnet` | Latest Sonnet |
+| `best` | Best available model |
 | `opus` | Latest Opus |
+| `sonnet` | Latest Sonnet |
 | `haiku` | Latest Haiku |
-| `sonnet[1m]` | Sonnet with 1M context window |
-| `opus[1m]` | Opus with 1M context window |
-| `opusplan` | Opus in plan mode |
+| `sonnet[1m]` | Sonnet with 1M context |
+| `opus[1m]` | Opus with 1M context |
+| `opusplan` | Opus with extended thinking |
 
-Switch models: `/model` picker, `modelOverrides` in settings, or env vars for alias pinning.
-
-#### Effort Levels
+**Effort levels:**
 
 | Level | Description |
-|:------|:-----------|
-| `low` | Minimal thinking, fastest |
+|:------|:------------|
+| `low` | Fastest, least thorough |
 | `medium` | Balanced |
-| `high` | Extended thinking |
-| `xhigh` | More extended thinking |
-| `max` | Maximum thinking budget |
-| `ultracode` | Optimized for large coding tasks |
+| `high` | More thorough |
+| `xhigh` | Very thorough |
+| `max` | Maximum effort |
+| `ultracode` | Max effort optimized for coding |
 
-Set via `/effort`, settings, or `--effort` CLI flag. Extended thinking available on supporting models.
+**Environment variable overrides:**
+
+| Variable | Effect |
+|:---------|:-------|
+| `ANTHROPIC_DEFAULT_OPUS_MODEL` | Override the Opus alias |
+| `ANTHROPIC_DEFAULT_SONNET_MODEL` | Override the Sonnet alias |
+| `ANTHROPIC_DEFAULT_HAIKU_MODEL` | Override the Haiku alias |
+
+`modelOverrides` in settings lets you pin specific model IDs for different roles (main, subagent, background).
+
+---
 
 ### Fast Mode
 
 | Item | Detail |
 |:-----|:-------|
-| Toggle | `/fast` command while in a session |
-| Effect | Up to 2.5× faster responses with Opus models |
-| Opus 4.8 pricing | $10 input / $50 output per MTok |
-| Opus 4.7/4.6 pricing | $30 input / $150 output per MTok |
-| Requirement | Usage credits (not subscription) |
-| Setting | `fastModePerSessionOptIn: true` to default on |
+| Toggle | `/fast` in session |
+| Supported models | Opus 4.8, 4.7, 4.6 |
+| Pricing (Opus 4.8) | $10/MTok input, $50/MTok output |
+| Requirements | Usage credits; Team/Enterprise requires admin enablement |
+| Rate limit behavior | Falls back to standard mode if rate limit hit |
 
 ### Output Styles
 
