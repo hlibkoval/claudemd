@@ -1,251 +1,273 @@
 ---
 name: best-practices-doc
-description: Complete official documentation for Claude Code best practices — prompting patterns, context management, CLAUDE.md authoring, verification, parallel sessions, non-interactive mode, large codebases, ultraplan, ultrareview, and dynamic workflows.
 user-invocable: false
 ---
 
 # Best Practices Documentation
 
-This skill provides the complete official documentation for Claude Code best practices, common workflows, large-codebase configuration, ultraplan, ultrareview, and dynamic workflows.
+This skill provides the complete official documentation for Claude Code best practices, common workflows, large codebase configuration, dynamic workflows, ultraplan, and ultrareview.
 
 ## Quick Reference
 
-### Core Principle: Context Window is the Primary Constraint
+### Core Constraint: Context Window
 
-LLM performance degrades as the context window fills. Manage it aggressively:
+Everything in a session — messages, file reads, command output — fills the context window. Performance degrades as it fills. Managing context is the single most important practice.
 
 | Signal | Action |
-| :--- | :--- |
-| Unrelated tasks in same session | `/clear` between tasks |
-| Two failed corrections on the same issue | `/clear`, write a better initial prompt |
-| Long exploratory file reads | Use a subagent — keeps reads out of main context |
-| CLAUDE.md too long | Prune ruthlessly; Claude ignores rules buried in noise |
+|:-------|:-------|
+| Claude "forgetting" earlier instructions | `/clear` and restart with a tighter prompt |
+| Claude ignoring CLAUDE.md rules | CLAUDE.md is too long — prune it |
+| Claude reads hundreds of files to find a symbol | Install a code intelligence plugin |
+| Long session drifting off track | `/compact <instructions>` or `/rewind` |
 
-### Explore → Plan → Code → Commit Workflow
+---
 
-| Phase | Mode | Key action |
-| :--- | :--- | :--- |
-| Explore | Plan mode (`Shift+Tab` or `--permission-mode plan`) | Read files; no edits |
-| Plan | Plan mode | `Ctrl+G` to open plan in editor; review before proceeding |
-| Implement | Default mode | Code against the plan; run tests inline |
-| Commit | Default mode | `commit with a descriptive message and open a PR` |
+### Workflow Phases: Explore → Plan → Implement → Commit
 
-Skip the plan when the diff fits in one sentence.
+| Phase | Mode | What happens |
+|:------|:-----|:-------------|
+| Explore | Plan mode | Claude reads files, answers questions; no edits |
+| Plan | Plan mode | Claude creates implementation plan; `Ctrl+G` to edit in your editor |
+| Implement | Default | Claude codes, runs tests, fixes failures |
+| Commit | Default | Claude commits with message and opens PR |
 
-### Give Claude a Verifiable Check
+Use `--permission-mode plan` or `Shift+Tab` to toggle plan mode. Skip planning for one-sentence changes.
 
-| Approach | Setup | When to use |
-| :--- | :--- | :--- |
-| Inline in prompt | `run the tests after implementing` | Any task today |
-| `/goal` condition | Set pass/fail criteria; evaluator re-checks each turn | Unattended sessions |
-| Stop hook | Script blocks turn from ending until check passes | Deterministic gate |
-| Verification subagent | Fresh model tries to refute the result | High-stakes tasks |
+---
 
-Always ask Claude to show evidence (test output, command result, screenshot), not just assert success.
+### Give Claude a Way to Verify Its Work
 
-### Prompting Patterns
+| Gate level | How | Setup cost |
+|:-----------|:----|:----------|
+| Single prompt | Ask Claude to run check and iterate in same message | None |
+| `/goal` condition | Evaluator re-checks after every turn until condition holds | Low |
+| Stop hook | Script blocks turn from ending until check passes (max 8 consecutive blocks) | Medium |
+| Verification subagent | Fresh model tries to refute the result independently | Medium |
 
-| Pattern | Vague | Specific |
-| :--- | :--- | :--- |
-| Tests | `add tests for foo.py` | `write a test for foo.py covering the logged-out edge case. avoid mocks.` |
-| Bug fix | `fix the login bug` | `users report login fails after session timeout. check src/auth/ token refresh. write a failing test, then fix it` |
-| New feature | `add a calendar widget` | `look at HotDogWidget.php as a pattern. implement a calendar widget with month select and year pagination` |
-| Root cause | `fix the build` | `build fails with [error]. fix it and verify the build succeeds. address the root cause, don't suppress the error` |
+Always ask Claude to show evidence (test output, screenshot, command result) rather than asserting success.
 
-### Rich Context Input
+---
 
-- `@path/to/file` — include file contents before Claude responds
-- Paste images — drag/drop or `Ctrl+V` for screenshots, mockups, diagrams
-- Pipe data — `cat error.log | claude` sends file contents directly
-- Give URLs — use `/permissions` to allowlist frequently-used domains
+### Prompt Specificity Patterns
 
-### CLAUDE.md: What to Include vs. Exclude
+| Strategy | Vague | Specific |
+|:---------|:------|:---------|
+| Scope the task | "add tests for foo.py" | "write a test for foo.py covering the logged-out edge case. avoid mocks." |
+| Point to sources | "why is this API weird?" | "look through ExecutionFactory's git history and summarize how its API evolved" |
+| Reference patterns | "add a calendar widget" | "look at HotDogWidget.php to understand widget patterns, then implement a calendar widget without new libraries" |
+| Describe symptom | "fix the login bug" | "users report login fails after session timeout. check src/auth/, write a failing test, then fix the root cause" |
+
+Rich content: use `@file` references, paste images directly, give URLs, or pipe data with `cat error.log | claude`.
+
+---
+
+### CLAUDE.md Guidelines
 
 | Include | Exclude |
-| :--- | :--- |
-| Bash commands Claude can't guess | Anything Claude infers from code |
-| Code style rules that differ from defaults | Standard language conventions |
-| Test runners and testing instructions | Detailed API docs (link instead) |
-| Branch naming, PR conventions | Information that changes frequently |
-| Developer environment quirks, required env vars | Long explanations or tutorials |
-| Common gotchas and non-obvious behaviors | File-by-file codebase descriptions |
+|:--------|:--------|
+| Bash commands Claude can't guess | Anything Claude can figure out from code |
+| Code style rules differing from defaults | Standard language conventions |
+| Testing instructions and preferred test runners | Detailed API documentation (link instead) |
+| Repository etiquette (branch naming, PR conventions) | Information that changes frequently |
+| Architectural decisions specific to your project | Long explanations or tutorials |
+| Developer environment quirks (required env vars) | File-by-file codebase descriptions |
+| Common gotchas or non-obvious behaviors | Self-evident practices like "write clean code" |
 
-- Run `/init` to generate a starter CLAUDE.md
-- Import sub-files with `@path/to/file` syntax
-- Locations: `~/.claude/CLAUDE.md` (all sessions), `./CLAUDE.md` (project, commit to git), `./CLAUDE.local.md` (personal, gitignored), parent/child directories
-- Add emphasis (`IMPORTANT`, `YOU MUST`) for critical rules
-- Keep it concise: if removing a line wouldn't cause Claude to make mistakes, cut it
+CLAUDE.md placement options:
+- `~/.claude/CLAUDE.md` — applies to all sessions
+- `./CLAUDE.md` — check in to share with team
+- `./CLAUDE.local.md` — personal project-specific notes (gitignore this)
+- Parent/child directories — loaded hierarchically as Claude reads files there
+
+Import other files with `@path/to/file` syntax inside CLAUDE.md.
+
+---
 
 ### Session Management Commands
 
 | Command | Effect |
-| :--- | :--- |
+|:--------|:-------|
 | `Esc` | Stop Claude mid-action; context preserved |
-| `Esc Esc` or `/rewind` | Open rewind menu; restore conversation and/or code to checkpoint |
+| `Esc Esc` or `/rewind` | Open rewind menu to restore prior conversation/code state |
 | `/clear` | Reset context entirely |
-| `/compact <instructions>` | Compact with focus guidance |
-| `/btw <question>` | Side question — answer appears in overlay, never enters context |
-| `claude --continue` | Resume most recent session |
+| `/compact <instructions>` | Compact with focus, e.g. `/compact Focus on API changes` |
+| `/btw` | Side question — answer never enters conversation history |
+| `claude --continue` | Resume most recent session in current directory |
 | `claude --resume` | Choose from session list |
-| `/rename <name>` | Name the current session |
+| `/rename` | Name current session (e.g. `oauth-migration`) |
 
-### Parallel and Automated Sessions
+After two failed corrections on the same issue, `/clear` and write a better initial prompt incorporating what you learned.
 
-| Approach | Use when |
-| :--- | :--- |
-| `claude -p "prompt"` | CI, pre-commit hooks, scripts |
-| `--output-format stream-json --verbose` | Streaming JSON for programmatic parsing |
-| Worktrees (`claude --worktree <name>`) | Parallel isolated git checkouts |
-| Writer/Reviewer pattern (two sessions) | Independent code review without bias |
-| Fan-out loop (`for file in ...; do claude -p ...`) | Large migrations across many files |
-| `--permission-mode auto` | Unattended runs with classifier safety check |
+---
 
-Auto mode aborts on repeated classifier blocks in `-p` mode since there is no user to fall back to.
+### Parallel and Automation Patterns
+
+| Pattern | Command / Method |
+|:--------|:----------------|
+| Non-interactive one-off | `claude -p "prompt"` |
+| Structured output | `claude -p "prompt" --output-format json` |
+| Streaming | `claude -p "prompt" --output-format stream-json --verbose` |
+| Isolated parallel session | `claude --worktree feature-auth` |
+| Fan-out migration | Loop calling `claude -p` per file with `--allowedTools` |
+| Auto mode (unattended) | `claude --permission-mode auto -p "fix all lint errors"` |
+| Adversarial review | Ask subagent to review diff against plan; report gaps not style |
+
+Writer/Reviewer pattern:
+- Session A: `Implement a rate limiter for our API endpoints`
+- Session B: `Review @src/middleware/rateLimiter.ts for edge cases, race conditions, and consistency with existing patterns`
+- Session A: `Here's the review feedback: [Session B output]. Address these issues.`
+
+---
 
 ### Common Failure Patterns
 
 | Anti-pattern | Fix |
-| :--- | :--- |
-| Kitchen-sink session (mixing unrelated tasks) | `/clear` between tasks |
-| Correcting the same mistake repeatedly | After two failures, `/clear` and write a better prompt |
-| Over-specified CLAUDE.md | Prune; convert stable behaviors to hooks |
-| Trust-then-verify gap (no check) | Always provide a verification mechanism |
-| Infinite exploration (unscoped "investigate") | Scope narrowly or delegate to a subagent |
+|:-------------|:----|
+| Kitchen sink session — mixing unrelated tasks | `/clear` between tasks |
+| Correcting the same issue more than twice | `/clear` and write a better initial prompt |
+| Over-specified CLAUDE.md — rules get lost in noise | Ruthlessly prune; convert always-true rules to hooks |
+| Trust-then-verify gap — plausible but incorrect implementation | Always provide verification: tests, scripts, screenshots |
+| Infinite exploration — Claude reads hundreds of files | Scope investigations narrowly or delegate to a subagent |
 
 ---
 
-### Large Codebases: Settings Reference
+### Large Codebases and Monorepos
 
-| Goal | Setting / approach |
-| :--- | :--- |
-| Load only relevant conventions | Per-directory `CLAUDE.md` files |
-| Exclude other teams' CLAUDE.md files | `claudeMdExcludes` in `.claude/settings.local.json` |
-| Block reads of dist/build/vendor | `Read` deny rules in `permissions.deny` |
-| Jump to definitions without scanning files | Code intelligence plugin (`/plugin install typescript-lsp@claude-plugins-official`) |
-| Sparse worktrees (faster, smaller checkouts) | `worktree.sparsePaths` in `.claude/settings.json` |
-| Avoid duplicating `node_modules` in worktrees | `worktree.symlinkDirectories` |
-| Access sibling package without restarting | `additionalDirectories` in settings, or `--add-dir` flag at launch |
-| Per-subsystem skills loaded on demand | `.claude/skills/` inside each subdirectory |
+| Goal | Setting / Mechanism |
+|:-----|:--------------------|
+| Load only relevant conventions | Per-directory CLAUDE.md files |
+| Exclude other teams' CLAUDE.md files | `claudeMdExcludes` in `settings.local.json` |
+| Block reads of build output and vendored code | `Read` deny rules in `permissions.deny` |
+| Symbol navigation without file scanning | Code intelligence plugin (`/plugin install typescript-lsp@claude-plugins-official`) |
+| Sparse worktree checkout | `worktree.sparsePaths` in `.claude/settings.json` |
+| Avoid duplicating `node_modules` across worktrees | `worktree.symlinkDirectories` |
+| Cross-package file access | `additionalDirectories` setting or `--add-dir` flag |
+| Load CLAUDE.md from `--add-dir` directories | Set `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` |
+| Per-package skills | `.claude/skills/` inside the subdirectory |
 
-`claudeMdExcludes` pattern examples:
-- `"**/packages/admin-dashboard/**"` — exclude one package
-- `"**/packages/*/CLAUDE.md"` — exclude all package files, keep root
+**Starting directory determines scope:**
+- Start from repo root → access to all files; only root CLAUDE.md at launch
+- Start from subdirectory → that subtree only; that directory's + all ancestor CLAUDE.md files loaded
 
-Per-directory CLAUDE.md vs. path-scoped rules:
-
-| Approach | File location | Loads when |
-| :--- | :--- | :--- |
-| Per-directory `CLAUDE.md` | Inside the directory | At launch (if started there) or on demand when Claude reads a file there |
-| Path-scoped rule in `.claude/rules/` | Central `.claude/` at root | When Claude works with a file matching the rule's `paths:` glob |
-
-Starting directory matters: project `.claude/settings.json` loads only from the starting directory; CLAUDE.md files load from starting dir and all parents.
+**Key settings file locations:**
+- `.claude/settings.json` — committed, applies from starting directory
+- `.claude/settings.local.json` — personal, gitignored
 
 ---
 
-### Ultraplan
+### Common Workflow Recipes
 
-Launch from the CLI to draft a plan in a cloud Claude Code on the web session while your terminal stays free.
+| Task | Prompt pattern |
+|:-----|:---------------|
+| Codebase overview | "give me an overview of this codebase" |
+| Understand component | "how do these authentication files work together?" |
+| Trace a flow | "trace the login process from front-end to database" |
+| Fix a bug | "I'm seeing this error: [error]. reproduce it with a failing test, then fix the root cause" |
+| Refactor safely | "refactor utils.js to use ES2024 features while maintaining the same behavior. run tests after" |
+| Add tests | "find functions in NotificationsService.swift not covered by tests, add edge-case tests, run and fix failures" |
+| Create PR | "create a pr" or "summarize my changes, then create a pr" |
+| Scheduled task | Use Routines (Anthropic cloud), Desktop scheduled tasks, GitHub Actions, or `/loop` (current session) |
 
-| Launch method | How |
-| :--- | :--- |
+**Reference files with `@`:** `@src/utils/auth.js` adds file content; `@src/components` adds directory listing. MCP resources use `@server:resource` format.
+
+**Let Claude interview you for large features:**
+> "I want to build [brief description]. Interview me in detail using the AskUserQuestion tool. Ask about technical implementation, UI/UX, edge cases, and tradeoffs. Keep interviewing until we've covered everything, then write a complete spec to SPEC.md."
+
+Start a fresh session to implement the spec — clean context, focused on implementation.
+
+---
+
+### Ultraplan (Cloud Planning)
+
+Ultraplan hands a planning task to a Claude Code on the web session running in plan mode. Your terminal stays free while the plan is drafted remotely.
+
+| Entry point | How |
+|:------------|:----|
 | Command | `/ultraplan <prompt>` |
-| Keyword | Include `ultraplan` in any prompt |
-| From local plan | Choose "Refine with Ultraplan" in the plan approval dialog |
+| Keyword | Include "ultraplan" anywhere in a normal prompt |
+| From local plan | In approval dialog, choose "No, refine with Ultraplan on Claude Code on the web" |
 
-Status indicators shown in CLI prompt:
+Status indicators:
 
 | Status | Meaning |
-| :--- | :--- |
-| `◇ ultraplan` | Drafting in progress |
+|:-------|:--------|
+| `◇ ultraplan` | Claude is researching and drafting |
 | `◇ ultraplan needs your input` | Open the session link to answer a clarifying question |
-| `◆ ultraplan ready` | Plan ready to review in browser |
+| `◆ ultraplan ready` | Plan is ready to review in browser |
 
-Execution choices after browser review:
-- **Approve and start coding** — implements in the same cloud session; create a PR from the web interface
-- **Approve and teleport back to terminal** — implement locally; web session is archived
-  - Sub-choices: **Implement here**, **Start new session**, **Cancel** (saves plan to file)
+After review, choose:
+- **Approve and start coding** — implement in the same cloud session; review diff and open PR from web
+- **Approve and teleport back to terminal** — implement locally; web session archived; terminal dialog offers: Implement here / Start new session / Cancel (saves plan to file)
 
-Requires Claude Code on the web account and a GitHub repository. Not available on Amazon Bedrock, Google Cloud Vertex AI, or Microsoft Foundry.
+Requires Claude Code on the web account and a GitHub repository. Not available on Bedrock, Vertex AI, or Foundry.
 
 ---
 
-### Ultrareview (`/code-review ultra`)
+### Ultrareview (Deep Code Review)
 
-Deep, multi-agent code review running remotely in a cloud sandbox.
+| Command | Scope |
+|:--------|:------|
+| `/code-review ultra` | Current branch diff vs. default branch (including uncommitted changes) |
+| `/code-review ultra 1234` | GitHub pull request by number |
+| `claude ultrareview` | Non-interactive; findings printed to stdout |
+| `claude ultrareview 1234` | Non-interactive PR review |
+| `claude ultrareview origin/main` | Non-interactive diff against a base branch |
 
-```text
-/code-review ultra          # review diff against default branch
-/code-review ultra 1234     # review a GitHub PR by number
-```
-
-Non-interactive (CI/scripts):
-```bash
-claude ultrareview
-claude ultrareview 1234
-claude ultrareview origin/main
-```
-
-| Flag | Description |
-| :--- | :--- |
-| `--json` | Print raw `bugs.json` payload |
-| `--timeout <minutes>` | Max wait time (default 30) |
-
-Pricing:
-
-| Plan | Free runs | After free runs |
-| :--- | :--- | :--- |
-| Pro / Max | 3 (one-time, non-refreshing) | Usage credits (~$5–$20/review) |
-| Team / Enterprise | None | Usage credits (~$5–$20/review) |
-
-`/review` vs. `/code-review ultra`:
+**`/review` vs. `/code-review ultra`:**
 
 | | `/review` | `/code-review ultra` |
-| :--- | :--- | :--- |
-| Runs | Locally | Remotely in cloud sandbox |
-| Depth | Single-pass | Multi-agent with independent verification |
-| Duration | Seconds–minutes | ~5–10 minutes |
-| Cost | Normal usage | Free runs, then ~$5–$20 |
-| Best for | Fast feedback while iterating | Pre-merge confidence on substantial changes |
+|:-|:----------|:--------------------|
+| Runs | Locally in session | Remotely in cloud sandbox |
+| Depth | Single-pass | Multi-agent fleet with independent verification |
+| Duration | Seconds to a few minutes | Roughly 5–10 minutes |
+| Cost | Normal usage | Free runs, then ~$5–$20 per review as usage credits |
+| Best for | Quick feedback while iterating | Pre-merge confidence on substantial changes |
 
-Not available on Bedrock, Vertex AI, Microsoft Foundry, or orgs with Zero Data Retention enabled.
+Free runs: Pro and Max get 3 (one-time, non-refreshing). Team and Enterprise: none included. Usage credits must be enabled for paid runs.
+
+Non-interactive flags: `--json` (raw `bugs.json`), `--timeout <minutes>` (default: 30).
 
 ---
 
 ### Dynamic Workflows
 
-JavaScript scripts that orchestrate subagents at scale. Claude writes the script; the runtime executes it in the background.
+Workflows move orchestration into a JavaScript script so intermediate results stay in script variables, not Claude's context. Supports up to 1,000 agents per run, 16 concurrent.
 
 | | Subagents | Skills | Workflows |
-| :--- | :--- | :--- | :--- |
-| Who decides next step | Claude, turn by turn | Claude, following prompt | The script |
+|:-|:----------|:-------|:----------|
+| Who decides what runs next | Claude, turn by turn | Claude, following prompt | The script |
 | Intermediate results | Claude's context | Claude's context | Script variables |
-| Scale | Few delegated tasks | Same | Dozens–hundreds of agents |
+| Scale | Few per turn | Same | Dozens to hundreds per run |
 | Interruption | Restarts the turn | Restarts the turn | Resumable in same session |
 
-**Bundled workflow:** `/deep-research <question>` — fans out web searches, cross-checks sources, returns a cited report.
+**Launch options:**
+- Include the word `workflow` in a prompt → Claude writes and runs a script for that task
+- `/effort ultracode` → Claude automatically plans workflows for every substantive task in the session
+- `/deep-research <question>` — built-in fan-out web research workflow
+- `/workflows` — list and monitor running/completed workflows
 
-Triggering a workflow:
-- Include the word `workflow` anywhere in a prompt
-- `/effort ultracode` — Claude plans a workflow for every substantive task in the session
-- Run a saved command: `/<saved-workflow-name>`
+**Progress view keys:**
 
-Save a workflow for reuse: run `/workflows`, select the run, press `s`.
+| Key | Action |
+|:----|:-------|
+| `↑`/`↓` | Select phase or agent |
+| `Enter`/`→` | Drill into phase or agent detail |
+| `p` | Pause or resume the run |
+| `x` | Stop agent or whole workflow |
+| `r` | Restart selected running agent |
+| `s` | Save run's script as a reusable command |
 
-Runtime constraints:
+**Approval modes:**
 
-| Constraint | Value |
-| :--- | :--- |
-| Max concurrent agents | 16 (fewer on limited CPUs) |
-| Max agents per run | 1,000 |
-| Mid-run user input | Not supported; use permission prompts only |
-| Direct filesystem/shell from script | Not allowed; agents do file I/O |
+| Permission mode | When prompted |
+|:----------------|:--------------|
+| Default, accept edits | Every run (unless "don't ask again" selected) |
+| Auto | First launch only |
+| Bypass permissions, `-p`, Agent SDK | Never |
 
-Disable workflows:
-- Toggle in `/config`
-- `"disableWorkflows": true` in `~/.claude/settings.json`
-- `CLAUDE_CODE_DISABLE_WORKFLOWS=1` env var
+**Save for reuse:** In `/workflows`, press `s`. Save to `.claude/workflows/` (shared) or `~/.claude/workflows/` (personal). Saved workflows become `/<name>` commands.
 
-Requires Claude Code v2.1.154 or later. Available on all paid plans including Bedrock, Vertex AI, and Microsoft Foundry. On Pro, enable from the Dynamic workflows row in `/config`.
+**Disable:** `/config` toggle, `"disableWorkflows": true` in `settings.json`, or `CLAUDE_CODE_DISABLE_WORKFLOWS=1`.
 
 ---
 
@@ -253,18 +275,18 @@ Requires Claude Code v2.1.154 or later. Available on all paid plans including Be
 
 For the complete official documentation, see the reference files:
 
-- [Best practices for Claude Code](references/claude-code-best-practices.md) — context management, explore/plan/code workflow, prompting patterns, CLAUDE.md authoring, permissions, skills, subagents, parallel sessions, failure patterns
-- [Common workflows](references/claude-code-common-workflows.md) — prompt recipes for codebase exploration, bug fixing, refactoring, tests, PRs, documentation, images, scheduled tasks, worktrees, subagent delegation, piping Claude into scripts
-- [Set up Claude Code in a monorepo or large codebase](references/claude-code-large-codebases.md) — per-directory CLAUDE.md, claudeMdExcludes, Read deny rules, code intelligence plugins, sparse worktrees, additionalDirectories, per-directory skills, plugin-based centralization
-- [Plan in the cloud with ultraplan](references/claude-code-ultraplan.md) — launching ultraplan, reviewing and revising a plan in the browser, executing on the web or teleporting back to terminal
-- [Find bugs with ultrareview](references/claude-code-ultrareview.md) — running `/code-review ultra`, PR mode, pricing and free runs, tracking a running review, non-interactive `claude ultrareview` subcommand, comparison with `/review`
-- [Orchestrate subagents at scale with dynamic workflows](references/claude-code-workflows.md) — when to use workflows, bundled `/deep-research`, asking Claude to write a workflow, ultracode effort level, approval flow, saving workflows, runtime constraints, managing and resuming runs, disabling workflows
+- [Best Practices for Claude Code](references/claude-code-best-practices.md) — Core patterns: verify work, explore-plan-implement, prompt specificity, CLAUDE.md, permissions, hooks, skills, subagents, plugins, session management, non-interactive mode, parallel sessions, failure patterns
+- [Common Workflows](references/claude-code-common-workflows.md) — Prompt recipes for codebase exploration, bug fixing, refactoring, testing, PRs, documentation, images, scheduled tasks; resume sessions; worktrees; plan mode; subagents; piping Claude into scripts
+- [Monorepos and Large Codebases](references/claude-code-large-codebases.md) — Layered CLAUDE.md files, claudeMdExcludes, Read deny rules, code intelligence plugins, sparse worktrees, symlinkDirectories, additionalDirectories, per-directory skills, centralizing with plugins
+- [Ultraplan](references/claude-code-ultraplan.md) — Cloud-based planning: launch methods, status indicators, inline comments and reactions in browser, execute on web vs. teleport back to terminal
+- [Ultrareview](references/claude-code-ultrareview.md) — Multi-agent remote code review: pricing and free runs, tracking runs, non-interactive subcommand, comparison with local `/review`
+- [Dynamic Workflows](references/claude-code-workflows.md) — When to use workflows vs. subagents vs. skills, bundled `/deep-research`, having Claude write a workflow, ultracode, approval flow, saving for reuse, managing runs, cost, disabling
 
 ## Sources
 
-- Best practices for Claude Code: https://code.claude.com/docs/en/best-practices.md
-- Common workflows: https://code.claude.com/docs/en/common-workflows.md
-- Set up Claude Code in a monorepo or large codebase: https://code.claude.com/docs/en/large-codebases.md
-- Plan in the cloud with ultraplan: https://code.claude.com/docs/en/ultraplan.md
-- Find bugs with ultrareview: https://code.claude.com/docs/en/ultrareview.md
-- Orchestrate subagents at scale with dynamic workflows: https://code.claude.com/docs/en/workflows.md
+- Best Practices for Claude Code: https://code.claude.com/docs/en/best-practices.md
+- Common Workflows: https://code.claude.com/docs/en/common-workflows.md
+- Monorepos and Large Codebases: https://code.claude.com/docs/en/large-codebases.md
+- Ultraplan: https://code.claude.com/docs/en/ultraplan.md
+- Ultrareview: https://code.claude.com/docs/en/ultrareview.md
+- Dynamic Workflows: https://code.claude.com/docs/en/workflows.md

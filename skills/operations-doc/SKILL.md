@@ -246,9 +246,13 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 
 Run `claude --version` to check your version. The changelog lists every bug fix and minor improvement. The weekly What's New digest covers notable features with context and examples.
 
-**Recent major releases (as of 2026-05-29):**
+**Recent major releases (as of 2026-06-01):**
+- **v2.1.159** (May 31, 2026): Internal infrastructure improvements
+- **v2.1.158** (May 30, 2026): Auto mode on Bedrock/Vertex/Foundry for Opus 4.7 and 4.8 (opt in via `CLAUDE_CODE_ENABLE_AUTO_MODE=1`)
+- **v2.1.157** (May 29, 2026): Plugins auto-load from `.claude/skills` directories; `claude plugin init <name>`; EnterWorktree mid-session switching
 - **v2.1.154** (May 28, 2026): Opus 4.8, dynamic workflows, fast mode on Opus 4.8 at 2x cost/2.5x speed
-- **v2.1.153** (May 28, 2026): `skipLfs` for plugin marketplace sources; background agent improvements
+- **Week 22** (May 25–29): Opus 4.8 default; dynamic workflows; security-guidance plugin; fast mode on Opus 4.8
+- **Week 21** (May 18–22): Auto mode on Pro plan; `/usage` breakdown by skill/subagent/plugin/MCP; `/code-review` command; background sessions in `/resume`
 - **Week 20** (May 11–15): `claude agents` view; `/goal` command; fast mode on Opus 4.7
 - **Week 19** (May 4–8): Plugins from `.zip` archives and URLs; auto mode hard deny rules
 - **Week 18** (April 27–May 1): Windows without Git Bash; `claude ultrareview`; `claude project purge`
@@ -279,6 +283,8 @@ For the complete official documentation, see the reference files:
 - [What's New: Week 18](references/claude-code-whats-new-2026-w18.md) — Windows without Git Bash, `claude ultrareview`, `claude project purge`, PR URL in `/resume`
 - [What's New: Week 19](references/claude-code-whats-new-2026-w19.md) — Plugins from `.zip`/URLs, `worktree.baseRef`, auto mode hard deny rules, hooks see effort level
 - [What's New: Week 20](references/claude-code-whats-new-2026-w20.md) — `claude agents` view, `/goal` command, fast mode on Opus 4.7, Rewind menu summarization
+- [What's New: Week 21](references/claude-code-whats-new-2026-w21.md) — Auto mode on Pro plan, `/usage` breakdown by skill/subagent/plugin/MCP, `/code-review` command, background sessions
+- [What's New: Week 22](references/claude-code-whats-new-2026-w22.md) — Claude Opus 4.8 as new default, dynamic workflows, security-guidance plugin, fast mode on Opus 4.8
 
 ## Sources
 
@@ -299,3 +305,5 @@ For the complete official documentation, see the reference files:
 - What's New: Week 18: https://code.claude.com/docs/en/whats-new/2026-w18.md
 - What's New: Week 19: https://code.claude.com/docs/en/whats-new/2026-w19.md
 - What's New: Week 20: https://code.claude.com/docs/en/whats-new/2026-w20.md
+- What's New: Week 21: https://code.claude.com/docs/en/whats-new/2026-w21.md
+- What's New: Week 22: https://code.claude.com/docs/en/whats-new/2026-w22.md

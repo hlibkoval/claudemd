@@ -5,62 +5,56 @@ user-invocable: false
 
 # Agent SDK Documentation
 
-This skill provides the complete official documentation for the Claude Agent SDK — a Python and TypeScript library for building production AI agents that run Claude Code's agent loop programmatically.
+This skill provides the complete official documentation for the Claude Agent SDK — a Python and TypeScript library for building production AI agents that run the Claude Code agent loop programmatically.
 
 ## Quick Reference
 
 ### Installation
 
-| Language | Install | Import |
-|:---------|:--------|:-------|
-| TypeScript | `npm install @anthropic-ai/claude-agent-sdk` | `import { query } from "@anthropic-ai/claude-agent-sdk"` |
-| Python | `pip install claude-agent-sdk` | `from claude_agent_sdk import query, ClaudeAgentOptions` |
+| Language | Package | Requirement |
+|:---------|:--------|:------------|
+| TypeScript | `npm install @anthropic-ai/claude-agent-sdk` | Node.js 18+ (bundles Claude Code binary) |
+| Python | `pip install claude-agent-sdk` | Python 3.10+ |
 
 Authentication: set `ANTHROPIC_API_KEY`. Also supports Bedrock (`CLAUDE_CODE_USE_BEDROCK=1`), Vertex AI (`CLAUDE_CODE_USE_VERTEX=1`), Claude Platform on AWS (`CLAUDE_CODE_USE_ANTHROPIC_AWS=1`), and Azure (`CLAUDE_CODE_USE_FOUNDRY=1`).
 
-### Core entry point: `query()`
+### Core Entry Points
 
-```python
-# Python
-async for message in query(
-    prompt="Fix the bug in auth.py",
-    options=ClaudeAgentOptions(allowed_tools=["Read", "Edit", "Bash"]),
-):
-    print(message)
-```
+| API | Python | TypeScript | Use case |
+|:----|:-------|:-----------|:---------|
+| One-off query | `query(prompt, options)` | `query({prompt, options})` | Single task |
+| Multi-turn session | `ClaudeSDKClient` (async context mgr) | `query()` with `continue: true` | Ongoing conversation in one process |
+| Pre-warm subprocess | — | `startup({options})` → `WarmQuery` | Amortize startup latency |
 
-```typescript
-// TypeScript
-for await (const message of query({
-  prompt: "Fix the bug in auth.ts",
-  options: { allowedTools: ["Read", "Edit", "Bash"] }
-})) {
-  console.log(message);
-}
-```
+Both `query()` and `ClaudeSDKClient` return async iterables of `SDKMessage` / `Message` objects.
 
 ### Built-in Tools
 
-| Category | Tools | What they do |
-|:---------|:------|:-------------|
-| File operations | `Read`, `Edit`, `Write` | Read, modify, and create files |
-| Search | `Glob`, `Grep` | Find files by pattern, search content with regex |
-| Execution | `Bash` | Run shell commands, scripts, git operations |
-| Web | `WebSearch`, `WebFetch` | Search the web, fetch and parse pages |
-| Discovery | `ToolSearch` | Load tool definitions on demand |
-| Orchestration | `Agent`, `Skill`, `AskUserQuestion`, `TaskCreate`, `TaskUpdate` | Spawn subagents, invoke skills, ask the user, track tasks |
-| Monitoring | `Monitor` | Watch a background script and react to each output line |
+| Tool | Description |
+|:-----|:------------|
+| `Read` | Read files |
+| `Write` | Create files |
+| `Edit` | Edit existing files |
+| `Bash` | Run terminal commands, scripts, git operations |
+| `Monitor` | Watch a background script, react to each output line |
+| `Glob` | Find files by pattern |
+| `Grep` | Search file contents with regex |
+| `WebSearch` | Search the web |
+| `WebFetch` | Fetch and parse web pages |
+| `AskUserQuestion` | Ask user clarifying questions with multiple-choice options |
+| `Agent` | Invoke a subagent |
+| `Skill` | Invoke a skill by name |
 
 ### Permission Modes
 
 | Mode | Behavior | Use case |
 |:-----|:---------|:---------|
-| `default` | Unmatched tools call `canUseTool` callback | Interactive approval flows |
-| `acceptEdits` | Auto-approves file edits + `mkdir`, `touch`, `mv`, `cp`, `rm`, `sed` | Trusted development workflows |
+| `default` | Unmatched tools call `canUseTool` callback | Interactive / custom approval flows |
+| `acceptEdits` | Auto-approves file edits + `mkdir`, `touch`, `mv`, `cp`, `rm`, `sed` (inside cwd) | Trusted development workflows |
 | `dontAsk` | Denies anything not pre-approved by `allowedTools`/rules | Locked-down headless agents |
-| `plan` | Read-only tools only; Claude explores and proposes a plan | Code review without executing changes |
+| `plan` | Read-only tools only; Claude proposes without executing changes | Code review/planning |
 | `auto` (TypeScript only) | Model classifier approves/denies each tool call | Autonomous agents with safety guardrails |
-| `bypassPermissions` | All tools run without prompts; requires `allowAllowDangerouslySkipPermissions: true` | Sandboxed CI, fully trusted environments |
+| `bypassPermissions` | All tools run without prompts; requires `allowDangerouslySkipPermissions: true` | Sandboxed CI, fully trusted environments |
 
 ### Allow and Deny Rules
 
@@ -77,35 +71,40 @@ Permission evaluation order: hooks → deny rules → permission mode → allow 
 
 | Option (Python / TypeScript) | Default | Description |
 |:-----------------------------|:--------|:------------|
-| `allowed_tools` / `allowedTools` | `[]` | Auto-approve listed tools |
-| `disallowed_tools` / `disallowedTools` | `[]` | Block listed tools |
+| `allowed_tools` / `allowedTools` | `[]` | Auto-approve listed tools (does not restrict unlisted tools) |
+| `disallowed_tools` / `disallowedTools` | `[]` | Block listed tools; bare name removes from context, scoped pattern `Tool(pattern)` blocks matching calls |
 | `permission_mode` / `permissionMode` | `"default"` | Global permission behavior |
 | `max_turns` / `maxTurns` | none | Cap tool-use round trips |
-| `max_budget_usd` / `maxBudgetUsd` | none | Cap cost before stopping |
+| `max_budget_usd` / `maxBudgetUsd` | none | Stop when client-side cost estimate exceeds this value |
 | `effort` | `None` / `"high"` | Reasoning depth: `"low"`, `"medium"`, `"high"`, `"xhigh"`, `"max"` |
+| `thinking` | adaptive | `ThinkingConfig`: `{type:"adaptive"}`, `{type:"enabled", budget_tokens:N}`, `{type:"disabled"}` |
 | `model` | SDK default | Claude model to use |
-| `system_prompt` / `systemPrompt` | minimal | Custom string or `{"type": "preset", "preset": "claude_code"}` |
+| `system_prompt` / `systemPrompt` | minimal | Custom string or `{"type": "preset", "preset": "claude_code", "append": "..."}` |
 | `cwd` | process cwd | Working directory |
 | `setting_sources` / `settingSources` | all sources | Which filesystem settings to load: `"user"`, `"project"`, `"local"` or `[]` |
 | `mcp_servers` / `mcpServers` | `{}` | MCP server configurations |
-| `agents` | `None` | Programmatic subagent definitions |
+| `strict_mcp_config` / `strictMcpConfig` | `False` | Use only programmatic servers; ignore `.mcp.json` and settings-file servers |
+| `agents` | `None` | Programmatic subagent definitions (`AgentDefinition`) |
 | `hooks` | `None` | Hook callback configuration |
 | `resume` | `None` | Session ID to resume |
-| `continue_conversation` / `continue` | `False` / `false` | Resume most recent session |
+| `continue_conversation` / `continue` | `False` / `false` | Resume most recent session in cwd |
 | `fork_session` / `forkSession` | `False` | Fork instead of continuing resumed session |
 | `skills` | `None` | `"all"` or list of skill names to enable |
 | `plugins` | `[]` | Load local plugins: `[{"type": "local", "path": "..."}]` |
-| `enable_file_checkpointing` / `enableFileCheckpointing` | `False` | Enable file rewind support |
-| `session_store` / `sessionStore` | `None` | External session storage adapter |
-| `output_format` / `outputFormat` | `None` | JSON schema for structured output |
-| `env` | `{}` | Environment variables for the CLI subprocess |
+| `enable_file_checkpointing` / `enableFileCheckpointing` | `False` | Enable file snapshot/rewind support |
+| `session_store` / `sessionStore` | `None` | External session storage adapter for cross-host resume |
+| `output_format` / `outputFormat` | `None` | `{"type": "json_schema", "schema": {...}}` for structured output |
+| `env` | `{}` | Environment variables merged into the CLI subprocess env |
+| `sandbox` | `None` | `SandboxSettings` for container/sandbox configuration |
+| `persist_session` / `persistSession` (TS) | `True` | Set `false` to disable session disk writes |
+| `can_use_tool` / `canUseTool` | `None` | Custom permission callback for tool approval |
 
 ### Message Types
 
 | Type | Python check | TypeScript check | When emitted |
 |:-----|:-------------|:-----------------|:-------------|
-| `SystemMessage` (subtype `"init"`) | `isinstance(msg, SystemMessage) and msg.subtype == "init"` | `msg.type === "system" && msg.subtype === "init"` | First message; contains session ID, tools, MCP servers |
-| `AssistantMessage` | `isinstance(msg, AssistantMessage)` | `msg.type === "assistant"` | Each Claude response turn |
+| `SystemMessage` (subtype `"init"`) | `isinstance(msg, SystemMessage) and msg.subtype == "init"` | `msg.type === "system" && msg.subtype === "init"` | First message; contains session ID, tools, MCP servers, permissionMode |
+| `AssistantMessage` | `isinstance(msg, AssistantMessage)` | `msg.type === "assistant"` | Each Claude response turn; `parent_tool_use_id` set inside subagents |
 | `UserMessage` | `isinstance(msg, UserMessage)` | `msg.type === "user"` | After each tool result |
 | `ResultMessage` | `isinstance(msg, ResultMessage)` | `msg.type === "result"` | Final message; contains result, cost, usage, session ID |
 | `StreamEvent` | (with `include_partial_messages=True`) | (with `includePartialMessages: true`) | Partial streaming deltas |
@@ -120,7 +119,9 @@ Permission evaluation order: hooks → deny rules → permission mode → allow 
 | `"error_during_execution"` | No | API failure or cancellation |
 | `"error_max_structured_output_retries"` | No | Structured output validation failed |
 
-All result subtypes carry `total_cost_usd`, `usage`, `num_turns`, `session_id`, and `stop_reason`.
+All result subtypes carry `total_cost_usd`, `usage`, `modelUsage`, `num_turns`, `session_id`, `stop_reason`, and `terminal_reason`.
+
+**`terminal_reason` values:** `completed`, `max_turns`, `tool_deferred`, `aborted_streaming`, `aborted_tools`, `hook_stopped`, `stop_hook_prevented`, `blocking_limit`, `rapid_refill_breaker`, `prompt_too_long`, `image_error`, `model_error`.
 
 ### Sessions
 
@@ -145,20 +146,27 @@ Session utilities — Python: `list_sessions()`, `get_session_messages()`, `get_
 | `PreToolUse` | Yes | Yes | Block/modify tool calls before execution |
 | `PostToolUse` | Yes | Yes | Audit outputs, trigger side effects |
 | `PostToolUseFailure` | Yes | Yes | Handle tool errors |
+| `PostToolBatch` | No | Yes | Inject context once after a parallel batch |
 | `UserPromptSubmit` | Yes | Yes | Inject context into prompts |
+| `MessageDisplay` | No | Yes | Redact/reformat displayed assistant messages |
 | `Stop` | Yes | Yes | Validate result, save state |
 | `SubagentStart` / `SubagentStop` | Yes | Yes | Track parallel tasks |
 | `PreCompact` | Yes | Yes | Archive transcript before compaction |
 | `PermissionRequest` | Yes | Yes | Custom permission handling |
 | `Notification` | Yes | Yes | Forward agent status to Slack, etc. |
 | `SessionStart` / `SessionEnd` | No (file hooks only) | Yes | Session lifecycle |
-| `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `PostToolBatch`, `MessageDisplay`, `Setup` | No | Yes | Additional TypeScript-only events |
+| `TeammateIdle`, `TaskCompleted`, `ConfigChange`, `WorktreeCreate`, `WorktreeRemove`, `Setup` | No | Yes | TypeScript-only lifecycle events |
 
 Hook callback signature (Python): `async def my_hook(input_data, tool_use_id, context) -> dict`
 
 Hook callback signature (TypeScript): `async (input: HookInput, toolUseID, { signal }) => Promise<HookJSONOutput>`
 
-Return `{}` to allow. Return `{"hookSpecificOutput": {"hookEventName": "...", "permissionDecision": "deny", "permissionDecisionReason": "..."}}` to block.
+**Return values:**
+- `{}` — allow with no change
+- `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "..."}}` — block tool call
+- `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {...}}}` — rewrite tool input
+- `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "..."}}` — inject context after tool
+- `{"async": true}` / `{"async_": True}` — return immediately, run hook as background side-effect
 
 Hook priority when multiple hooks apply: deny > defer > ask > allow.
 
@@ -199,11 +207,21 @@ agents={
 }
 ```
 
-**Note (Python):** `AgentDefinition` field names use camelCase (`disallowedTools`, `maxTurns`, `permissionMode`) — not snake_case.
+**Note (Python):** `AgentDefinition` field names use camelCase (`disallowedTools`, `maxTurns`, `permissionMode`) — not snake_case. Passing snake_case raises `TypeError`.
 
-**What subagents inherit:** their own system prompt, project CLAUDE.md (via `settingSources`), and inherited tool definitions. They do NOT receive parent conversation history, parent system prompt, or preloaded skills (unless listed in `AgentDefinition.skills`).
+**`AgentDefinition` fields:** `description` (required), `prompt` (required), `tools`, `disallowedTools`, `model` (`"sonnet"`, `"opus"`, `"haiku"`, `"inherit"`, or full ID), `maxTurns`, `background` (non-blocking background task), `skills`, `mcpServers`, `memory`, `effort`, `permissionMode`.
+
+**What subagents inherit:** their own system prompt, project CLAUDE.md (via `settingSources`), and tool definitions. They do NOT receive parent conversation history, parent system prompt, or preloaded skills (unless listed in `AgentDefinition.skills`).
 
 Subagents cannot spawn their own subagents; do not include `Agent` in a subagent's `tools` array.
+
+**Common tool combos for subagents:**
+
+| Use case | Tools |
+|:---------|:------|
+| Read-only analysis | `Read`, `Grep`, `Glob` |
+| Test execution | `Bash`, `Read`, `Grep` |
+| Code modification | `Read`, `Edit`, `Write`, `Grep`, `Glob` |
 
 ### Custom Tools
 
@@ -250,18 +268,44 @@ Omitting `settingSources` = `["user", "project", "local"]`. Pass `[]` to disable
 
 ### TypeScript-only: `startup()` (pre-warm)
 
+Pre-warms the CLI subprocess before a prompt is available, eliminating startup latency from the critical path:
+
 ```typescript
 const warm = await startup({ options: { maxTurns: 3 } });
 for await (const message of warm.query("What files are here?")) { ... }
 ```
 
+`WarmQuery` implements `AsyncDisposable`. Call `warm.close()` to discard without sending a prompt.
+
 ### TypeScript-only: `Query` object methods
 
-`interrupt()`, `rewindFiles(userMessageId)`, `setPermissionMode(mode)`, `setModel(model)`, `applyFlagSettings(settings)`, `supportedCommands()`, `supportedModels()`, `mcpServerStatus()`, `reconnectMcpServer(name)`, `setMcpServers(servers)`, `stopTask(taskId)`, `close()`
+| Method | Description |
+|:-------|:------------|
+| `interrupt()` | Interrupt in streaming input mode |
+| `rewindFiles(userMessageId, {dryRun?})` | Restore files to state at that message (requires `enableFileCheckpointing`) |
+| `setPermissionMode(mode)` | Change permission mode mid-session |
+| `setModel(model?)` | Change model mid-session |
+| `applyFlagSettings(settings)` | Merge settings into flag layer mid-session |
+| `supportedCommands()` | List available slash commands |
+| `supportedModels()` | List available models |
+| `mcpServerStatus()` | Get MCP server connection status |
+| `reconnectMcpServer(name)` | Retry connecting to an MCP server |
+| `setMcpServers(servers)` | Dynamically replace MCP servers |
+| `stopTask(taskId)` | Stop a running background task |
+| `close()` | Terminate the process and clean up |
+
+### TypeScript-only: `resolveSettings()`
+
+Inspect merged effective settings without starting a query:
+
+```typescript
+const { effective, provenance } = await resolveSettings({ cwd: "/path/to/project" });
+```
 
 ### Python-only: `ClaudeSDKClient`
 
 Multi-turn client that reuses the same session:
+
 ```python
 async with ClaudeSDKClient(options=options) as client:
     await client.query("Analyze the auth module")
@@ -272,7 +316,9 @@ async with ClaudeSDKClient(options=options) as client:
         print(message)
 ```
 
-Methods: `connect()`, `query()`, `receive_messages()`, `receive_response()`, `interrupt()`, `set_permission_mode()`, `set_model()`, `rewind_files()`, `get_mcp_status()`, `disconnect()`
+Methods: `connect()`, `query()`, `receive_messages()`, `receive_response()`, `interrupt()`, `set_permission_mode()`, `set_model()`, `rewind_files()`, `get_mcp_status()`, `reconnect_mcp_server()`, `toggle_mcp_server()`, `stop_task()`, `get_server_info()`, `disconnect()`
+
+**After calling `interrupt()`:** drain the interrupted task's messages with `receive_response()` before sending a new query — interrupt does not flush the buffer.
 
 ### Structured Output
 
@@ -284,12 +330,11 @@ Set `enable_file_checkpointing=True` / `enableFileCheckpointing: true`. Then cal
 
 ### Secure Deployment Key Points
 
-- Run SDK in sandboxed containers (Modal, E2B, Fly Machines, Docker, etc.)
+- Run the SDK in sandboxed containers (Modal, E2B, Fly Machines, Docker, etc.)
 - Recommended per-instance: 1 GiB RAM, 5 GiB disk, 1 CPU
 - Multi-tenant isolation: `settingSources: []`, `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`, separate filesystem per tenant
-- Manage credentials via proxy (agent makes API calls without seeing keys)
 - Use `disallowedTools` and scoped deny rules like `"Bash(curl *)"` for network restrictions
-- Hooks run before permission mode, allowing in-process enforcement
+- Hooks run in-process before permission mode, enabling fine-grained enforcement
 
 ### API Timeout Env Vars (pass via `env` option)
 

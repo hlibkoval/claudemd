@@ -2,6 +2,46 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.1
+
+**35 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Skills-directory plugins auto-load** — any folder under `~/.claude/skills/` or `.claude/skills/` with a `.claude-plugin/plugin.json` manifest loads automatically as `<name>@skills-dir` with no marketplace or install step; project-scope plugins require workspace trust (plugins-doc, skills-doc)
+- **`claude plugin init <name>`** — new command scaffolds a plugin in `~/.claude/skills/<name>/`; `--with` flag adds component folders (`skills`, `agents`, `hooks`, `mcp`, `lsp`, `output-style`, `channel`); alias `new`; can be blocked by `strictKnownMarketplaces` or `blockedMarketplaces` in managed settings (plugins-doc)
+- **WebSocket MCP transport (`type: "ws"`)** — new `ws` transport for remote MCP servers needing persistent bidirectional connections; configure via `.mcp.json` or `claude mcp add-json`; accepts `url`, `headers`, `headersHelper`, `timeout`, `alwaysLoad`; not supported by `claude mcp add --transport` (mcp-doc)
+- **`Workflow` tool in TypeScript SDK** — `WorkflowInput` and `WorkflowOutput` types added; `script`, `name`, `scriptPath`, `args`, `resumeFromRunId` fields; available in Agent SDK v0.3.149+; include `Workflow` in `allowedTools` to auto-approve (agent-sdk-doc)
+- **Agent SDK hosting guide rewritten** — new sections on subprocess model, four session patterns (ephemeral, long-running, hybrid, multi-agent), production concerns (observability, auth, scaling, cost, multi-tenant isolation), and known limitations table; links to deployable hosting cookbook (agent-sdk-doc)
+- **`workflowKeywordTriggerEnabled` setting** — set to `false` to stop the word "workflow" in a prompt from triggering a dynamic workflow; appears in `/config` as "Workflow keyword trigger"; unaffected: ultracode, `/workflows`, saved workflow commands (settings-doc)
+- **`--agent` flag on `claude agents`** — sets the default subagent for dispatched sessions; falls back to `agent` setting, then built-in `claude` catch-all; naming a subagent in the dispatch input overrides it; requires v2.1.157 (cli-doc, features-doc, settings-doc)
+- **`applyFlagSettings()` mid-session behavior documented** — keys applied on next turn: `model`, `effortLevel`, `ultracode`, `permissions`, `hooks`, `skillOverrides`, `fastMode`, `awaySummaryEnabled`; keys with no mid-session effect: `agent` and system prompt options (agent-sdk-doc)
+- **`AskUserQuestionOutput.response` field** — freeform reply field set when user dismisses structured questions and types a general reply; Claude receives "The user responded: …" instead of per-question answers (agent-sdk-doc)
+- **`tool_parameters` on `tool_decision` telemetry events** — when `OTEL_LOG_TOOL_DETAILS=1`, `tool_decision` events now include `tool_parameters` with Bash commands, MCP server/tool names, and skill names; useful for seeing which command was rejected (operations-doc)
+- **`WorkspaceBash` tool parameters in telemetry** — `tool_decision` and `tool_result` events document `WorkspaceBash` parameters: `bash_command`, `full_command`, `timeout` (operations-doc)
+- **Ops changelog v2.1.157–v2.1.159 and weekly digests** — weeks 21 and 22 ("What's New") reference pages added; changelog entries through v2.1.159 (operations-doc)
+- **`/terminal-setup` sets GPU acceleration off** — now also sets `terminal.integrated.gpuAcceleration` to `"off"` in VS Code/Cursor/Windsurf to prevent garbled-text rendering; undo with `"auto"` (cli-doc)
+- **Python SDK Windows pip setup instructions** — quickstart now includes Windows-specific venv activation (`py -m venv`, `.venv\Scripts\Activate.ps1`) and PowerShell execution-policy fix (agent-sdk-doc)
+- **`.cargo` added to protected directories** — `.cargo` is now a protected directory in `acceptEdits` and `auto` modes; `bypassPermissions` also updated (settings-doc, sub-agents-doc)
+
+### Changed
+
+- **`effort.level` no longer reports `ultra`** — ultracode is no longer a distinct effort level; it reports as `xhigh` in `effort.level` (status line), `$CLAUDE_EFFORT` (env var), hooks `effort` field, and `${CLAUDE_EFFORT}` skill substitution (features-doc, hooks-doc, settings-doc, skills-doc)
+- **`autoMemoryDirectory` scope widened** — now honored from project and local `settings.json` after accepting the workspace trust dialog, instead of being rejected from those scopes entirely (memory-doc, settings-doc)
+- **`agent` setting also sets dispatched-session default** — the `agent` setting now sets the default subagent for sessions dispatched from `claude agents`, not just the main thread (settings-doc)
+- **`EnterWorktree` can switch between Claude-managed worktrees** — from within a worktree or subagent with a pinned working directory, `EnterWorktree` accepts the `path` form to switch to another worktree under `.claude/worktrees/` (cli-doc, features-doc)
+- **Worktree auto-cleanup scope broadened** — worktrees created for background sessions are now also swept by the `cleanupPeriodDays` cleanup, not just crash-orphaned subagent worktrees (features-doc)
+- **`OTEL_LOG_TOOL_DETAILS` behavior clarified** — expanded into per-signal breakdown: `tool_result` gets `tool_parameters` + `tool_input`; `tool_decision` gets `tool_parameters`; `user_prompt` gets `command_name`; trace spans get `tool_input` with same truncation; `full_command` is emitted untruncated (operations-doc)
+- **Task tool renamed to Agent tool in telemetry docs** — span hierarchy, `subagent_type` attribute, and security signal table updated to reference "Agent tool or legacy Task tool" (operations-doc)
+- **MCP OAuth fallback behavior** — if `headers.Authorization` is configured and rejected by the server, Claude Code reports the connection as failed instead of falling back to OAuth (mcp-doc)
+- **`CLAUDE_CODE_DISABLE_TERMINAL_TITLE` extended** — also skips the background Haiku request that generates session titles in Agent SDK and `claude -p` sessions (settings-doc)
+- **Errors doc: corrupted-conversation fix for Opus 4.7/4.8** — new bullet advises running `claude update` before `/rewind` if using Opus 4.7 or 4.8 on versions before v2.1.156 (errors-doc)
+- **Marketplace `name` field: one-per-name constraint documented** — adding a second marketplace with the same name replaces the first; list all plugins in one `marketplace.json` to share a name (plugins-doc)
+
+### Removed
+
+- Minor wording/formatting updates across best-practices-doc, ide-doc docs
+
 ## 26.5.29
 
 **38 references updated across 16 skills:** best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
