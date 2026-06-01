@@ -71,35 +71,40 @@ Permission evaluation order: hooks → deny rules → permission mode → allow 
 
 | Option (Python / TypeScript) | Default | Description |
 |:-----------------------------|:--------|:------------|
-| `allowed_tools` / `allowedTools` | `[]` | Auto-approve listed tools |
-| `disallowed_tools` / `disallowedTools` | `[]` | Block listed tools |
+| `allowed_tools` / `allowedTools` | `[]` | Auto-approve listed tools (does not restrict unlisted tools) |
+| `disallowed_tools` / `disallowedTools` | `[]` | Block listed tools; bare name removes from context, scoped pattern `Tool(pattern)` blocks matching calls |
 | `permission_mode` / `permissionMode` | `"default"` | Global permission behavior |
 | `max_turns` / `maxTurns` | none | Cap tool-use round trips |
-| `max_budget_usd` / `maxBudgetUsd` | none | Cap cost before stopping |
+| `max_budget_usd` / `maxBudgetUsd` | none | Stop when client-side cost estimate exceeds this value |
 | `effort` | `None` / `"high"` | Reasoning depth: `"low"`, `"medium"`, `"high"`, `"xhigh"`, `"max"` |
+| `thinking` | adaptive | `ThinkingConfig`: `{type:"adaptive"}`, `{type:"enabled", budget_tokens:N}`, `{type:"disabled"}` |
 | `model` | SDK default | Claude model to use |
-| `system_prompt` / `systemPrompt` | minimal | Custom string or `{"type": "preset", "preset": "claude_code"}` |
+| `system_prompt` / `systemPrompt` | minimal | Custom string or `{"type": "preset", "preset": "claude_code", "append": "..."}` |
 | `cwd` | process cwd | Working directory |
 | `setting_sources` / `settingSources` | all sources | Which filesystem settings to load: `"user"`, `"project"`, `"local"` or `[]` |
 | `mcp_servers` / `mcpServers` | `{}` | MCP server configurations |
-| `agents` | `None` | Programmatic subagent definitions |
+| `strict_mcp_config` / `strictMcpConfig` | `False` | Use only programmatic servers; ignore `.mcp.json` and settings-file servers |
+| `agents` | `None` | Programmatic subagent definitions (`AgentDefinition`) |
 | `hooks` | `None` | Hook callback configuration |
 | `resume` | `None` | Session ID to resume |
-| `continue_conversation` / `continue` | `False` / `false` | Resume most recent session |
+| `continue_conversation` / `continue` | `False` / `false` | Resume most recent session in cwd |
 | `fork_session` / `forkSession` | `False` | Fork instead of continuing resumed session |
 | `skills` | `None` | `"all"` or list of skill names to enable |
 | `plugins` | `[]` | Load local plugins: `[{"type": "local", "path": "..."}]` |
-| `enable_file_checkpointing` / `enableFileCheckpointing` | `False` | Enable file rewind support |
-| `session_store` / `sessionStore` | `None` | External session storage adapter |
-| `output_format` / `outputFormat` | `None` | JSON schema for structured output |
-| `env` | `{}` | Environment variables for the CLI subprocess |
+| `enable_file_checkpointing` / `enableFileCheckpointing` | `False` | Enable file snapshot/rewind support |
+| `session_store` / `sessionStore` | `None` | External session storage adapter for cross-host resume |
+| `output_format` / `outputFormat` | `None` | `{"type": "json_schema", "schema": {...}}` for structured output |
+| `env` | `{}` | Environment variables merged into the CLI subprocess env |
+| `sandbox` | `None` | `SandboxSettings` for container/sandbox configuration |
+| `persist_session` / `persistSession` (TS) | `True` | Set `false` to disable session disk writes |
+| `can_use_tool` / `canUseTool` | `None` | Custom permission callback for tool approval |
 
 ### Message Types
 
 | Type | Python check | TypeScript check | When emitted |
 |:-----|:-------------|:-----------------|:-------------|
-| `SystemMessage` (subtype `"init"`) | `isinstance(msg, SystemMessage) and msg.subtype == "init"` | `msg.type === "system" && msg.subtype === "init"` | First message; contains session ID, tools, MCP servers |
-| `AssistantMessage` | `isinstance(msg, AssistantMessage)` | `msg.type === "assistant"` | Each Claude response turn |
+| `SystemMessage` (subtype `"init"`) | `isinstance(msg, SystemMessage) and msg.subtype == "init"` | `msg.type === "system" && msg.subtype === "init"` | First message; contains session ID, tools, MCP servers, permissionMode |
+| `AssistantMessage` | `isinstance(msg, AssistantMessage)` | `msg.type === "assistant"` | Each Claude response turn; `parent_tool_use_id` set inside subagents |
 | `UserMessage` | `isinstance(msg, UserMessage)` | `msg.type === "user"` | After each tool result |
 | `ResultMessage` | `isinstance(msg, ResultMessage)` | `msg.type === "result"` | Final message; contains result, cost, usage, session ID |
 | `StreamEvent` | (with `include_partial_messages=True`) | (with `includePartialMessages: true`) | Partial streaming deltas |
@@ -114,7 +119,9 @@ Permission evaluation order: hooks → deny rules → permission mode → allow 
 | `"error_during_execution"` | No | API failure or cancellation |
 | `"error_max_structured_output_retries"` | No | Structured output validation failed |
 
-All result subtypes carry `total_cost_usd`, `usage`, `num_turns`, `session_id`, and `stop_reason`.
+All result subtypes carry `total_cost_usd`, `usage`, `modelUsage`, `num_turns`, `session_id`, `stop_reason`, and `terminal_reason`.
+
+**`terminal_reason` values:** `completed`, `max_turns`, `tool_deferred`, `aborted_streaming`, `aborted_tools`, `hook_stopped`, `stop_hook_prevented`, `blocking_limit`, `rapid_refill_breaker`, `prompt_too_long`, `image_error`, `model_error`.
 
 ### Sessions
 
