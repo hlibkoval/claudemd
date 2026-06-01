@@ -207,11 +207,21 @@ agents={
 }
 ```
 
-**Note (Python):** `AgentDefinition` field names use camelCase (`disallowedTools`, `maxTurns`, `permissionMode`) — not snake_case.
+**Note (Python):** `AgentDefinition` field names use camelCase (`disallowedTools`, `maxTurns`, `permissionMode`) — not snake_case. Passing snake_case raises `TypeError`.
 
-**What subagents inherit:** their own system prompt, project CLAUDE.md (via `settingSources`), and inherited tool definitions. They do NOT receive parent conversation history, parent system prompt, or preloaded skills (unless listed in `AgentDefinition.skills`).
+**`AgentDefinition` fields:** `description` (required), `prompt` (required), `tools`, `disallowedTools`, `model` (`"sonnet"`, `"opus"`, `"haiku"`, `"inherit"`, or full ID), `maxTurns`, `background` (non-blocking background task), `skills`, `mcpServers`, `memory`, `effort`, `permissionMode`.
+
+**What subagents inherit:** their own system prompt, project CLAUDE.md (via `settingSources`), and tool definitions. They do NOT receive parent conversation history, parent system prompt, or preloaded skills (unless listed in `AgentDefinition.skills`).
 
 Subagents cannot spawn their own subagents; do not include `Agent` in a subagent's `tools` array.
+
+**Common tool combos for subagents:**
+
+| Use case | Tools |
+|:---------|:------|
+| Read-only analysis | `Read`, `Grep`, `Glob` |
+| Test execution | `Bash`, `Read`, `Grep` |
+| Code modification | `Read`, `Edit`, `Write`, `Grep`, `Glob` |
 
 ### Custom Tools
 

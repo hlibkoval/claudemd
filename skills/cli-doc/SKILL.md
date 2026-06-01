@@ -85,6 +85,9 @@ This skill provides the complete official documentation for the Claude Code comm
 | `--teammate-mode` | Set agent team display: `auto`, `in-process`, or `tmux` |
 | `--chrome` | Enable Chrome browser integration |
 | `--ide` | Auto-connect to IDE on startup |
+| `--exec` | Run a shell command as a background job instead of a Claude session (use with `--bg`) |
+| `--prompt-suggestions` | Emit prompt suggestions after each turn (requires print mode + `stream-json` + `--verbose`) |
+| `--remote-control`, `--rc` | Start interactive session with Remote Control enabled |
 
 ### System Prompt Flags
 
@@ -111,7 +114,7 @@ Type `/` to see all commands; type `/` followed by letters to filter. Commands a
 | `/branch [name]` | Built-in | Fork the current conversation at this point |
 | `/btw <question>` | Built-in | Side question — ephemeral, not added to conversation history |
 | `/clear [name]` | Built-in | Start fresh conversation (previous stays in `/resume`) |
-| `/code-review [level] [--fix] [--comment] [target]` | Skill | Review diff for bugs and cleanups; `--fix` applies findings |
+| `/code-review [level] [--fix] [--comment] [target]` | Skill | Review diff for bugs and cleanups; `--fix` applies findings; `ultra` runs cloud review |
 | `/color [color]` | Built-in | Set prompt bar color for the session |
 | `/compact [instructions]` | Built-in | Summarize context to free up token space |
 | `/config` | Built-in | Open Settings interface |
@@ -124,6 +127,7 @@ Type `/` to see all commands; type `/` followed by letters to filter. Commands a
 | `/effort [level\|auto]` | Built-in | Set model effort level interactively |
 | `/exit` | Built-in | Exit CLI (detaches if in a background session) |
 | `/export [filename]` | Built-in | Export conversation as plain text |
+| `/fast [on\|off]` | Built-in | Toggle fast mode |
 | `/feedback` | Built-in | Submit feedback or report a bug |
 | `/fewer-permission-prompts` | Skill | Add permission allowlist to reduce prompts |
 | `/focus` | Built-in | Toggle focus view (last prompt + final response only) |
@@ -149,6 +153,7 @@ Type `/` to see all commands; type `/` followed by letters to filter. Commands a
 | `/review [PR]` | Built-in | Review a pull request locally |
 | `/rewind` | Built-in | Roll back conversation/code to a checkpoint |
 | `/run` | Skill | Launch app to verify a change in the running app |
+| `/run-skill-generator` | Skill | Teach `/run` and `/verify` how to build and launch your project |
 | `/schedule [description]` | Built-in | Create/manage routines on claude.ai infrastructure |
 | `/security-review` | Built-in | Analyze pending changes for security vulnerabilities |
 | `/simplify [target]` | Skill | Review changed code for cleanup opportunities, apply fixes |
@@ -261,18 +266,21 @@ File: `~/.claude/keybindings.json` (open with `/keybindings`). Changes apply wit
 }
 ```
 
-**Contexts:** `Global`, `Chat`, `Autocomplete`, `Confirmation`, `Transcript`, `HistorySearch`, `Task`, `ThemePicker`, `Settings`, `Scroll`, `DiffDialog`, `ModelPicker`, `Select`, `Plugin`, `Footer`, `MessageSelector`, `Attachments`, `Doctor`
+**Contexts:** `Global`, `Chat`, `Autocomplete`, `Confirmation`, `Transcript`, `HistorySearch`, `Task`, `ThemePicker`, `Settings`, `Scroll`, `DiffDialog`, `ModelPicker`, `Select`, `Plugin`, `Footer`, `MessageSelector`, `Attachments`, `Doctor`, `Help`, `Tabs`
 
 **Key actions by namespace:**
 
 | Namespace | Example actions |
 |:----------|:----------------|
-| `app:` | `app:interrupt`, `app:exit`, `app:toggleTodos`, `app:toggleTranscript` |
-| `chat:` | `chat:submit`, `chat:newline`, `chat:cycleMode`, `chat:externalEditor`, `chat:imagePaste`, `chat:modelPicker`, `chat:fastMode`, `chat:thinkingToggle`, `chat:killAgents` |
+| `app:` | `app:interrupt`, `app:exit`, `app:toggleTodos`, `app:toggleTranscript`, `app:redraw` |
+| `chat:` | `chat:submit`, `chat:newline`, `chat:cycleMode`, `chat:externalEditor`, `chat:imagePaste`, `chat:modelPicker`, `chat:fastMode`, `chat:thinkingToggle`, `chat:killAgents`, `chat:stash`, `chat:undo` |
 | `history:` | `history:search`, `history:previous`, `history:next` |
 | `transcript:` | `transcript:toggleShowAll`, `transcript:exit` |
-| `scroll:` | `scroll:pageUp`, `scroll:pageDown`, `scroll:top`, `scroll:bottom` |
-| `diff:` | `diff:dismiss`, `diff:previousFile`, `diff:nextFile`, `diff:viewDetails` |
+| `scroll:` | `scroll:pageUp`, `scroll:pageDown`, `scroll:top`, `scroll:bottom`, `scroll:lineUp`, `scroll:lineDown` |
+| `diff:` | `diff:dismiss`, `diff:previousFile`, `diff:nextFile`, `diff:viewDetails`, `diff:previousSource`, `diff:nextSource` |
+| `confirm:` | `confirm:yes`, `confirm:no`, `confirm:toggle`, `confirm:cycleMode`, `confirm:toggleExplanation` |
+| `voice:` | `voice:pushToTalk` |
+| `selection:` | `selection:copy`, `selection:extendLeft`, `selection:extendRight`, `selection:extendUp`, `selection:extendDown` |
 
 Set an action to `null` to unbind it. Unbinding chord prefixes: unbind all chords on a prefix, then the prefix can be used as a standalone binding.
 
@@ -296,17 +304,21 @@ Set an action to `null` to unbind it. Unbinding chord prefixes: unbind all chord
 | `Glob` | No | Find files by name pattern (up to 100, sorted by modification time) |
 | `Grep` | No | Search file contents with ripgrep regex |
 | `LSP` | No | Code intelligence (requires language server plugin) |
-| `Monitor` | Yes | Watch a command's output and react to changes |
+| `Monitor` | Yes | Watch a command's output and react to changes (v2.1.98+) |
 | `NotebookEdit` | Yes | Edit Jupyter notebook cells by `cell_id` |
 | `PowerShell` | Yes | Execute PowerShell commands (Windows / opt-in elsewhere) |
 | `PushNotification` | No | Send desktop/phone notification |
 | `Read` | No | Read file contents (also images, PDFs, Jupyter notebooks) |
 | `RemoteTrigger` | No | Create/run Routines on claude.ai |
+| `ScheduleWakeup` | No | Reschedule next iteration of a self-paced loop |
+| `SendMessage` | No | Send message to agent team teammate (experimental) |
 | `Skill` | Yes | Execute a skill in the main conversation |
 | `TaskCreate` / `TaskGet` / `TaskList` / `TaskUpdate` / `TaskStop` | No | Manage session task list |
 | `ToolSearch` | No | Search for and load deferred tools (when tool search enabled) |
+| `WaitForMcpServers` | No | Wait for MCP servers still connecting in background |
 | `WebFetch` | Yes | Fetch a URL and extract content via a summarizing prompt |
 | `WebSearch` | Yes | Search the web, returns titles and URLs |
+| `Workflow` | Yes | Run a dynamic multi-subagent workflow |
 | `Write` | Yes | Create or overwrite a file |
 
 #### Key Tool Behaviors
@@ -323,7 +335,7 @@ Set an action to `null` to unbind it. Unbinding chord prefixes: unbind all chord
 
 **WebSearch:** Up to 8 internal backend searches per call. Does not fetch pages — Claude follows up with WebFetch to read results. Not available on Amazon Bedrock.
 
-**Monitor:** Requires v2.1.98+. Not available on Bedrock, Vertex, Foundry, or when `DISABLE_TELEMETRY`/`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set.
+**Monitor:** Not available on Bedrock, Vertex, Foundry, or when `DISABLE_TELEMETRY`/`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set.
 
 **Write:** Must have read the target file at least once in the conversation before overwriting an existing file.
 

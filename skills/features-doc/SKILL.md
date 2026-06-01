@@ -5,22 +5,32 @@ user-invocable: false
 
 # Features Documentation
 
-This skill covers Claude Code's extended feature set: model configuration, fast mode, output styles, status line, checkpointing, agent parallelism approaches, agent view, worktrees, channels, scheduling (session loops, desktop tasks, cloud routines), remote control, voice dictation, prompt caching, fullscreen rendering, context window management, deep links, and the prompt library.
+This skill provides the complete official documentation for Claude Code features beyond the core agentic loop: extension architecture, agent orchestration, UI capabilities, model configuration, scheduling, remote access, and performance tuning.
 
 ## Quick Reference
 
-### Extension Features Overview
+### Extension Selection Guide
 
-| Feature | What it does | When to use it |
-|:--------|:-------------|:---------------|
-| **CLAUDE.md** | Persistent context loaded every conversation | Project conventions, "always do X" rules |
-| **Skills** | Instructions, knowledge, and workflows Claude can use | Reusable content, reference docs, repeatable tasks |
-| **Subagents** | Isolated execution context that returns summarized results | Context isolation, parallel tasks, specialized workers |
-| **Agent teams** | Coordinate multiple independent Claude Code sessions | Parallel research, feature development, competing hypotheses |
-| **Code intelligence** | Language-server navigation and diagnostics | Typed languages, large codebases where grep is slow |
-| **MCP** | Connect to external services | External data or actions |
-| **Hooks** | Script/HTTP/prompt/subagent triggered by events | Automation that must run on every matching event |
-| **Plugins** | Bundle skills, hooks, subagents, MCP into one installable unit | Reuse across repos, distribute via marketplace |
+| Feature | What it is | Best for |
+|:--------|:-----------|:---------|
+| CLAUDE.md | Persistent instructions loaded into every session | Rules, project setup, always-on context |
+| Skills | Reusable slash commands that run in your conversation | Repeatable workflows invoked on demand |
+| Subagents | Delegated workers in their own context | Side tasks that would flood the main conversation |
+| MCP | Tool plugins exposed to Claude | Persistent capabilities (DB access, APIs, search) |
+| Hooks | Shell/HTTP/LLM handlers at lifecycle points | Automated side-effects, validation, formatting |
+| Plugins | Packaged bundles of the above | Shareable multi-project extensions |
+
+### Context Cost by Feature
+
+| Feature | Context cost |
+|:--------|:-------------|
+| CLAUDE.md (project) | All tokens, every turn |
+| CLAUDE.md (user) | All tokens, every turn |
+| Skills (non-active) | Zero |
+| Skills (active/expanded) | Skill content tokens |
+| Subagent results | Summary returned to parent only |
+| MCP tool results | Tool output tokens |
+| Hooks | Zero (run out-of-band) |
 
 ### Agent Parallelism Approaches
 
