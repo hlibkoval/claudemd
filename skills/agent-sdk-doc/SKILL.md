@@ -5,62 +5,56 @@ user-invocable: false
 
 # Agent SDK Documentation
 
-This skill provides the complete official documentation for the Claude Agent SDK — a Python and TypeScript library for building production AI agents that run Claude Code's agent loop programmatically.
+This skill provides the complete official documentation for the Claude Agent SDK — a Python and TypeScript library for building production AI agents that run the Claude Code agent loop programmatically.
 
 ## Quick Reference
 
 ### Installation
 
-| Language | Install | Import |
-|:---------|:--------|:-------|
-| TypeScript | `npm install @anthropic-ai/claude-agent-sdk` | `import { query } from "@anthropic-ai/claude-agent-sdk"` |
-| Python | `pip install claude-agent-sdk` | `from claude_agent_sdk import query, ClaudeAgentOptions` |
+| Language | Package | Requirement |
+|:---------|:--------|:------------|
+| TypeScript | `npm install @anthropic-ai/claude-agent-sdk` | Node.js 18+ (bundles Claude Code binary) |
+| Python | `pip install claude-agent-sdk` | Python 3.10+ |
 
 Authentication: set `ANTHROPIC_API_KEY`. Also supports Bedrock (`CLAUDE_CODE_USE_BEDROCK=1`), Vertex AI (`CLAUDE_CODE_USE_VERTEX=1`), Claude Platform on AWS (`CLAUDE_CODE_USE_ANTHROPIC_AWS=1`), and Azure (`CLAUDE_CODE_USE_FOUNDRY=1`).
 
-### Core entry point: `query()`
+### Core Entry Points
 
-```python
-# Python
-async for message in query(
-    prompt="Fix the bug in auth.py",
-    options=ClaudeAgentOptions(allowed_tools=["Read", "Edit", "Bash"]),
-):
-    print(message)
-```
+| API | Python | TypeScript | Use case |
+|:----|:-------|:-----------|:---------|
+| One-off query | `query(prompt, options)` | `query({prompt, options})` | Single task |
+| Multi-turn session | `ClaudeSDKClient` (async context mgr) | `query()` with `continue: true` | Ongoing conversation in one process |
+| Pre-warm subprocess | — | `startup({options})` → `WarmQuery` | Amortize startup latency |
 
-```typescript
-// TypeScript
-for await (const message of query({
-  prompt: "Fix the bug in auth.ts",
-  options: { allowedTools: ["Read", "Edit", "Bash"] }
-})) {
-  console.log(message);
-}
-```
+Both `query()` and `ClaudeSDKClient` return async iterables of `SDKMessage` / `Message` objects.
 
 ### Built-in Tools
 
-| Category | Tools | What they do |
-|:---------|:------|:-------------|
-| File operations | `Read`, `Edit`, `Write` | Read, modify, and create files |
-| Search | `Glob`, `Grep` | Find files by pattern, search content with regex |
-| Execution | `Bash` | Run shell commands, scripts, git operations |
-| Web | `WebSearch`, `WebFetch` | Search the web, fetch and parse pages |
-| Discovery | `ToolSearch` | Load tool definitions on demand |
-| Orchestration | `Agent`, `Skill`, `AskUserQuestion`, `TaskCreate`, `TaskUpdate` | Spawn subagents, invoke skills, ask the user, track tasks |
-| Monitoring | `Monitor` | Watch a background script and react to each output line |
+| Tool | Description |
+|:-----|:------------|
+| `Read` | Read files |
+| `Write` | Create files |
+| `Edit` | Edit existing files |
+| `Bash` | Run terminal commands, scripts, git operations |
+| `Monitor` | Watch a background script, react to each output line |
+| `Glob` | Find files by pattern |
+| `Grep` | Search file contents with regex |
+| `WebSearch` | Search the web |
+| `WebFetch` | Fetch and parse web pages |
+| `AskUserQuestion` | Ask user clarifying questions with multiple-choice options |
+| `Agent` | Invoke a subagent |
+| `Skill` | Invoke a skill by name |
 
 ### Permission Modes
 
 | Mode | Behavior | Use case |
 |:-----|:---------|:---------|
-| `default` | Unmatched tools call `canUseTool` callback | Interactive approval flows |
-| `acceptEdits` | Auto-approves file edits + `mkdir`, `touch`, `mv`, `cp`, `rm`, `sed` | Trusted development workflows |
+| `default` | Unmatched tools call `canUseTool` callback | Interactive / custom approval flows |
+| `acceptEdits` | Auto-approves file edits + `mkdir`, `touch`, `mv`, `cp`, `rm`, `sed` (inside cwd) | Trusted development workflows |
 | `dontAsk` | Denies anything not pre-approved by `allowedTools`/rules | Locked-down headless agents |
-| `plan` | Read-only tools only; Claude explores and proposes a plan | Code review without executing changes |
+| `plan` | Read-only tools only; Claude proposes without executing changes | Code review/planning |
 | `auto` (TypeScript only) | Model classifier approves/denies each tool call | Autonomous agents with safety guardrails |
-| `bypassPermissions` | All tools run without prompts; requires `allowAllowDangerouslySkipPermissions: true` | Sandboxed CI, fully trusted environments |
+| `bypassPermissions` | All tools run without prompts; requires `allowDangerouslySkipPermissions: true` | Sandboxed CI, fully trusted environments |
 
 ### Allow and Deny Rules
 
