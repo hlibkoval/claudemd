@@ -268,18 +268,44 @@ Omitting `settingSources` = `["user", "project", "local"]`. Pass `[]` to disable
 
 ### TypeScript-only: `startup()` (pre-warm)
 
+Pre-warms the CLI subprocess before a prompt is available, eliminating startup latency from the critical path:
+
 ```typescript
 const warm = await startup({ options: { maxTurns: 3 } });
 for await (const message of warm.query("What files are here?")) { ... }
 ```
 
+`WarmQuery` implements `AsyncDisposable`. Call `warm.close()` to discard without sending a prompt.
+
 ### TypeScript-only: `Query` object methods
 
-`interrupt()`, `rewindFiles(userMessageId)`, `setPermissionMode(mode)`, `setModel(model)`, `applyFlagSettings(settings)`, `supportedCommands()`, `supportedModels()`, `mcpServerStatus()`, `reconnectMcpServer(name)`, `setMcpServers(servers)`, `stopTask(taskId)`, `close()`
+| Method | Description |
+|:-------|:------------|
+| `interrupt()` | Interrupt in streaming input mode |
+| `rewindFiles(userMessageId, {dryRun?})` | Restore files to state at that message (requires `enableFileCheckpointing`) |
+| `setPermissionMode(mode)` | Change permission mode mid-session |
+| `setModel(model?)` | Change model mid-session |
+| `applyFlagSettings(settings)` | Merge settings into flag layer mid-session |
+| `supportedCommands()` | List available slash commands |
+| `supportedModels()` | List available models |
+| `mcpServerStatus()` | Get MCP server connection status |
+| `reconnectMcpServer(name)` | Retry connecting to an MCP server |
+| `setMcpServers(servers)` | Dynamically replace MCP servers |
+| `stopTask(taskId)` | Stop a running background task |
+| `close()` | Terminate the process and clean up |
+
+### TypeScript-only: `resolveSettings()`
+
+Inspect merged effective settings without starting a query:
+
+```typescript
+const { effective, provenance } = await resolveSettings({ cwd: "/path/to/project" });
+```
 
 ### Python-only: `ClaudeSDKClient`
 
 Multi-turn client that reuses the same session:
+
 ```python
 async with ClaudeSDKClient(options=options) as client:
     await client.query("Analyze the auth module")
@@ -290,7 +316,9 @@ async with ClaudeSDKClient(options=options) as client:
         print(message)
 ```
 
-Methods: `connect()`, `query()`, `receive_messages()`, `receive_response()`, `interrupt()`, `set_permission_mode()`, `set_model()`, `rewind_files()`, `get_mcp_status()`, `disconnect()`
+Methods: `connect()`, `query()`, `receive_messages()`, `receive_response()`, `interrupt()`, `set_permission_mode()`, `set_model()`, `rewind_files()`, `get_mcp_status()`, `reconnect_mcp_server()`, `toggle_mcp_server()`, `stop_task()`, `get_server_info()`, `disconnect()`
+
+**After calling `interrupt()`:** drain the interrupted task's messages with `receive_response()` before sending a new query — interrupt does not flush the buffer.
 
 ### Structured Output
 
