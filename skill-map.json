@@ -62,6 +62,10 @@
       {
         "url": "https://code.claude.com/docs/en/managed-mcp.md",
         "file": "claude-code-managed-mcp.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/mcp-quickstart.md",
+        "file": "claude-code-mcp-quickstart.md"
       }
     ],
     "memory-doc": [
