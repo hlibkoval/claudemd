@@ -2,6 +2,59 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.2
+
+**36 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc
+
+### New
+
+- **`claude daemon stop --any`** — new CLI command stops the background supervisor and the sessions it hosts; `--keep-workers` leaves background sessions running so the next supervisor reconnects to them (cli-doc, features-doc)
+- **`~/.claude/jobs/<id>/tmp/` per-session scratch directory** — writes here don't require permission prompts; `CLAUDE_JOB_DIR` env var set for each background session pointing to `~/.claude/jobs/<id>/` (features-doc)
+- **`ANTHROPIC_DEFAULT_HAIKU_MODEL` for third-party providers** — on Bedrock, Vertex AI, Foundry, and custom gateways the agent-view session summary falls back to the session's main model; set this env var to choose the Haiku-class model for summaries (features-doc)
+- **Voice dictation in agent view** — hold or tap push-to-talk key while the peek-panel reply or dispatch input is focused to dictate to a background session (features-doc)
+- **Agent-view dispatch commands `/exit`, `/quit`, `/logout`** — these run in agent view itself instead of dispatching to a new background session (features-doc)
+- **MCP quickstart link in overview and MCP doc** — overview accordion and MCP reference now link to the new `/en/mcp-quickstart` step-by-step walkthrough (getting-started-doc, mcp-doc)
+- **Plugin reload token-cost note** — docs now explain that `/reload-plugins` appends announcements to the conversation and that plugins with MCP servers can invalidate the prompt cache (plugins-doc)
+- **`claude.ai` MCP connectors in SDK** — `strictMcpConfig: true` now also suppresses claude.ai connectors; new table row documents the connector input and how to disable it via `strictMcpConfig` or `ENABLE_CLAUDEAI_MCP_SERVERS=false` (agent-sdk-doc)
+- **`ListMcpResourcesTool` / `ReadMcpResourceTool` tool name rename** — MCP resource tool names changed from `ListMcpResources`/`ReadMcpResource` to `ListMcpResourcesTool`/`ReadMcpResourceTool` in SDK references (agent-sdk-doc)
+- **`MessageDisplay` hook: code examples added** — new macOS/Linux and Windows PowerShell example scripts for stripping markdown formatting in the MessageDisplay hook (hooks-doc)
+- **Extended thinking no longer incompatible with streaming** — removed the "extended thinking disables StreamEvent" limitation from the SDK streaming docs (agent-sdk-doc)
+- **Hooks now fire inside subagents for programmatic callbacks** — programmatic hook callbacks now fire inside subagents, not just the main session; callbacks receive `agent_id` and `agent_type` to distinguish (agent-sdk-doc)
+- **macOS background session folder-access troubleshooting** — new section for `Operation not permitted` errors on `~/Desktop`, `~/Documents`, `~/Downloads` in background sessions; explains Privacy & Security grant (features-doc)
+- **"Background service did not respond" recovery steps** — new troubleshooting section with `claude daemon stop --any --keep-workers` workflow and Windows `taskkill` fallback (features-doc)
+- **Empty unprompted agent-view rows auto-removed** — rows left from pressing `←` without entering a prompt are removed after ~5 minutes (features-doc)
+- **Ops changelog v2.1.160** — June 2 release notes added (operations-doc)
+
+### Changed
+
+- **`[1m]` suffix scope clarified** — the 1M context suffix applies only to `opus` and `sonnet` aliases, not to the `opusplan` plan-mode Opus phase, which remains capped at 200K (features-doc)
+- **Prompt caching: MCP tool search and plugin changes documented** — cache invalidation rules now distinguish deferred vs prefix-loaded tools; enabling/disabling a plugin that provides MCP servers follows the same rules as connecting/disconnecting a server (features-doc)
+- **`Enabling or disabling a plugin` added to cache-invalidation list** — new section explains per-component-type cost when reloading plugins mid-session (features-doc)
+- **Desktop app loads `claude_desktop_config.json` MCP servers into Code tab** — previously said these were separate; now they load alongside `~/.claude.json` servers; standalone CLI still requires `claude mcp add-from-claude-desktop` (ide-doc)
+- **Workflows comparison table adds "Agent teams" column** — subagents/skills/workflows table now includes agent teams as a fourth option with its own row describing shared task list and peer-session model (best-practices-doc)
+- **Workflow `ultracode` keyword trigger** — docs updated to reflect that the trigger keyword is now `ultracode` (renamed from `workflow`); pressing `Option+W`/`Alt+W` dismisses the highlight (best-practices-doc)
+- **Saved workflows: `args` parameter and script-path access documented** — new section explains how saved workflows accept input via `args` global and where to find the generated script under `~/.claude/projects/` (best-practices-doc)
+- **Workflow cost section expanded** — `/workflows` shows per-agent token usage; recommends running on a small slice to gauge spend before committing to large runs (best-practices-doc)
+- **`MessageDisplay` timeout lowered to 10 seconds** — default timeout for MessageDisplay hooks is now 10 s, down from 600 s; documented in hook reference and guide (hooks-doc)
+- **`MessageDisplay` description expanded** — use-cases (strip markdown, transform SDK output, redact secrets) and "hold each batch until hook returns" behavior now documented (hooks-doc)
+- **Auto-mode classifier evaluates protected paths even with allow rules** — allow rules no longer bypass the classifier for writes to protected paths (settings-doc)
+- **`/en/hooks-guide` page retitled "Automate actions with hooks"** — was "Automate workflows with hooks" across hooks-doc, features-doc, best-practices-doc, security-doc (hooks-doc, features-doc, best-practices-doc, security-doc)
+- **`PreToolUse` hook block format updated** — `decision`/`reason` top-level fields are deprecated; use `hookSpecificOutput.permissionDecision: "deny"` and `permissionDecisionReason` instead; code examples updated in both Python and TypeScript (agent-sdk-doc)
+- **`updatedMCPToolOutput` deprecated in SDK hooks** — use `updatedToolOutput` instead, which works for any tool in both SDKs (agent-sdk-doc)
+- **Slash-command `$0`-indexed arguments** — example command corrected: first argument is `$0`, second is `$1` (was `$1`/`$2`) (agent-sdk-doc)
+- **CLAUDE.md scope note updated** — all discovered CLAUDE.md files are concatenated from broadest to most specific scope rather than overriding each other (getting-started-doc)
+- **MCP tool search description updated** — tool names and server instructions (not just names) load at session start (mcp-doc)
+- **Plugin manifest now optional** — docs updated to state `plugin.json` is optional; Claude Code auto-discovers components from directory layout without it; plugin root is the parent of `skills/`, `agents/`, etc. (plugins-doc, agent-sdk-doc)
+- **`SandboxNetworkConfig` clarified** — explicitly states these settings apply only to sandboxed Bash commands, not to the WebFetch tool (agent-sdk-doc)
+- **Background session permission-mode/model/effort persistence documented** — model and effort mid-session changes persist through supervisor restart, not just permission mode (features-doc)
+
+### Removed
+
+- **LSP plugin `shutdownTimeout` and `restartOnCrash` fields removed** — these two optional fields are no longer documented in the plugin reference (plugins-doc)
+- **Streaming limitation for extended thinking removed** — the incompatibility between `max_thinking_tokens` and `StreamEvent` messages is no longer listed (agent-sdk-doc)
+- **Single message input "hook integration" limitation removed** — hooks are no longer listed as unavailable in single-message input mode (agent-sdk-doc)
+- Minor wording/formatting updates across errors-doc, getting-started-doc, settings-doc docs
+
 ## 26.6.1
 
 **35 references updated across 14 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
