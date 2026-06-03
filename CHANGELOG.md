@@ -2,6 +2,37 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.3
+
+**23 references updated across 9 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`CLAUDE_CODE_ENABLE_AUTO_MODE` env var** — enables auto mode on Amazon Bedrock, Google Cloud Vertex AI, and Microsoft Foundry; only Opus 4.7 and 4.8 are supported on these providers; without it auto mode does not appear in the `Shift+Tab` cycle (settings-doc)
+- **Auto mode on Bedrock/Vertex AI/Foundry: new setup section** — new "Enable auto mode on Bedrock, Vertex AI, or Foundry" section documents how to set the env var per-user or org-wide in managed settings, and how `defaultMode: "auto"` requires it on these providers (settings-doc)
+- **SDK hook matcher comparison rules documented** — matchers containing only letters, digits, `_`, and `|` are exact-match with `|` as OR; any other characters trigger regex evaluation; `*` or omitted matcher matches everything; examples show `Write|Edit` vs `^mcp__` (agent-sdk-doc)
+- **Ops changelog v2.1.161** — June 2 release notes added covering OTEL label improvements, parallel tool call fix, Linux clipboard support, and numerous bug fixes (operations-doc)
+- **Protected directories expanded** — `.config/git`, `.devcontainer`, `.yarn`, and `.mvn` added to the protected-path list across `default`, `acceptEdits`, `auto`, `dontAsk`, and `bypassPermissions` modes (settings-doc, sub-agents-doc)
+- **Protected files expanded** — shell startup files (`.bash_login`, `.bash_aliases`, `.bash_logout`, `.zshenv`, `.zlogin`, `.zlogout`, `.envrc`), package manager configs (`.npmrc`, `.yarnrc`, `.yarnrc.yml`, etc.), build-tool lockfiles (`.bazelrc`, `.bazelversion`, etc.), hook configs (`.pre-commit-config.yaml`, lefthook variants), wrapper properties, `.devcontainer.json`, and `pyrightconfig.json` added to protected files (settings-doc)
+- **Protected-path behavior table** — new table clearly maps each permission mode to its protected-path write behavior (settings-doc)
+- **Agent-view attached sessions always use fullscreen rendering** — documented that background sessions from agent view or `claude attach` always render in fullscreen mode; `tui` setting and `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN` do not apply (features-doc, settings-doc)
+- **Auto-fix merge conflict limitation documented** — GitHub does not emit a webhook when the base branch advances and creates a merge conflict; documented that auto-fix cannot react automatically and the user must open the session to rebase (headless-doc)
+- **Auto mode availability on Desktop with Vertex AI** — Enterprise Desktop routing through Vertex AI requires `CLAUDE_CODE_ENABLE_AUTO_MODE`; only Opus 4.7 and 4.8 supported there (ide-doc)
+
+### Changed
+
+- **`ultracode` replaces `workflow` as the workflow keyword trigger** — the literal trigger keyword changed from `workflow` to `ultracode`; natural-language requests ("use a workflow") also work; `/config` label renamed to "Ultracode keyword trigger"; `workflowKeywordTriggerEnabled` setting description updated (best-practices-doc, settings-doc)
+- **SDK matcher section renamed "Filter with multi-tool matchers"** — section was "Filter with regex matchers"; prose updated to describe pipe-separated exact lists, regex patterns, and omitted matchers as three distinct behaviors (agent-sdk-doc)
+- **Model error hint varies by surface** — "There's an issue with the selected model" error now gives surface-specific guidance: `/model` in interactive CLI, `--model` flag in `-p` mode, structured `model_not_found` in Agent SDK (errors-doc, operations-doc)
+- **`grep`/`egrep`/`fgrep` count for read-before-edit** — these commands now satisfy the read-before-edit requirement alongside `cat`/`head`/`tail`/`sed`; `grep` also triggers Read deny rules, but `egrep`/`fgrep` do not (cli-doc)
+- **`/terminal-setup` lists Devin Desktop instead of Windsurf** — all references to Windsurf replaced with Devin Desktop in terminal setup docs, commands reference, and VS Code extension install instructions (cli-doc, ide-doc)
+- **Fast mode pricing clarification** — pricing line rephrased to "per MTok input/output" for clarity; Opus 4.6 fast mode override env var (`CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE`) removed and marked as retired (features-doc)
+- **`CLAUDE_CODE_OPUS_4_6_FAST_MODE_OVERRIDE` removed** — marked deprecated in env-vars reference; to use Opus 4.6 for fast mode, select the model with `/model` first then `/fast on` (settings-doc)
+- **Auto mode availability wording simplified** — glossary and auto-mode-config notes updated to say "research preview" without provider restriction language, now that Bedrock/Vertex/Foundry support is opt-in via the enable var (getting-started-doc, settings-doc)
+- **`CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN` caveat added** — env-vars table note clarifies this flag does not apply to background sessions from agent view (settings-doc)
+- **`tui` setting caveat added** — setting description notes that background sessions from agent view always use fullscreen regardless of this setting (settings-doc)
+- **`bypassPermissions` warning updated** — warning now lists the expanded protected directories (`.config/git`, `.devcontainer`, `.yarn`, `.mvn`) (settings-doc, sub-agents-doc)
+
 ## 26.6.2
 
 **36 references updated across 11 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, getting-started-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc
