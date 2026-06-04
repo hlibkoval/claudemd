@@ -2,6 +2,40 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.4
+
+**27 references updated across 10 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **`/fork` command (v2.1.161+)** — spawns a forked subagent that inherits the full conversation and works on a directive while you continue; available by default from v2.1.161 without setting `CLAUDE_CODE_FORK_SUBAGENT`; `/branch` is now distinct and only switches you into a conversation copy (cli-doc, sub-agents-doc)
+- **`SDKCommandsChangedMessage`** — new SDK message type emitted when the available command set changes mid-session (e.g., skills discovered on directory change); contains the full updated `commands` array and supersedes the `supportedCommands()` snapshot (agent-sdk-doc)
+- **`pending_permission_requests` on `initialize` response** — when a client connects to an already-running session, the control-response wrapper carries in-flight permission requests that arrived before the client connected and will not be re-sent (agent-sdk-doc)
+- **`overloaded` error type** — new `SDKAssistantMessageError` value `'overloaded'` (HTTP 529) distinguishing server-capacity errors from `'rate_limit'` (HTTP 429); added to headless `api_retry` event, `StopFailure` hook matcher, and hooks reference (agent-sdk-doc, headless-doc, hooks-doc)
+- **`OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES` env var** — controls whether `OTEL_RESOURCE_ATTRIBUTES` keys are attached as labels on every metric datapoint (default: `true`); `OTEL_RESOURCE_ATTRIBUTES` keys now also appear as standard attributes in the monitoring table (settings-doc, operations-doc)
+- **"When your context fills up" section** — new context-window guidance covering `/compact` with focus, `/clear` between tasks, delegating large reads to subagents, and the 1M token window available on Opus 4.6+/Sonnet 4.6 (features-doc)
+- **Fast mode and prompt cache interaction documented** — new "Turning on fast mode" section in prompt-caching docs explains the one-time cache-bust cost, that the fast-mode header stays in subsequent toggles (v2.1.86+), and what resets it (features-doc)
+- **Garbled text troubleshooting entry** — new entry for boxes/smears in VS Code, Cursor, or Devin Desktop integrated terminal, directing users to disable GPU acceleration via `/terminal-setup` (operations-doc)
+- **Agent-view parallel work item count** — from v2.1.161, session rows show a `done/total` count when two or more parallel items are running; peek panel names the longest-running item (features-doc)
+- **Ops changelog v2.1.162** — June 3 release notes added covering `claude agents --json waitingFor`, `/effort` confirmation, autocomplete fill-then-run, Remote Control footer pill, and numerous bug fixes (operations-doc)
+- **MCP unused connectors collapsed** — from v2.1.161, connectors never signed in to are hidden behind a "Show unused connectors" row in the claude.ai panel; previously-signed-in connectors stay visible (mcp-doc)
+- **WebSearch unavailable on Bedrock** — explicit note added to the Bedrock limitations list with link to the WebSearch tool behavior reference (cloud-providers-doc)
+
+### Changed
+
+- **`agent` setting applied mid-session** — `agent` moved from "no effect mid-session" to "applied on the next turn" list; switching agent also applies that agent's model override, hooks, and system prompt on the next turn (agent-sdk-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT` behavior updated** — variable now makes forked subagents the model's *default* spawn behavior rather than also changing `/fork` (which is now always available); description updated accordingly (settings-doc)
+- **Fast mode cost clarification** — cost applies once per conversation; toggling off and on again does not repeat the cache-bust; documented in both fast-mode and prompt-caching references (features-doc)
+- **Fullscreen clipboard copy paths documented** — clipboard path now broken out by OS (`pbcopy`, `wl-copy`/`xclip`/`xsel` with PRIMARY selection, PowerShell `Set-Clipboard`); per-terminal bypass modifier list expanded (Terminal.app `Fn`, VS Code/Cursor/Devin Desktop `Shift` or `Option`) (features-doc)
+- **Auto mode ignores project settings clarified** — now specifies v2.1.142 and later; `CLAUDE_CODE_ENABLE_AUTO_MODE` requirement on Bedrock/Vertex/Foundry specifies v2.1.158 and later (settings-doc)
+- **`.claude` protected-directory scope narrowed** — protection now covers only `.claude/worktrees`; earlier entry listed `.claude/commands`, `.claude/agents`, `.claude/skills` as exceptions (settings-doc)
+- **`CLAUDE_CODE_TMPDIR` gets short fallback `$TMPDIR`** — from v2.1.161, Bash subprocesses on macOS/Linux receive a short fallback `$TMPDIR` under the system default when the override path is long; Claude Code's own temp files still use the override (settings-doc)
+- **Agent SDK quickstart run instructions** — TypeScript tab moved first; Python split into separate `uv run` and `python agent.py` (pip) tabs (agent-sdk-doc)
+
+### Removed
+
+- **`/fork` as alias for `/branch`** — before v2.1.161, `/fork` was an alias for `/branch`; it is now a distinct command; the alias behavior is documented as legacy only (cli-doc, sub-agents-doc)
+
 ## 26.6.3
 
 **23 references updated across 9 skills:** agent-sdk-doc, best-practices-doc, cli-doc, errors-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, settings-doc, sub-agents-doc
