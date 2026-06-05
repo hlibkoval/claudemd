@@ -2,6 +2,35 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.5
+
+**11 references updated across 7 skills:** agent-sdk-doc, cli-doc, features-doc, ide-doc, mcp-doc, memory-doc, operations-doc, settings-doc
+
+### New
+
+- **`ResultMessage` subtype and error-field documentation** — new prose explains all `subtype` values (`success`, `error_during_execution`, `error_max_turns`, `error_max_budget_usd`, `error_max_structured_output_retries`) and clarifies `is_error`, `api_error_status`, `result`, and `errors` field semantics for each (agent-sdk-doc)
+- **`requiredMinimumVersion` / `requiredMaximumVersion` managed settings** — new fields in managed settings that block startup if Claude Code's version is outside the allowed range (operations-doc)
+- **`/plugin list` command** — lists installed plugins with `--enabled`/`--disabled` filters (operations-doc, cli-doc)
+- **Stop/SubagentStop hook `additionalContext` output** — Stop and SubagentStop hooks can now return `hookSpecificOutput.additionalContext` to pass feedback to Claude without triggering a hook error (operations-doc)
+- **`$` escape syntax in skill command bodies** — `\$` now inserts a literal `$` before a digit in skill command bodies (operations-doc)
+- **`tool_use_id` and `gen_ai.tool.call.id` OTEL attributes** — new attributes added to `claude_code.tool` and `claude_code.tool.execution` spans for joining spans to tool-result and tool-decision events and hook payloads (operations-doc)
+- **`skill.kind` OTEL attribute** — new `skill.kind: "workflow"` attribute on skill invocation events for workflow skills (operations-doc)
+- **Anthropic-hosted connectors (Microsoft 365, Gmail, Google Calendar) local-OAuth limitation** — from v2.1.162, authenticating these providers in `/mcp` redirects the user to Settings → Connectors on claude.ai; once connected there, the connector appears in Claude Code automatically (mcp-doc)
+- **Extension storage removal paths by platform** — VS Code extension uninstall instructions now provide separate `rm -rf` paths for macOS, Linux, and a PowerShell `Remove-Item` command for Windows (ide-doc)
+- **`waitingFor` field in `claude agents --json`** — when `status` is `waiting`, the JSON entry now includes `waitingFor` describing the block (e.g., `permission prompt`, `input needed`) (features-doc)
+
+### Changed
+
+- **WebFetch preapproved documentation domains** — WebFetch no longer prompts for a built-in set of preapproved docs domains; explicit `deny`/`ask`/`allow` rules still override the preapproved set (cli-doc)
+- **LSP tool "list symbols" split into two capabilities** — "List symbols in a file" and "Search for a symbol by name across the workspace" are now listed as separate capabilities (cli-doc)
+- **`mcp add` option-ordering note updated** — note clarifies that `--env` must not be immediately followed by the server name (the CLI would read it as a `KEY=value` pair); examples updated accordingly (mcp-doc)
+- **MCP per-server `timeout` behavior for values below 1000** — values below 1000 are now ignored and fall through to `MCP_TOOL_TIMEOUT` (or its ~28-hour default); prior to v2.1.162 they were floored to one second; `MCP_TOOL_TIMEOUT` env var retains the floor-to-one-second behavior (mcp-doc, settings-doc)
+- **Deep-link session-open warning UI updated** — the banner above the input is replaced by a persistent `Prompt from an external link` warning line below the input box that stays visible until the prompt is sent or cleared; character count shown for prompts over 1,000 characters (features-doc)
+- **Deep-link `repo` mode welcome header simplified** — the welcome header now shows which path was picked; the "last fetched" timestamp detail was removed (features-doc)
+- **`/init` reads `.devin/rules/`** — `/init` now incorporates `.devin/rules/` alongside `.cursorrules` and `.windsurfrules` when generating `CLAUDE.md` (memory-doc)
+- **PowerShell `curl` alias note in troubleshoot-install** — added note that PowerShell aliases `curl` to `Invoke-WebRequest`; users should run `curl.exe -sI` instead (operations-doc)
+- **Ops changelog v2.1.163** — June 4 release notes added (operations-doc)
+
 ## 26.6.4
 
 **27 references updated across 10 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, features-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, settings-doc, sub-agents-doc
