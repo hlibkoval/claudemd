@@ -2,6 +2,42 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.8
+
+**26 references updated across 13 skills:** agent-sdk-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`initialPrompt` agent definition field** — new optional field auto-submits a first user turn when the agent runs as the main thread agent (agent-sdk-doc)
+- **`fallbackModel` setting** — configure up to three fallback models tried in order when the primary model is overloaded or unavailable; `--fallback-model` now also applies to interactive sessions (operations-doc)
+- **Deny rules with glob in tool-name position** — `"*"` in the tool-name position of a deny rule now denies all tools; allow rules reject non-MCP globs, and unknown tool names in deny rules warn at startup (operations-doc)
+- **API refusal OTEL event (`claude_code.api_refusal`)** — new telemetry event logged when an API request returns `stop_reason: "refusal"`, with `model` and `request_id` attributes (operations-doc)
+- **Plugin attribution in `mcp_server_connection` OTEL event** — three new attributes (`is_plugin`, `plugin_id_hash`, `plugin.name`) distinguish plugin-provided MCP servers in telemetry without requiring `OTEL_LOG_TOOL_DETAILS` (operations-doc)
+- **`/plugin list` inline command** — `/plugin list` (with `--enabled`/`--disabled` filters and `ls` alias) lists installed plugins directly within an interactive session (plugins-doc)
+- **`requiredMinimumVersion` / `requiredMaximumVersion` settings** — managed-only settings that block Claude Code from starting if its version falls outside the allowed range; stronger than `minimumVersion` which only blocks downgrades (settings-doc)
+- **`CLAUDE_CODE_SYNC_SKILLS_INSTALL_TIMEOUT_MS` env var** — new variable to bound mid-session skills resync when `CLAUDE_CODE_SYNC_SKILLS` is set (settings-doc)
+- **Background task cleanup on `claude -p` exit** — background Bash tasks started during a `-p` run are now terminated ~5 seconds after the final result; previously a never-exiting background process would hold the invocation open indefinitely (headless-doc)
+- **`/btw` answer copy key (`c`)** — pressing `c` in the `/btw` overlay copies the answer to the clipboard as raw Markdown (cli-doc)
+- **Hooks `if` filter matching table** — new reference table documents how `Bash(...)` patterns evaluate against subcommands, `$()`, backticks, and when the filter fails open (hooks-doc)
+- **Stop/SubagentStop `additionalContext` documented in SubagentStop** — SubagentStop hooks now explicitly support `hookSpecificOutput.additionalContext` for non-error feedback, matching Stop hook behavior (hooks-doc)
+- **`additionalContext` for Stop hooks in transcript** — `Stop` and `SubagentStop` events added to the list of events that support `additionalContext` placement, shown as "Stop hook feedback" in the transcript (hooks-doc)
+- **Prompt/agent hook `$` escape in `prompt` field** — `\$1.00` renders as `$1.00` in prompt hook text; escape behavior documented in the common fields table (hooks-doc)
+- **`$` escape syntax in skill substitutions** — `\$` before a digit, `ARGUMENTS`, or a declared argument name inserts a literal `$` (skills-doc)
+- **`minimumVersion` vs `requiredMinimumVersion` distinction** — `minimumVersion` description updated to note it only blocks downgrades; `requiredMinimumVersion` is the hard floor that blocks startup (settings-doc)
+- **Version range constraints for updates** — `requiredMaximumVersion` now also caps auto-updates and `claude update`; `minimumVersion` description clarifies startup is not blocked (getting-started-doc, settings-doc)
+- **Commit attribution format change** — default commit attribution now omits the robot emoji line; only the `Co-Authored-By` trailer is included, with a note that the model name reflects the active session model (settings-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT=0` opt-out** — setting the variable to `0` now disables fork mode everywhere including server-side rollout; fork mode may also be enabled by default in interactive sessions via staged rollout (sub-agents-doc, settings-doc)
+
+### Changed
+
+- **Cloud provider model alias resolution clarified** — across Bedrock, Vertex AI, Foundry, and Claude Platform on AWS docs, the description of unversioned aliases (`sonnet`, `opus`, `haiku`) now says they resolve to "Claude Code's built-in default for that provider" rather than "the latest version," clarifying that defaults can lag the newest release (cloud-providers-doc)
+- **Subagent resume example rewritten** — the resume example now uses a custom `endpoint-finder` agent (instead of the built-in Explore agent) and clarifies that built-in one-shot agents omit the `agentId` trailer; Python code updated to parse `agentId` from `ToolResultBlock` directly (agent-sdk-doc)
+- **`/reload-plugins --force` flag added** — when a reload would invalidate the prompt cache by changing loaded MCP tools, the command warns and skips unless `--force` is passed; v2.1.163+ behavior (cli-doc, features-doc)
+- **`/plugin` command description expanded** — now documents subcommands (`list`, `install`, `enable`, `disable`) inline alongside the menu shortcut (cli-doc)
+- **`CLAUDE_CODE_TMPDIR` sandbox clarification** — the short fallback `$TMPDIR` for long paths applies only to sandboxed Bash subprocesses; unsandboxed Bash inherits the shell's `$TMPDIR` unchanged (settings-doc)
+- **`CLAUDE_CODE_SESSION_ID` behavior on `--resume`** — now explicitly states MCP servers receive the resumed session ID when `--resume <session-id>` is used; only `--continue` or resuming without an explicit ID may give the startup ID (settings-doc)
+- **`if` filter reference table added to hooks reference** — hooks reference now includes the same Bash matching table as the guide, with a cross-link anchor `#bash-if-matching` (hooks-doc)
+
 ## 26.6.5
 
 **11 references updated across 7 skills:** agent-sdk-doc, cli-doc, features-doc, ide-doc, mcp-doc, memory-doc, operations-doc, settings-doc
