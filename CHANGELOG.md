@@ -2,6 +2,55 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.9
+
+**30 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`initialPrompt` field on `AgentDefinition`** — auto-submitted as the first user turn when the agent runs as the main thread agent (agent-sdk-doc)
+- **`--safe-mode` flag and `CLAUDE_CODE_SAFE_MODE` env var** — starts Claude Code with all customizations (CLAUDE.md, plugins, skills, hooks, MCP servers) disabled for troubleshooting (operations-doc)
+- **`/cd` command** — moves a session to a new working directory without breaking the prompt cache mid-session (operations-doc)
+- **`disableBundledSkills` setting and `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS` env var** — hides bundled skills, workflows, and built-in slash commands from the model (operations-doc)
+- **`fallbackModel` setting** — configures up to three fallback models tried in order when the primary model is overloaded or unavailable; `--fallback-model` now also applies to interactive sessions (operations-doc)
+- **Glob pattern support in deny rule tool-name position** — `"*"` in a deny rule denies all tools; allow rules reject non-MCP globs, unknown tool names in deny rules warn at startup (operations-doc)
+- **`api_refusal` OTEL event** — logged when an API request returns `stop_reason: "refusal"`; includes `model` and `request_id` attributes (operations-doc)
+- **`is_plugin`, `plugin_id_hash`, and `plugin.name` attributes on `mcp_server_connection` events** — identifies whether a server comes from a plugin, with redaction for third-party plugin names unless `OTEL_LOG_TOOL_DETAILS=1` (operations-doc)
+- **`/btw` overlay `c` key to copy answer** — copies the overlay answer to clipboard as raw Markdown rather than hard-wrapped terminal text (cli-doc)
+- **`/reload-plugins --force` flag** — when a reload would change which MCP tools are loaded and invalidate the prompt cache, the command warns and skips; pass `--force` to apply anyway (cli-doc, features-doc)
+- **Background task termination behavior for `claude -p`** — background Bash tasks are terminated about five seconds after Claude returns its final result; before v2.1.163 a never-exiting task held the process open indefinitely (headless-doc)
+- **`Bash(if)` matching table in hooks guide and reference** — detailed table documenting how `if` patterns match against subcommands, `$(...)` expansions, and backticks, including fail-open behavior for constrained patterns (hooks-doc)
+- **`hookSpecificOutput.additionalContext` for SubagentStop hooks** — SubagentStop now supports `additionalContext` (same as Stop), for non-error feedback that keeps the subagent running (hooks-doc)
+- **`additionalContext` as Stop/SubagentStop feedback channel** — documented in the `additionalContext` placement in the `where the reminder appears` table; Stop and SubagentStop now listed alongside other events (hooks-doc)
+- **`/plugin list` subcommand inside interactive sessions** — `/plugin list` prints the inline listing; accepts `--enabled`/`--disabled` filters and `ls` as a shorthand (plugins-doc)
+- **`requiredMinimumVersion` and `requiredMaximumVersion` settings** — managed-settings-only keys that block startup when the running version is outside the approved range (settings-doc, getting-started-doc)
+- **`CLAUDE_CODE_SYNC_SKILLS_INSTALL_TIMEOUT_MS` env var** — bounds the download triggered when the host requests a skill reload during a session (settings-doc)
+- **`disallowed-tools` skill frontmatter key** — removes tools from Claude's available pool while a skill is active; restriction clears after the next message (skills-doc)
+- **`$` escape syntax in skill argument substitutions** — `\$` before a digit, `ARGUMENTS`, or a declared argument name inserts a literal `$` (skills-doc)
+- **ZDR eligibility note** — explicit note that Zero Data Retention is not included in the standard Enterprise plan and requires separate confirmation by Anthropic (security-doc)
+- **`requiredMinimumVersion`/`requiredMaximumVersion` row in admin control surface table** — documented alongside `minimumVersion` in the managed settings control table (settings-doc)
+- **Git commit attribution format change** — the `🤖 Generated with Claude Code` line was removed from the default commit trailer; only `Co-Authored-By:` remains, with a note that the model name reflects the active session model (settings-doc)
+
+### Changed
+
+- **Dynamic workflows out of research preview** — "research preview" qualifier removed from the availability note (best-practices-doc)
+- **Model alias resolution clarified for cloud providers** — Bedrock, Vertex AI, Foundry, and Claude Platform on AWS docs updated to say aliases resolve to Claude Code's "built-in default" for that provider (which can lag the newest release), not simply "the latest version" (cloud-providers-doc, features-doc, errors-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT` accepts `0` to opt out of rollout** — setting to `0` now explicitly disables fork mode, overriding any server-side staged rollout (settings-doc, sub-agents-doc)
+- **`CLAUDE_CODE_SESSION_ID` behavior on `--resume`** — clarified that `--resume <session-id>` delivers the resumed ID to MCP servers, matching hooks and Bash; `--continue` or `--resume` without an explicit ID may still deliver the startup ID (settings-doc)
+- **`CLAUDE_CODE_TMPDIR` sandboxing scope clarified** — the short fallback `$TMPDIR` for long paths applies only to sandboxed Bash subprocesses; unsandboxed commands inherit the shell's `$TMPDIR` unchanged (settings-doc)
+- **Hook `if` field description updated to reference new matching table** — reference now links to the Bash matching table and drops the prior "fails open on complex commands" inline prose (hooks-doc)
+- **Hook `prompt` field documents `\$` literal escape** — `\$1.00` renders as `$1.00` in prompt and agent hook bodies (hooks-doc)
+- **Subagent resumption example updated** — Python example uses a custom `endpoint-finder` agent definition and `ToolResultBlock`-based extraction instead of JSON stringification; TypeScript example removed (agent-sdk-doc)
+- **Quickstart welcome screen description updated** — launch text now describes the prompt bar showing version, model, and working directory rather than a "welcome screen" (getting-started-doc)
+
+### Removed
+
+- **`/reload-plugins` silent cache-invalidating reload** — as of v2.1.163, a reload that would trigger a full prompt-cache re-read now warns and holds instead of applying silently (features-doc)
+
+### Trivial
+
+- Minor wording/formatting updates across agent-sdk-doc, cli-doc, features-doc, getting-started-doc, settings-doc docs (link updates, column-width alignment, duplicated `theme` attributes in code fences)
+
 ## 26.6.5
 
 **11 references updated across 7 skills:** agent-sdk-doc, cli-doc, features-doc, ide-doc, mcp-doc, memory-doc, operations-doc, settings-doc

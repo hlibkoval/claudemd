@@ -10,6 +10,75 @@ This page is generated from the [CHANGELOG.md on GitHub](https://github.com/anth
 
 Run `claude --version` to check your installed version.
 
+<Update label="2.1.169" description="June 8, 2026">
+  * Added `--safe-mode` flag (and `CLAUDE_CODE_SAFE_MODE`) to start Claude Code with all customizations (CLAUDE.md, plugins, skills, hooks, MCP servers) disabled for troubleshooting
+  * Added `/cd` command to move a session to a new working directory without breaking the prompt cache mid-session
+  * Added a `disableBundledSkills` setting and `CLAUDE_CODE_DISABLE_BUNDLED_SKILLS` environment variable to hide bundled skills, workflows, and built-in slash commands from the model
+  * Fixed Up/Down arrows jumping to command history past the wrapped rows of a long input line — they now move through each visual row first, and history recall enters at the near edge
+  * Fixed enterprise managed MCP policies (`allowedMcpServers`/`deniedMcpServers`) not being enforced on reconnect, IDE-typed configs, `--mcp-config` servers during the first session after install, or before remote settings loaded; also fixed slow cold starts for orgs without remote settings
+  * Fixed a \~30-50ms UI stall at the start of each turn for macOS users logged in with claude.ai credentials
+  * Fixed `claude -p` being slow or appearing to hang on Windows while waiting for the slash-command/skill scan (regression in 2.1.161)
+  * Fixed Remote Control getting stuck on "reconnecting" after resuming a session when an OAuth token refresh happened at the same time
+  * Fixed Git Credential Manager's "Connect to GitHub" popup appearing on Windows at startup when background git commands ran without cached credentials
+  * Fixed footer hints (e.g. "esc to interrupt") not showing for users with a custom statusline
+  * Fixed stale permission and dialog prompts reappearing every time you reattached to a remote session whose worker had died while waiting on them
+  * Fixed `claude agents --json` omitting blocked and just-dispatched background sessions; added `--all` to include completed sessions, plus new `id` and `state` fields
+  * Fixed agents view leaving a stale/garbled frame after navigating back from an agent on WSL in Windows Terminal
+  * Fixed background agents ignoring project-level settings `env` values (e.g. `ANTHROPIC_MODEL`) when dispatched onto a pre-warmed worker
+  * Fixed MCPB plugin cache being spuriously invalidated on Windows, causing unnecessary re-extraction
+  * Fixed plugin `.in_use` PID lock files accumulating without bound; stale markers from crashed sessions are now swept once per day
+  * Fixed untrusted project settings being able to set OTEL client-certificate paths without trust confirmation
+  * `/workflows` now opens immediately even while a turn is in progress
+  * Improved `TaskCreate` reliability: malformed inputs are repaired automatically and validation errors for unloaded tools include the schema
+  * Improved the error message shown when your organization has disabled API key authentication, with guidance based on where the active API key comes from
+  * Reduced CPU usage while responses stream and during spinner animations
+  * Restored a default 5-minute idle timeout on Vertex/Foundry so a stalled stream aborts instead of hanging indefinitely; set `API_FORCE_IDLE_TIMEOUT=0` to opt out
+  * Remote-managed settings with an invalid entry now apply their remaining valid policies and surface the validation error, instead of silently dropping the whole payload
+  * Background sessions now preserve `--ide`, `--chrome`, `--bare`, `--remote-control`, and other flags across retire→wake, and respawn state validation was hardened
+  * Background sessions are now told that shared-checkout edits are blocked until they enter a worktree, avoiding a wasted rejected edit before `EnterWorktree`
+  * The "CLAUDE.md is too long" warning threshold now scales with the model's context window
+  * Auto-updater on Windows now stops retrying within a session once `claude.exe` is held by another process
+  * Improved color contrast for skill tags in the slash-command menu
+  * Promo credit claims for Apple/Google-billed subscribers without a payment method now explain where to add one
+  * Added a tip suggesting `claude agents` when running multiple concurrent sessions
+</Update>
+
+<Update label="2.1.168" description="June 6, 2026">
+  * Bug fixes and reliability improvements
+</Update>
+
+<Update label="2.1.167" description="June 6, 2026">
+  * Bug fixes and reliability improvements
+</Update>
+
+<Update label="2.1.166" description="June 6, 2026">
+  * Added `fallbackModel` setting to configure up to three fallback models tried in order when the primary model is overloaded or unavailable; `--fallback-model` now also applies to interactive sessions
+  * Added glob pattern support in deny rule tool-name position (`"*"` denies all tools); allow rules reject non-MCP globs, and unknown tool names in deny rules warn at startup
+  * Hardened cross-session messaging: messages relayed via `SendMessage` from other Claude sessions no longer carry user authority — receivers refuse relayed permission requests, and auto mode blocks them
+  * `MAX_THINKING_TOKENS=0`, `--thinking disabled`, and the per-model thinking toggle now disable thinking on models that think by default via the Claude API (3P providers unchanged)
+  * Claude Code now retries a turn once on the fallback model when the API rejects an unexpected non-retryable error; auth, rate-limit, request-size, and transport errors still surface immediately
+  * `claude update` now announces the target version before downloading instead of going silent
+  * `claude agents`: typing a URL into the list now filters to the session whose first prompt contained it
+  * Fixed a recurring "image could not be processed" error and extra token usage when an unprocessable image was sent in a session
+  * Fixed remote sessions becoming permanently stuck when a brief backend disruption occurred during worker registration at startup
+  * Fixed flickering in JetBrains IDE terminals (IntelliJ, PyCharm, WebStorm, etc.) on 2026.1+ by enabling synchronized output
+  * Fixed Shift+non-ASCII characters (e.g. Shift+ä → Ä) being dropped in terminals using the Kitty keyboard protocol (WezTerm, Ghostty, kitty)
+  * Fixed PowerShell command validation occasionally hanging far past its time budget on Windows when a killed process's children held its output pipes
+  * Fixed orphaned `claude --bg-pty-host` processes spinning at 100% CPU after the daemon dies while connected on macOS
+  * Fixed voice mode requiring `/login` to clear a stale auth check after toggling `/voice`
+  * Fixed managed settings with an invalid entry silently disabling enforcement of their remaining valid policies
+  * Fixed managed-settings `allowedMcpServers`/`deniedMcpServers` predicates not matching when they use `${VAR}` references
+  * Fixed background agent sessions that entered a git worktree crash-looping with "No conversation found" when reopened from `claude agents`
+  * Fixed duplicated thinking text in the Ctrl+O transcript view while streaming
+  * Fixed `/doctor` showing a contradictory failed "Not inside a remote session" check when run inside a remote session
+  * Fixed the cursor sticking at the end of the first line when typing a multiline prompt in the `claude agents` dispatch and reply inputs
+  * Fixed blank lines appearing between background agent rows in the task list on terminals without Unicode support
+</Update>
+
+<Update label="2.1.165" description="June 5, 2026">
+  * Bug fixes and reliability improvements
+</Update>
+
 <Update label="2.1.163" description="June 4, 2026">
   * Added `requiredMinimumVersion` and `requiredMaximumVersion` managed settings — Claude Code refuses to start if its version is outside the allowed range and directs the user to an approved version
   * Added `/plugin list` command to list installed plugins, with `--enabled`/`--disabled` filters
