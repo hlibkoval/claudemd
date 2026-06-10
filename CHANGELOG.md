@@ -2,6 +2,88 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.10
+
+**86 references updated across 20 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Claude Fable 5 model** — new Mythos-class model available via `/model fable` or `best` alias (where available); requires v2.1.170; not available under ZDR; cybersecurity/biology content triggers automatic fallback to Opus (features-doc, getting-started-doc, settings-doc, sub-agents-doc, agent-sdk-doc)
+- **`fable` model alias and `ANTHROPIC_DEFAULT_FABLE_MODEL` env var** — new alias resolves to Fable 5; new env var pins Fable model ID for third-party providers and controls automatic fallback recognition (features-doc, settings-doc, cloud-providers-doc, agent-sdk-doc)
+- **Fallback model chains** — configure up to three fallback models via `fallbackModel` setting or `--fallback-model` flag for availability-based switching; separate from content-based Fable 5 automatic fallback (features-doc)
+- **Automatic model fallback for Fable 5** — when a safety classifier flags a request, Claude Code re-runs it on the default Opus model with a transcript notice; session continues on Opus until `/model fable` is re-selected (features-doc, operations-doc, errors-doc)
+- **`ask` rules now override `bypassPermissions`** — explicit ask rules in `permissions` force a prompt even in `bypassPermissions` mode; documented across permissions, SDK, security, and sub-agents docs (agent-sdk-doc, settings-doc, security-doc, sub-agents-doc, features-doc)
+- **`plan` mode behavior clarified: file edits prompt via `canUseTool`** — plan mode no longer described as "read-only"; file edits are never auto-approved and route through the callback even when an allow rule matches (agent-sdk-doc, settings-doc, features-doc, ide-doc)
+- **`disallowed_tools=["*"]` glob deny rule** — documented: a `"*"` deny rule removes every tool definition from the request; tool-name globs are supported in deny rules (agent-sdk-doc)
+- **Allow rules reject non-MCP globs** — allow rules only accept wildcards after a literal `mcp__<server>__` prefix; unanchored globs like `"*"` in allow rules are ignored with a startup warning (agent-sdk-doc)
+- **`ttft_stream_ms` field on `ResultMessage`** — new field measuring time to first `message_start` stream event, lower than `ttft_ms`; the gap between them is streaming time (agent-sdk-doc)
+- **`audio` and `resource_link` tool result content types** — tool result `content` array now accepts `audio` and `resource_link` blocks alongside `text`, `image`, and `resource` (agent-sdk-doc)
+- **`CLAUDE_AGENT_SDK_DISABLE_BUILTIN_AGENTS` documented for interactive sessions** — built-in subagents are always registered interactively; env var only applies in non-interactive/SDK mode (sub-agents-doc)
+- **`post-session` lifecycle hook for self-hosted runners** — new hook runs after the session ends and before the workspace is deleted; SIGTERM→SIGKILL window is also configurable (operations-doc)
+- **`defer` permission decision value** — hooks can now return `defer` as a `PreToolUse` permission decision; precedence order updated to `deny > defer > ask > allow` (hooks-doc)
+- **Hook content rewriting summary** — new section documenting which events support `updatedInput`/`updatedToolOutput` rewriting vs. only `additionalContext` injection (hooks-doc)
+- **`diagnostics` field on LSP server config** — set to `false` to suppress automatic diagnostic injection after edits while keeping code navigation (plugins-doc)
+- **Single-skill plugin root `SKILL.md` layout** — plugins with exactly one skill can place `SKILL.md` at the plugin root instead of `skills/`; `name` frontmatter controls invocation name (plugins-doc)
+- **Plugin `ref` + `sha` pinning survives deleted upstream branches** — when both are set, the pinned commit is fetched directly; install succeeds even if the branch/tag was deleted (plugins-doc)
+- **Plugin detail view shows component inventory** — the plugin detail view lists contributed commands, skills, agents, hooks, MCP servers, and LSP servers; also available via `claude plugin details` (plugins-doc)
+- **Sandbox session temp directory writable by default** — `$TMPDIR` inside the sandbox now points to the session temp dir (writable alongside the working dir); documented write behavior and `sandbox.filesystem.allowWrite` scope (security-doc)
+- **`DISABLE_PROMPT_CACHING_FABLE` env var** — disables prompt caching for Fable models only (features-doc, settings-doc)
+- **`Remote Control active` footer indicator (v2.1.162)** — a persistent link to the claude.ai session URL stays in the footer while Remote Control is connected; selectable with the down arrow key (features-doc)
+- **`/mcp` command works from mobile and web (v2.1.166)** — returns a text summary of server status instead of opening the picker; accepts `reconnect`, `enable`, and `disable` subcommands (features-doc)
+- **URL filter in agent view dispatch input** — any non-special URL in the dispatch filter finds the session whose first prompt contained that URL (features-doc)
+- **`claude agents --json --all` flag** — includes completed background sessions in addition to live and in-progress ones; JSON schema also adds `state` field and changes `status` to only appear while the process is alive (features-doc)
+- **`--safe-mode` flag now documented in troubleshooting** — use `claude --safe-mode` as the first isolation step before pointing `CLAUDE_CONFIG_DIR` at an empty directory (operations-doc)
+- **`Usage credits required for 1M context` error** — new error entry: fires on entitlement check, not quota exhaustion; resolution steps include `/usage-credits` and switching to standard context (operations-doc, errors-doc)
+- **`Your organization has disabled API key authentication` error** — new error entry with multiple recovery variants depending on whether the key came from `ANTHROPIC_API_KEY`, env, or `apiKeyHelper` (operations-doc, errors-doc)
+- **`safe_mode` attribute on OTEL plugin/session events** — `"true"` when session started with `--safe-mode`; requires v2.1.169 (operations-doc)
+- **`user.id` OTEL attribute clarified** — documented as a random anonymous identifier generated on first run, persisted in `~/.claude.json`, not derived from account; deleting the file creates a new unrelated value (operations-doc)
+- **`--fallback-model` now appears in transcript notices, not `/model` change** — availability-based fallback is visible in the transcript; `/model` only changes for Bedrock/Vertex startup checks and Fable 5 automatic fallback (operations-doc, errors-doc)
+- **`/model` picker shows worktree lock note** — while an agent runs, its worktree is locked with `git worktree lock`; released when the agent finishes; `--force` needed to remove a locked worktree manually (features-doc)
+- **Skills in `-p` mode** — user-invoked skills like `/code-review` now work in `-p` mode; only interactive-dialog built-ins like `/config` remain unavailable (headless-doc)
+- **Cloud session user skills and agents not available** — `~/.claude/skills/`, `~/.claude/agents/`, and `~/.claude/commands/` do not transfer to cloud sessions; skills enabled on claude.ai load automatically (headless-doc)
+- **apt/dnf/apk `stable` vs `latest` channel docs** — setup instructions now document both channels with explicit `latest` repository URLs for each package manager (getting-started-doc)
+- **Model availability under ZDR section** — Fable 5 is unavailable for ZDR organizations; `best` alias resolves to Opus for ZDR accounts (security-doc)
+- **`model` field on `AgentDefinition` now links to accepted values** — clarified to accept alias or full model name with link to model-config doc (agent-sdk-doc)
+- **Tool search model support broadened** — now supported on every Claude model except Haiku, not just Sonnet 4+ and Opus 4+ (agent-sdk-doc, mcp-doc)
+- **MCP tool search has no per-server tool cap** — Claude Code imposes no fixed per-server limit; practical limit is context window budget (mcp-doc)
+
+### Changed
+
+- **"Remote sessions" renamed to "cloud sessions"** — all references to "remote sessions" updated to "cloud sessions" across IDE, headless, best-practices, and CI/CD docs (ide-doc, headless-doc, best-practices-doc, ci-cd-doc)
+- **`best` alias now resolves to Fable 5 where available** — previously resolved to latest Opus; on accounts without Fable 5 access (including ZDR), still resolves to Opus (features-doc)
+- **`xhigh` effort now recommended for Opus 4.8 and Opus 4.7** — table updated; Fable 5 added with effort range `low`–`max` and default `high` (agent-sdk-doc, features-doc)
+- **TypeScript SDK `effort` default changed to `Model default`** — both SDKs now leave effort unset when not specified, deferring to the model's default; TypeScript no longer defaults to `"high"` (agent-sdk-doc)
+- **`plan` mode description corrected** — described as "explore without editing" rather than "read-only tools only" across all docs (agent-sdk-doc, settings-doc, features-doc, getting-started-doc, ide-doc)
+- **`bypassPermissions` description updated** — now described as "bypass permission checks" with the ask-rule exception noted everywhere it appears (agent-sdk-doc, settings-doc, sub-agents-doc, ide-doc)
+- **Managed settings: first non-empty config wins** — clarified that Claude Code applies the first source that returns a non-empty configuration, not just the first one found (settings-doc)
+- **Auto mode: deny and ask rules evaluated before classifier** — explicit ask/deny rules now documented as pre-classifier steps that still block or prompt regardless of auto mode (settings-doc)
+- **`MAX_THINKING_TOKENS=0` behavior on Fable 5 and third-party providers** — has no effect on Fable 5 (thinking cannot be turned off); on third-party providers, omits the `thinking` parameter instead of disabling thinking (features-doc, ide-doc)
+- **`/feedback` data stored in Google Cloud Storage** — data retention note updated to mention GCS encryption at rest (security-doc)
+- **`--dangerously-skip-permissions` described as bypassing "other than explicit ask rules"** — security and sub-agents docs updated to reflect ask-rule exception (security-doc, sub-agents-doc)
+- **Sandbox: `ask` rules for bare `Bash` skipped for sandboxed commands** — content-scoped ask rules like `Bash(git push *)` still prompt for sandboxed commands; bare `Bash` ask rule does not (security-doc)
+- **`settings.local.json` described as "gitignored when Claude Code creates it"** — note added that manually created files need manual gitignore entries (hooks-doc, memory-doc, settings-doc, best-practices-doc)
+- **`initialPrompt` field: ignored when agent is a subagent** — clarified that `initialPrompt` is only submitted when the agent runs as the main thread agent (agent-sdk-doc)
+- **`fable` alias added to `model` field on `AgentDefinition`** — accepted aliases now include `fable`, `opus`, `sonnet`, `haiku`, and `inherit` (agent-sdk-doc, sub-agents-doc)
+- **Session storage respects `CLAUDE_CONFIG_DIR`** — resume troubleshooting note updated: sessions are under `$CLAUDE_CONFIG_DIR/projects/` when set (agent-sdk-doc)
+- **`/resume` picker updated for `/cd` relocations (v2.1.169)** — sessions moved with `/cd` appear in the new directory's picker (headless-doc)
+- **Desktop macOS managed settings preference domain corrected** — changed from `com.anthropic.Claude` to `com.anthropic.claudefordesktop` (ide-doc)
+- **Plugin suggestion marketplace requires admin allowlist** — the "suggested for this directory" label now requires `pluginSuggestionMarketplaces` managed setting (plugins-doc)
+- **`/reload-plugins` warning documented in plugins-doc** — v2.1.163 behavior (warn and hold instead of silently applying) now noted in the reload cost section (plugins-doc)
+- **`CLAUDE_CODE_FORK_SUBAGENT` rollout note clarified** — split into explicit enable/disable instructions; staged rollout note simplified (sub-agents-doc)
+- **`claude agents --json` output schema expanded** — `state` field added; `status`/`pid` only present while process is alive; `waitingFor` documented (features-doc)
+- **Built-in Explore/Plan agents confirmed one-shot, no `agentId` returned** — explicitly noted that they cannot be resumed; use `general-purpose` or custom agent when resumption is needed (agent-sdk-doc, sub-agents-doc)
+- **Cloud sessions: `Accept edits` replaces `Auto accept edits` label** — cloud sessions pre-approve file edits; selector shows "Accept edits" instead of "Ask permissions" (headless-doc, ide-doc)
+- **Desktop Cowork on 3P research preview noted** — Desktop can run the Code tab on Bedrock, Vertex AI, Foundry, or a self-hosted gateway via the Cowork on 3P research preview (ide-doc, cloud-providers-doc, getting-started-doc)
+- **Teleport requires claude.ai subscription** — noted in how-it-works doc (getting-started-doc)
+- **`disableBundledSkills` setting documented** — bundled skills are available "unless disabled with `disableBundledSkills`" (skills-doc)
+- **`\\$1` escape behavior corrected** — doubled backslash leaves both backslashes in place and `$1` still expands (skills-doc)
+- **`model` metric attribute scope clarified** — only available on `claude_code.token.usage` and `claude_code.cost.usage`, not activity counters (operations-doc)
+- **Pasted image error handling improved (v2.1.142)** — Claude Code now replaces unprocessable images with a text placeholder and retries; prior version workaround removed from docs (operations-doc, errors-doc)
+
+### Trivial
+
+- Minor wording/formatting updates across agent-sdk-doc, ci-cd-doc, features-doc, getting-started-doc, hooks-doc, ide-doc (link URL hash fixes, duplicated `theme` attributes in code fences, column-width alignment)
+
 ## 26.6.9
 
 **30 references updated across 15 skills:** agent-sdk-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc

@@ -486,6 +486,10 @@
       {
         "url": "https://code.claude.com/docs/en/prompt-library.md",
         "file": "claude-code-prompt-library.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/advisor.md",
+        "file": "claude-code-advisor.md"
       }
     ],
     "errors-doc": [
