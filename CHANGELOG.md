@@ -2,6 +2,23 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.11
+
+**11 references updated across 4 skills:** cloud-providers-doc, features-doc, memory-doc, operations-doc, plugins-doc
+
+### New
+
+- **Claude Code v2.1.172 release notes** — sub-agents can now spawn their own sub-agents up to 5 levels deep; Bedrock reads AWS region from `~/.aws` config when `AWS_REGION` is unset; search bar added to `/plugin` marketplace browser; `model` attribute added to `claude_code.lines_of_code.count` OTEL metric; multiple bug fixes for model picker, `availableModels`, background agents, `WebFetch` wildcard rules, and workflow validation (operations-doc)
+
+### Changed
+
+- **`claude-plugins-official` marketplace registration** — the official Anthropic marketplace is now only auto-registered on first interactive launch; non-interactive scripts that run before that must add it explicitly with `claude plugin marketplace add anthropics/claude-plugins-official` (plugins-doc)
+- **Plugin submission URL and access requirements** — the claude.ai submission form moved to `claude.ai/admin-settings/directory/submissions/plugins/new` and now requires a Team or Enterprise org with directory management access; individual authors without a Team/Enterprise org should use the Console form instead (plugins-doc)
+
+### Removed
+
+- Minor wording/formatting updates across cloud-providers-doc, features-doc, memory-doc docs (interactive JSX components removed from rendered source)
+
 ## 26.6.10
 
 **86 references updated across 20 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, ci-cd-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, memory-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc

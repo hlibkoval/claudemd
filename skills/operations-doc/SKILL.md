@@ -1,40 +1,47 @@
 ---
 name: operations-doc
-description: Reference documentation for operating Claude Code at scale: analytics and dashboards, cost tracking and spend limits, OpenTelemetry monitoring, troubleshooting (performance/stability/search), installation and login error fixes, configuration debugging, runtime error codes, and the changelog and weekly What's New digests. Use when questions involve costs, usage metrics, OTel setup, errors, debugging configs, or recent releases.
 user-invocable: false
 ---
 
 # Operations Documentation
 
-This skill provides the complete official documentation for operating and maintaining Claude Code at scale.
+This skill provides the complete official documentation for Claude Code operations: analytics, cost management, OpenTelemetry monitoring, troubleshooting, configuration debugging, error reference, and what's new.
 
 ## Quick Reference
 
-### Analytics Dashboards
+### Analytics dashboards
 
-| Plan | Dashboard URL | Available Metrics |
-|------|--------------|-------------------|
-| Teams / Enterprise | claude.ai/analytics/claude-code | Usage, contribution (GitHub), leaderboard, CSV export |
-| API (Console) | platform.claude.com/claude-code | Usage, spend, team insights per user |
+| Plan | Dashboard URL | Includes |
+| :--- | :------------ | :------- |
+| Teams / Enterprise | claude.ai/analytics/claude-code | Usage metrics, contribution metrics (GitHub), leaderboard, CSV export |
+| API (Console) | platform.claude.com/claude-code | Usage metrics, spend tracking, team insights |
 
-**Contribution metrics** (Teams/Enterprise, public beta): require GitHub app install + Owner enabling at claude.ai/admin-settings/claude-code. Data updates daily. Not available with Zero Data Retention. Attribution window: 21 days before to 2 days after PR merge.
+Contribution metrics require GitHub app installation + GitHub analytics toggle enabled. Not available with Zero Data Retention.
 
-### Cost Tracking
+### Cost commands
 
-| Command | Purpose |
-|---------|---------|
-| `/usage` | Current session token usage and cost estimate; plan usage breakdown on Pro/Max/Team |
-| `/usage-credits` | Buy or request additional usage credits |
-| `/model` | Switch models mid-session to manage costs |
-| `/compact [focus]` | Summarize history to reduce context size |
+| Command | What it does |
+| :------ | :----------- |
+| `/usage` | Session token usage, cost estimate, plan limits breakdown by skill/plugin/MCP |
+| `/usage-credits` | Buy extra credits (Pro/Max) or request from admin (Team/Enterprise) |
+| `/compact [focus]` | Summarize conversation to free context |
 | `/clear` | Start fresh session |
+| `/model` | Switch model (Sonnet for most tasks; Opus for complex reasoning) |
+| `/effort` | Adjust reasoning level to balance cost vs. quality |
+| `/context` | See what's consuming the context window |
 
-**Typical costs**: ~$13/developer/active day; ~$150–250/month. 90% of users stay under $30/active day.
+### Average API cost benchmarks
 
-**Rate limit recommendations by team size:**
+| Metric | Value |
+| :----- | :---- |
+| Average per active developer per day | ~$13 |
+| Typical monthly per developer | $150–250 |
+| 90th percentile daily cap | <$30/active day |
+
+### Rate limit recommendations (API)
 
 | Team size | TPM per user | RPM per user |
-|-----------|-------------|-------------|
+| :-------- | :----------- | :----------- |
 | 1–5 | 200k–300k | 5–7 |
 | 5–20 | 100k–150k | 2.5–3.5 |
 | 20–50 | 50k–75k | 1.25–1.75 |
@@ -42,147 +49,162 @@ This skill provides the complete official documentation for operating and mainta
 | 100–500 | 15k–20k | 0.37–0.47 |
 | 500+ | 10k–15k | 0.25–0.35 |
 
-**Token reduction strategies**: Use `/effort` to lower thinking budget; move CLAUDE.md instructions to skills (load on-demand); use subagents for verbose operations; install code intelligence plugins; preprocess with hooks; write specific prompts.
+### OpenTelemetry quick start
 
-### OpenTelemetry Monitoring
+Enable telemetry with these environment variables:
 
-**Quick start env vars:**
+```bash
+export CLAUDE_CODE_ENABLE_TELEMETRY=1
+export OTEL_METRICS_EXPORTER=otlp        # otlp | prometheus | console | none
+export OTEL_LOGS_EXPORTER=otlp           # otlp | console | none
+export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer your-token"
+```
 
-| Variable | Purpose | Example Values |
-|----------|---------|---------------|
-| `CLAUDE_CODE_ENABLE_TELEMETRY` | Enable telemetry (required) | `1` |
-| `OTEL_METRICS_EXPORTER` | Metrics exporter | `otlp`, `prometheus`, `console`, `none` |
-| `OTEL_LOGS_EXPORTER` | Logs/events exporter | `otlp`, `console`, `none` |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | Protocol | `grpc`, `http/json`, `http/protobuf` |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector endpoint | `http://localhost:4317` |
-| `OTEL_EXPORTER_OTLP_HEADERS` | Auth headers | `Authorization=Bearer token` |
-| `OTEL_METRIC_EXPORT_INTERVAL` | Export interval ms (default: 60000) | `10000` |
-| `OTEL_LOGS_EXPORT_INTERVAL` | Logs interval ms (default: 5000) | `5000` |
-| `OTEL_LOG_USER_PROMPTS` | Log prompt content (default: off) | `1` |
-| `OTEL_LOG_TOOL_DETAILS` | Log tool params/commands (default: off) | `1` |
-| `OTEL_LOG_TOOL_CONTENT` | Log tool I/O in spans (default: off) | `1` |
-| `OTEL_LOG_RAW_API_BODIES` | Log full API request/response bodies | `1` or `file:<dir>` |
+### Key OTel environment variables
 
-**Exported metrics:**
+| Variable | Description | Default |
+| :------- | :---------- | :------ |
+| `CLAUDE_CODE_ENABLE_TELEMETRY` | Master enable switch | off |
+| `OTEL_METRICS_EXPORTER` | Metrics backend(s) | — |
+| `OTEL_LOGS_EXPORTER` | Logs/events backend(s) | — |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector endpoint | — |
+| `OTEL_METRIC_EXPORT_INTERVAL` | Metrics flush interval (ms) | 60000 |
+| `OTEL_LOGS_EXPORT_INTERVAL` | Logs flush interval (ms) | 5000 |
+| `OTEL_LOG_USER_PROMPTS` | Include prompt text in events | off |
+| `OTEL_LOG_TOOL_DETAILS` | Include Bash commands, MCP names, skill names | off |
+| `OTEL_LOG_TOOL_CONTENT` | Include tool input/output in spans | off |
+| `OTEL_LOG_RAW_API_BODIES` | Log full Messages API request/response JSON | off |
+| `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA` | Enable distributed tracing (beta) | off |
 
-| Metric | Unit | Description |
-|--------|------|-------------|
-| `claude_code.session.count` | count | CLI sessions started |
-| `claude_code.token.usage` | tokens | Tokens used (type: input/output/cacheRead/cacheCreation) |
-| `claude_code.cost.usage` | USD | API cost per request |
-| `claude_code.lines_of_code.count` | count | Lines modified (type: added/removed) |
-| `claude_code.commit.count` | count | Git commits created |
-| `claude_code.pull_request.count` | count | PRs created |
-| `claude_code.code_edit_tool.decision` | count | Edit/Write/NotebookEdit accept/reject decisions |
-| `claude_code.active_time.total` | s | Active time (type: user/cli) |
+### Available OTel metrics
 
-**Key OTel events**: `user_prompt`, `tool_result`, `tool_decision`, `api_request`, `api_error`, `api_refusal`, `mcp_server_connection`, `permission_mode_changed`, `auth`, `compaction`, `plugin_installed`, `plugin_loaded`, `skill_activated`, `hook_registered`, `hook_execution_start`, `hook_execution_complete`
+| Metric | Description | Unit |
+| :----- | :---------- | :--- |
+| `claude_code.session.count` | Sessions started | count |
+| `claude_code.token.usage` | Tokens used | tokens |
+| `claude_code.cost.usage` | Session cost | USD |
+| `claude_code.lines_of_code.count` | Lines added/removed | count |
+| `claude_code.commit.count` | Git commits created | count |
+| `claude_code.pull_request.count` | PRs created | count |
+| `claude_code.code_edit_tool.decision` | Accept/reject decisions | count |
+| `claude_code.active_time.total` | Active usage time | s |
 
-**Traces (beta)**: enable with `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` + `OTEL_TRACES_EXPORTER`. Span hierarchy: `claude_code.interaction` → `claude_code.llm_request` / `claude_code.tool` (→ `blocked_on_user` + `execution`) / `claude_code.hook`.
+### OTel event types
 
-**Administrator config**: deploy via managed settings file using `"env"` key. Dynamic headers via `otelHeadersHelper` script in settings.json. Runs every 29 min by default (`CLAUDE_CODE_OTEL_HEADERS_HELPER_DEBOUNCE_MS` to customize).
+`user_prompt` · `tool_result` · `tool_decision` · `api_request` · `api_error` · `api_refusal` · `api_request_body` · `api_response_body` · `permission_mode_changed` · `auth` · `mcp_server_connection` · `internal_error` · `plugin_installed` · `plugin_loaded` · `skill_activated` · `at_mention` · `api_retries_exhausted` · `hook_registered` · `hook_execution_start` · `hook_execution_complete` · `hook_plugin_metrics` · `compaction` · `feedback_survey`
 
-### Troubleshooting Quick Reference
+All events share standard attributes: `session.id`, `user.id`, `user.email`, `user.account_uuid`, `organization.id`, `terminal.type`, `app.version`, `app.entrypoint`.
 
-**Which page to go to:**
+### Tracing span hierarchy (beta)
 
-| Symptom | Resource |
-|---------|----------|
-| `command not found`, PATH issues, TLS errors, install fails | Troubleshoot installation and login |
-| OAuth errors, 403 Forbidden, login loops, Bedrock/Vertex credentials | Troubleshoot installation and login (login section) |
+```
+claude_code.interaction
+├── claude_code.llm_request
+├── claude_code.hook
+└── claude_code.tool
+    ├── claude_code.tool.blocked_on_user
+    ├── claude_code.tool.execution
+    └── (Agent tool) subagent spans
+```
+
+Enable with `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` plus an OTel traces exporter.
+
+### Troubleshooting symptom index
+
+| Symptom | Go to |
+| :------ | :---- |
+| `command not found`, PATH issues, `EACCES`, TLS install errors | Troubleshoot installation and login |
+| Login loops, OAuth errors, `403 Forbidden`, cloud credentials | Troubleshoot installation and login — login section |
 | Settings not applying, hooks not firing, MCP not loading | Debug your configuration |
-| API errors (5xx, 529, 429), request validation | Error reference |
-| High CPU/memory, hangs, search not finding files | Troubleshooting (performance) |
+| `API Error: 5xx`, `529`, `429`, validation errors | Error reference |
+| `model not found` or access errors | Error reference — model section |
+| High CPU/memory, hangs, search not finding files | Troubleshooting — performance section |
 
-**Common configuration issues:**
+Run `/doctor` for an automated check of installation, settings, MCP, and context.
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Hook never fires | `matcher` is array, not string | Use `"Edit\|Write"` (pipe-separated string) |
-| Hook never fires | Lowercase tool name in matcher | Tool names are capitalized: `Bash`, `Edit`, `Write` |
-| Settings key ignored | Set in `~/.claude.json` instead of `~/.claude/settings.json` | These are different files |
-| `settings.json` value ignored | Same key in `settings.local.json` | Local overrides project; project overrides user |
-| Skill not in `/skills` | `.claude/skills/name.md` instead of folder | Use `.claude/skills/name/SKILL.md` |
-| MCP server in `.mcp.json` never loads | File placed under `.claude/` | Must be at repo root as `.mcp.json` |
-
-**Debug commands:**
+### Debug commands reference
 
 | Command | Shows |
-|---------|-------|
-| `/context` | Everything in context window by category |
-| `/memory` | Which CLAUDE.md files loaded |
-| `/skills` | Available skills |
+| :------ | :---- |
+| `/context` | Everything in the context window by category |
+| `/memory` | Which CLAUDE.md and rules files loaded |
+| `/skills` | Available skills from all sources |
 | `/hooks` | Active hook configurations |
-| `/mcp` | MCP server status |
-| `/doctor` | Config diagnostics, invalid keys, schema errors |
+| `/mcp` | Connected MCP servers and status |
+| `/permissions` | Resolved allow/deny rules |
+| `/doctor` | Config diagnostics, schema errors, installation health |
 | `/status` | Active settings sources |
-| `/debug [issue]` | Enable debug logging |
+| `/debug [issue]` | Enables debug logging for the session |
 
-**Clean test**: `cd /tmp && CLAUDE_CONFIG_DIR=/tmp/claude-clean claude`  
-**Safe mode**: `claude --safe-mode` — disables CLAUDE.md, plugins, skills, hooks, MCP servers (requires v2.1.169+)
+### Common config pitfalls
 
-### Runtime Error Quick Reference
+| Symptom | Cause | Fix |
+| :------ | :---- | :-- |
+| Hook never fires | `matcher` is a JSON array | Use a string with `\|` separating tool names |
+| Hook never fires | Lowercase matcher like `"bash"` | Tool names are capitalized: `Bash`, `Edit`, `Write` |
+| Hook in wrong file | Defined in standalone file | Put hooks under `"hooks"` key in `settings.json` |
+| Settings.json key ignored | Overridden by `settings.local.json` | Check local scope; it wins over project scope |
+| Skill not in `/skills` | File at `.claude/skills/name.md` not in a folder | Use `.claude/skills/name/SKILL.md` |
+| MCP server from `.mcp.json` never loads | Approval prompt was dismissed | Run `/mcp` and approve |
+| MCP env vars missing | Set in `settings.json env`, not per-server | Set `env` inside `.mcp.json` for the server |
 
-**Automatic retries**: Claude Code retries up to 10 times (tunable via `CLAUDE_CODE_MAX_RETRIES`). `API_TIMEOUT_MS` defaults to 600000ms.
+### Error recovery quick reference
 
-| Error | Category | Fix |
-|-------|----------|-----|
-| `API Error: 500` | Server | Check status.claude.com; retry |
-| `API Error: 529 Overloaded` | Server | Retry or `/model` switch |
-| `Request timed out` | Server | Retry; raise `API_TIMEOUT_MS` for slow networks |
-| `You've hit your session limit` | Usage | Wait for reset or `/usage-credits` |
-| `Request rejected (429)` | Rate limit | Lower concurrency; check Console limits |
-| `Credit balance is too low` | Usage | Add credits at platform.claude.com/settings/billing |
-| `Not logged in` | Auth | `/login` |
-| `Invalid API key` | Auth | Check key not revoked; unset stale `ANTHROPIC_API_KEY` |
-| `This organization has been disabled` | Auth | Unset `ANTHROPIC_API_KEY`; use subscription auth |
-| `OAuth token revoked or expired` | Auth | `/logout` then `/login` |
-| `Unable to connect to API` | Network | Check proxy (`HTTPS_PROXY`); check firewall rules |
-| `SSL certificate verification failed` | Network | Set `NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.pem` |
-| `Prompt is too long` | Request | `/compact` or `/clear`; disable unused MCP servers |
-| `Extra inputs are not permitted` | Request | Configure gateway to forward `anthropic-beta` header |
-| `There's an issue with the selected model` | Request | `/model` to pick valid model; check `ANTHROPIC_MODEL` env var |
+| Error | Action |
+| :---- | :----- |
+| `529 Overloaded` | Wait, then retry; run `/model` to switch models |
+| `429 Request rejected` | Check rate limits; reduce concurrency |
+| `You've hit your session limit` | Wait for reset or run `/usage-credits` |
+| `Prompt is too long` | Run `/compact` or `/clear`; disable unused MCP |
+| `Error during compaction: Conversation too long` | Press Esc twice to step back, then `/compact` |
+| `OAuth token revoked` | Run `/login` |
+| `Invalid API key` | Check key in Console; unset stale `ANTHROPIC_API_KEY` |
+| `model not found` | Run `/model` to pick valid model; check `ANTHROPIC_MODEL` env var |
+| `Extra inputs are not permitted` | Configure proxy to forward `anthropic-beta` header |
+| `API Error: 400 due to tool use concurrency issues` | Run `/rewind` |
+| `SSL certificate verification failed` | Set `NODE_EXTRA_CA_CERTS` to your CA bundle |
 
-### Recent Releases (What's New)
+Claude Code retries transient failures up to 10 times (configurable via `CLAUDE_CODE_MAX_RETRIES`) before surfacing an error.
 
-| Week | Dates | Key Feature | Versions |
-|------|-------|-------------|---------|
-| W22 | May 25–29, 2026 | Claude Opus 4.8 default; dynamic workflows; security-guidance plugin | v2.1.150–157 |
-| W21 | May 18–22, 2026 | Auto mode on Pro plan; `/usage` breakdown by skill/agent/MCP | v2.1.143–149 |
-| W20 | May 11–15, 2026 | Agent view (`claude agents`); `/goal` command; fast mode on Opus 4.7 | v2.1.139–142 |
-| W19 | May 4–8, 2026 | Plugin loading from `.zip`/URLs; auto mode hard deny rules | v2.1.128–136 |
-| W18 | Apr 27–May 1, 2026 | Windows without Git Bash (PowerShell tool); `claude ultrareview` | v2.1.120–126 |
-| W17 | Apr 20–24, 2026 | `/ultrareview` cloud bug-hunting agents; custom themes; web redesign | v2.1.114–119 |
-| W16 | Apr 13–17, 2026 | Claude Opus 4.7 default; `xhigh` effort; Routines; native binaries | v2.1.105–113 |
-| W15 | Apr 6–10, 2026 | Ultraplan; Monitor tool; `/loop` self-pacing | v2.1.92–101 |
-| W14 | Mar 30–Apr 3, 2026 | Computer use (research preview) CLI; `/powerup` lessons | v2.1.86–91 |
-| W13 | Mar 23–27, 2026 | Auto mode (research preview); native PowerShell tool; conditional `if` hooks | v2.1.83–85 |
+### Clean-config test
 
-**Latest release: v2.1.170** (June 9, 2026) — Claude Fable 5 (Mythos-class model); fixed session transcript saving from VS Code integrated terminal.
+```bash
+cd /tmp && CLAUDE_CONFIG_DIR=/tmp/claude-clean claude
+```
+
+Bypasses all user and project settings. Start with `claude --safe-mode` to disable customizations (CLAUDE.md, skills, plugins, hooks, MCP) while keeping auth and permissions.
+
+### What's new (recent highlights)
+
+| Week | Highlights |
+| :--- | :--------- |
+| W22 (May 25–29) | Claude Opus 4.8 default; dynamic workflows; security-guidance plugin; fast mode on Opus 4.8 at $10/$50/MTok |
+| W21 (May 18–22) | Auto mode on Pro; `/usage` skill/plugin/MCP breakdown; `/code-review` command; background sessions in `/resume` |
+| W20 (May 11–15) | `claude agents` view; `/goal` command; fast mode on Opus 4.7; Rewind "Summarize up to here" |
+| W19 (May 4–8) | Plugins from `.zip`/URL; `worktree.baseRef`; auto mode hard deny; hooks see effort level |
+| W18 (Apr 27–May 1) | Windows without Git Bash (PowerShell tool); `claude ultrareview`; paste PR URL into `/resume` |
+| W17 (Apr 20–24) | `/ultrareview` public preview; session recap; custom themes; Claude Code on the web redesign |
+| W16 (Apr 13–17) | Claude Opus 4.7 default; `xhigh` effort; Routines on web; mobile push notifications; native binaries |
+| W15 (Apr 6–10) | Ultraplan early preview; Monitor tool; `/loop` self-pacing |
+| W14 (Mar 30–Apr 3) | Computer use in CLI research preview |
+| W13 (Mar 23–27) | Auto mode research preview; native PowerShell tool; conditional `if` hooks |
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Track team usage with analytics](references/claude-code-analytics.md) — Analytics dashboards for Teams/Enterprise and API customers, contribution metrics with GitHub integration, PR attribution
+- [Track team usage with analytics](references/claude-code-analytics.md) — Analytics dashboards for Teams/Enterprise and API customers, contribution metrics setup, PR attribution
 - [Manage costs effectively](references/claude-code-costs.md) — Token tracking, spend limits, rate limit recommendations, token reduction strategies
-- [Monitoring with OpenTelemetry](references/claude-code-monitoring-usage.md) — OTel configuration, available metrics and events, traces (beta), audit/SIEM integration
-- [Troubleshooting](references/claude-code-troubleshooting.md) — Performance/stability issues, high CPU/memory, auto-compaction thrashing, search problems
-- [Troubleshoot installation and login](references/claude-code-troubleshoot-install.md) — Installation errors, PATH issues, TLS errors, login and authentication failures
-- [Debug your configuration](references/claude-code-debug-your-config.md) — Diagnosing CLAUDE.md, settings, hooks, MCP, and skill configuration issues
-- [Error reference](references/claude-code-errors.md) — Runtime error messages with causes and recovery steps
-- [Changelog](references/claude-code-changelog.md) — Full release notes by version
-- [What's new index](references/claude-code-whats-new-index.md) — Weekly digests index (W13–W22, 2026)
-- [What's new W13](references/claude-code-whats-new-2026-w13.md) — Auto mode research preview, PowerShell tool, conditional hooks
-- [What's new W14](references/claude-code-whats-new-2026-w14.md) — Computer use CLI preview, /powerup, per-tool MCP result-size override
-- [What's new W15](references/claude-code-whats-new-2026-w15.md) — Ultraplan, Monitor tool, /loop self-pacing, /autofix-pr
-- [What's new W16](references/claude-code-whats-new-2026-w16.md) — Opus 4.7 default, xhigh effort, Routines, mobile push notifications, native binaries
-- [What's new W17](references/claude-code-whats-new-2026-w17.md) — /ultrareview public preview, session recap, custom themes, web redesign
-- [What's new W18](references/claude-code-whats-new-2026-w18.md) — Windows without Git Bash, claude ultrareview in CI, claude project purge
-- [What's new W19](references/claude-code-whats-new-2026-w19.md) — Plugin loading from zip/URL, auto mode hard deny rules, hooks see effort level
-- [What's new W20](references/claude-code-whats-new-2026-w20.md) — Agent view, /goal command, fast mode on Opus 4.7, Rewind menu compression
-- [What's new W21](references/claude-code-whats-new-2026-w21.md) — Auto mode on Pro plan with Sonnet 4.6, /usage breakdown, /code-review command
-- [What's new W22](references/claude-code-whats-new-2026-w22.md) — Opus 4.8 default, dynamic workflows, security-guidance plugin, fast mode on Opus 4.8
+- [Monitoring with OpenTelemetry](references/claude-code-monitoring-usage.md) — Full OTel setup, all metrics and events, traces beta, security audit, SIEM integration
+- [Troubleshooting](references/claude-code-troubleshooting.md) — High CPU/memory, hangs, auto-compact thrashing, search issues
+- [Troubleshoot installation and login](references/claude-code-troubleshoot-install.md) — PATH, TLS, auth errors, WSL, platform-specific install issues
+- [Debug your configuration](references/claude-code-debug-your-config.md) — Inspecting loaded context, settings resolution, hook/MCP debugging, clean-config tests
+- [Error reference](references/claude-code-errors.md) — All runtime error messages with recovery steps
+- [Changelog](references/claude-code-changelog.md) — Full version history
+- [What's new index](references/claude-code-whats-new-index.md) — Weekly digest index linking all weekly highlights
+- [What's new W13–W22](references/claude-code-whats-new-2026-w13.md) — Individual weekly digests (w13 through w22)
 
 ## Sources
 
