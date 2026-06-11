@@ -25,6 +25,8 @@ This skill provides the complete official documentation for Claude Code features
 
 Default model by account type: Max/Team/Enterprise pay-as-you-go/Anthropic API → Opus 4.8; Claude Platform on AWS → Opus 4.7; Pro/Team Standard/Enterprise seats → Sonnet 4.6; Bedrock/Vertex/Foundry → Sonnet 4.5.
 
+Fable 5 is never the default — select it with `/model fable`. Requires v2.1.170+.
+
 ### Effort Levels
 
 | Level | When to use |
@@ -120,7 +122,7 @@ Or use `/statusline <description>` to auto-generate a script. The script receive
 | `session_id`, `session_name` | Session identifiers |
 | `vim.mode` | Vim mode (if enabled) |
 
-`COLUMNS`/`LINES` env vars give terminal dimensions inside the script (v2.1.153+). Updates trigger after each assistant message, `/compact`, permission mode change, or vim mode toggle.
+`COLUMNS`/`LINES` env vars give terminal dimensions inside the script (v2.1.153+). Updates trigger after each assistant message, `/compact`, permission mode change, or vim mode toggle. Subagent status lines: use `subagentStatusLine` setting (same structure as `statusLine`).
 
 ### Checkpointing and Rewind
 
@@ -233,6 +235,7 @@ claude --bg "task prompt"  # dispatch background session
 ```
 
 Key shortcuts:
+
 | Shortcut | Action |
 | :------- | :----- |
 | `Space` | Open/close peek panel |
@@ -241,12 +244,27 @@ Key shortcuts:
 | `Ctrl+T` | Pin session (keeps process alive while idle) |
 | `Ctrl+X` twice | Stop then delete session |
 | `Ctrl+R` | Rename session |
+| `Alt+1`..`Alt+9` | Attach to session 1–9 in focused directory |
+| `Ctrl+S` | Toggle grouping: by state vs. by directory |
 
 Session states: Working (animated), Needs input (yellow), Idle (dimmed), Completed (green), Failed (red), Stopped (grey). Shape `✽`/`✻` = process alive; `∙` = process exited but resumes on demand; `✢` = `/loop` sleeping.
 
 File isolation: each background session automatically moves into a git worktree under `.claude/worktrees/` before editing. Disable: `worktree.bgIsolation: "none"` in project settings.
 
 Shell commands: `claude attach <id>`, `claude logs <id>`, `claude stop <id>`, `claude rm <id>`, `claude respawn <id>`, `claude daemon status`.
+
+Run shell commands as background jobs from agent view by prefixing with `!`, or with `claude --bg --exec '<cmd>'`.
+
+### Parallel Agents — Approach Comparison
+
+| Approach | What it gives you | Use it when |
+| :------- | :---------------- | :---------- |
+| Subagents | Delegated workers inside one session | Side task would flood main conversation |
+| Agent view | Dispatch/monitor background sessions | Independent tasks; check back later |
+| Agent teams | Multi-session with shared task list + messaging | Claude coordinates a group of workers (experimental) |
+| Dynamic workflows | Script-driven multi-subagent with cross-checking | Job too large for ad-hoc subagents; needs verification |
+
+`/batch` skill: splits one large change into 5–30 worktree-isolated subagents each opening a PR.
 
 ### Prompt Caching
 
@@ -273,7 +291,7 @@ Cache performance fields in statusline `current_usage`: `cache_creation_input_to
 
 Enable: `/tui fullscreen` or `CLAUDE_CODE_NO_FLICKER=1`. Draws on alternate screen buffer like `vim`.
 
-Key features: mouse click-to-expand tool results, click-to-select text (auto-copies), URL/file-path clicking, `Ctrl+O` for transcript mode with `/` search. Disable mouse: `CLAUDE_CODE_DISABLE_MOUSE=1`.
+Key features: mouse click-to-expand tool results, click-to-select text (auto-copies), URL/file-path clicking, `Ctrl+O` for transcript mode with `/` search. Disable mouse: `CLAUDE_CODE_DISABLE_MOUSE=1`. Background/attached sessions always use fullscreen rendering.
 
 ### Deep Links
 
@@ -282,7 +300,9 @@ claude-cli://open?repo=owner/name&q=URL-encoded%20prompt
 claude-cli://open?cwd=/absolute/path&q=URL-encoded%20prompt
 ```
 
-Parameters: `q` (prompt, max 5000 chars), `cwd` (absolute path), `repo` (GitHub owner/name slug). Opens a new terminal window with prompt pre-filled but not submitted. Requires v2.1.91+.
+Parameters: `q` (prompt, max 5000 chars), `cwd` (absolute path), `repo` (GitHub owner/name slug). Opens a new terminal window with prompt pre-filled but not submitted. Requires v2.1.91+. Note: GitHub-rendered Markdown strips non-http/https schemes — put links in code blocks instead.
+
+VS Code variant: `vscode://anthropic.claude-code/open` opens an editor tab.
 
 ### Advisor Tool
 
@@ -300,7 +320,7 @@ Accepted pairings (advisor must be ≥ main model capability):
 | Opus 4.6+ | Fable, Opus (at or above main version) |
 | Fable 5 | Fable only |
 
-Requires Anthropic API only (not Bedrock/Vertex/Foundry). Claude decides when to call it; consult shown in transcript as "Advising" line expandable with `Ctrl+O`. Toggle does not invalidate prompt cache.
+Requires Anthropic API only (not Bedrock/Vertex/Foundry). Claude decides when to call it; consultation shown in transcript as "Advising" line expandable with `Ctrl+O`. Toggle does not invalidate prompt cache. Disable: `CLAUDE_CODE_DISABLE_ADVISOR_TOOL=1`.
 
 ### Extend Claude Code — Feature Selection Guide
 
@@ -342,10 +362,9 @@ For the complete official documentation, see the reference files:
 - [Routines (Cloud)](references/claude-code-routines.md) — Create from web/CLI, schedule/API/GitHub triggers, environments, network access, connectors, usage limits
 - [Voice Dictation](references/claude-code-voice-dictation.md) — Hold/tap modes, supported languages, rebind push-to-talk, troubleshooting
 - [Channels](references/claude-code-channels.md) — Telegram/Discord/iMessage setup, fakechat quickstart, security allowlists, enterprise controls
-- [Channels Reference](references/claude-code-channels-reference.md) — Build custom channel plugins, capability declarations, permission relay
+- [Channels Reference](references/claude-code-channels-reference.md) — Build custom channel plugins, capability declarations, notification format, reply tools, permission relay
 - [Context Window](references/claude-code-context-window.md) — Interactive timeline, what survives compaction, manage context proactively
 - [Fullscreen Rendering](references/claude-code-fullscreen.md) — Enable, mouse support, scrolling, transcript mode search, tmux caveats, native selection bypass
-- [Routines in Desktop](references/claude-code-desktop-scheduled-tasks.md) — Local scheduled tasks in the Desktop app
 - [Deep Links](references/claude-code-deep-links.md) — `claude-cli://open` URL scheme, `q`/`cwd`/`repo` params, embed in runbooks, shell invocation, registration per platform
 - [Agent View](references/claude-code-agent-view.md) — Dispatch/monitor/attach background sessions, peek panel, supervisor process, worktree isolation, shell management commands
 - [Agents Overview](references/claude-code-agents.md) — Compare subagents/agent view/agent teams/dynamic workflows; choose an approach; check on running work
