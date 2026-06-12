@@ -2,6 +2,31 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.12
+
+**19 references updated across 9 skills:** ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc
+
+### New
+
+- **Claude Code v2.1.173 release notes** — Fable 5 model names with a `[1m]` suffix are now stripped automatically since 1M context is included by default; fixed spurious "sandbox dependencies missing" warning on Windows (operations-doc)
+- **Plugin MCP tool naming convention** — tools from plugin-bundled MCP servers are now callable as `mcp__plugin_<plugin-name>_<server-name>__<tool-name>`; documented for use in permission rules, skill `allowed-tools`, and subagent `tools` fields (mcp-doc)
+- **`/code-review` default diff scope clarified** — now covers branch commits ahead of upstream plus uncommitted working-tree changes by default; target argument expanded to accept file path, PR number, branch name, or ref range like `main...my-feature` (ci-cd-doc)
+- **Ultrareview scope documented** — `/code-review ultra` uses current branch vs. repository default branch plus uncommitted and staged changes, independent of how the branch's upstream is configured (ci-cd-doc)
+
+### Changed
+
+- **`--resume` session ID scope narrowed** — passing a session ID now searches only the current project directory and its git worktrees; the picker and name search still include sessions added via `/add-dir` (cli-doc)
+- **Session ID resume scoping rule added to headless and sessions docs** — `--resume <session-id>` must be run from the directory the session was started in; error message `No conversation found with session ID` explained (headless-doc)
+- **VS Code extension does not add `claude` to PATH** — extension bundles a private CLI copy for its chat panel only; standalone CLI install required to run `claude` in any terminal; `claude mcp add` and `--resume` commands require the standalone install (ide-doc)
+- **VS Code prerequisites clarified** — any paid Claude subscription (Pro, Max, Team, Enterprise) or Claude Console account works; no API key required (ide-doc)
+- **JetBrains prerequisites clarified** — same subscription note added: paid Claude subscription or Console account, no API key required (ide-doc)
+- **Quickstart essential commands reorganized** — shell commands and session commands split into separate tables; `exit` corrected to `/exit`; links updated to include both CLI reference and commands reference (getting-started-doc)
+- **Grafana Cloud added to observability platform examples** — listed alongside Honeycomb and Datadog for metrics, events, and traces backends (operations-doc)
+
+### Removed
+
+- Minor wording/formatting updates across cloud-providers-doc, features-doc, memory-doc docs (interactive JSX components added to source)
+
 ## 26.6.11
 
 **11 references updated across 4 skills:** cloud-providers-doc, features-doc, memory-doc, operations-doc, plugins-doc
