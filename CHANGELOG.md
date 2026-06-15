@@ -2,6 +2,47 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.15
+
+**29 references updated across 15 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, sub-agents-doc
+
+### New
+
+- **Nested subagents (v2.1.172)** — subagents can now spawn their own subagents; foreground subagents can spawn at any depth, background subagents are limited to depth 5; `Agent` tool is no longer excluded from subagent tool lists (sub-agents-doc, agent-sdk-doc)
+- **`enforceAvailableModels` setting (v2.1.175)** — when enabled alongside `availableModels` in managed or policy settings, constrains the Default model picker option to the allowlist; managed/policy values now replace lower-precedence entries rather than merging (features-doc, settings-doc)
+- **`wheelScrollAccelerationEnabled` setting (v2.1.174)** — new `settings.json` key to disable mouse-wheel scroll acceleration in fullscreen mode; also documented in env vars reference (features-doc, settings-doc)
+- **`resolvedModel` field on Agent tool output (v2.1.174)** — `completed` and `async_launched` subagent results now include the model the subagent actually ran on, available in hooks `PostToolUse` and the Agent SDK (agent-sdk-doc, hooks-doc)
+- **`Could not resolve authentication method` error (v2.1.174)** — new error entry covering background, cloud, and SDK sessions that reach the API without credentials; includes fix note for idle pre-warmed worker bug fixed in v2.1.174 (errors-doc, operations-doc)
+- **`skipMcpDiscovery` field on `SdkPluginConfig` (TypeScript SDK)** — when `true`, the SDK loads skills, hooks, agents, and commands from a plugin but skips its `.mcp.json`/`mcpServers` configuration (agent-sdk-doc)
+- **`auto-continuation` origin kind** — new `SDKMessageOrigin` variant for synthetic turns injected when a session continues without fresh user input (agent-sdk-doc)
+- **v2.1.174 and v2.1.175 and v2.1.176 release notes** — three new changelog entries covering scroll acceleration, model picker fixes, `enforceAvailableModels`, authentication fixes, background session fixes, Remote Control fixes, and more (operations-doc)
+- **VS Code Account & usage dialog** — `/usage` in VS Code now shows usage attribution by skill, subagent, plugin, and MCP server with Day/Week toggle; requires v2.1.174 (ide-doc, operations-doc)
+- **`CLAUDE_CODE_CHILD_SESSION` env var (v2.1.172)** — set in subprocesses Claude Code spawns; recommended for gating plugin hints instead of `CLAUDECODE` to avoid false positives in IDE terminals and tmux (plugins-doc, settings-doc)
+- **`host_owned_mcp` telemetry field (v2.1.172)** — new attribute on plugin-loaded events indicating whether the SDK host manages the plugin's MCP connections (operations-doc)
+- **`model` attribute on `claude_code.lines_of_code.count` (v2.1.172)** — lines-of-code metric now carries model identifier so per-model code volume can be tracked directly without joining to token metrics (operations-doc)
+- **1M context auto-compaction (v2.1.172)** — when context exceeds 200K mid-conversation on a standard-context session, Claude Code now auto-compacts rather than repeating the "Usage credits required for 1M context" error (errors-doc, operations-doc)
+- **AWS GovCloud region prefix support** — `us-gov.` inference profile prefix documented for Bedrock GovCloud regions (cloud-providers-doc)
+- **JetBrains installation clarified** — setup now documented as two explicit steps (CLI first, then plugin); explains "Cannot launch Claude Code" notification when CLI is missing from PATH (ide-doc, getting-started-doc)
+
+### Changed
+
+- **`availableModels` enforcement scope expanded** — allowlist now applies to subagent model fields, advisor model, and the Agent tool's `model` parameter, not just the main session; blocked `--model` or `ANTHROPIC_MODEL` at startup substitutes a default with a warning rather than failing (features-doc, settings-doc)
+- **`availableModels` merge behavior changed (v2.1.175)** — managed or policy `availableModels` now replaces lower-precedence entries entirely; user and project settings can no longer widen a managed allowlist (features-doc, settings-doc)
+- **`availableModels` matching broadened** — allowlist matching now accepts model alias, version prefix (e.g. `claude-opus-4-8`), or full model ID; `[1m]` suffix stripped before matching; provider-specific prefixes not stripped (features-doc)
+- **`opusplan` extended context behavior** — plan-mode Opus phase now uses the same context window as the `opus` alias, including auto-upgrade to 1M on eligible tiers; `opusplan[1m]` documented for manual 1M on other tiers; excluded Opus falls back to Sonnet in plan mode (features-doc)
+- **`xhigh` effort level updated** — recommended model updated from "Opus 4.8" to "Fable 5 and Opus 4.7+" in the effort table (agent-sdk-doc)
+- **`error_max_structured_output_retries` description expanded** — error subtype now covers model-fallback retraction mid-stream (no validation failure needed); `errors` text recommended for distinguishing the two causes (agent-sdk-doc)
+- **Bedrock AWS region resolution (v2.1.172)** — `AWS_REGION` is no longer required; region resolves via `AWS_REGION` → `AWS_DEFAULT_REGION` → active AWS profile → `us-east-1` fallback; `/status` shows resolved region and source (cloud-providers-doc)
+- **`peer` origin kind description corrected** — marked as reserved for inter-agent messages; Agent SDK does not emit this origin; treat as unknown (agent-sdk-doc)
+- **SessionStart `model` field is now optional** — documented as omittable after `/clear` or conversation recovery; hooks should check for its presence before reading (hooks-doc)
+- **WebFetch permission rule matching clarified** — `*` wildcard behavior described precisely: matches across `.` only as a leading `*.` or whole-pattern `*`; `WebFetch(domain:*)` is equivalent to bare `WebFetch`; exact rules take precedence over wildcards (settings-doc)
+- **`Ctrl+X Ctrl+K` description updated** — wording changed from "Kill" to "Stop" background subagents (cli-doc)
+- **`/status` managed settings location** — now references the **Status** tab specifically; wording updated in admin setup and settings docs (settings-doc)
+
+### Removed
+
+- Minor wording/formatting updates across agent-teams-doc, headless-doc, mcp-doc (commented-out Playwright example removed from mcp-doc; minor rewordings elsewhere)
+
 ## 26.6.12
 
 **19 references updated across 9 skills:** ci-cd-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, ide-doc, mcp-doc, memory-doc, operations-doc
