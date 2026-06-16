@@ -2,6 +2,35 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.16
+
+**17 references updated across 8 skills:** agent-sdk-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, security-doc, settings-doc
+
+### New
+
+- **`Tool(param:value)` permission rule syntax (v2.1.178)** — permission rules can now match a tool's input parameters with optional `*` wildcard, e.g. `Agent(model:opus)` to block Opus subagents (operations-doc)
+- **v2.1.178 release notes** — covers nested skills with directory-qualified names, improved auto mode subagent classification, daemon version mismatch warning, `/bug` requiring a description, and 15+ bug fixes (operations-doc)
+- **Week 23 and Week 24 "What's New" digests** — Week 23 covers auto mode on Bedrock/Vertex/Foundry for Opus 4.7/4.8; Week 24 covers `/cd` mid-session, subagent-spawning-subagents up to depth 5, `--safe-mode`, and `fallbackModel` chains (operations-doc)
+- **Homebrew cask unavailable error** — new troubleshooting entry for `No Cask with this name exists`; fix is `brew update && brew install --cask claude-code`; also documents the `claude-code@latest` cask for the newest release (operations-doc)
+- **`agentPushNotifEnabled` setting** — enables proactive push notifications to phone via Remote Control when a long task finishes; appears in `/config` as **Push when Claude decides** (settings-doc)
+- **`inputNeededNotifEnabled` setting** — sends a push notification when a permission prompt or question waits for input; appears in `/config` as **Push when actions required** (settings-doc)
+- **`autoCompactEnabled` setting** — toggles automatic conversation compaction when context approaches the limit; default `true` (settings-doc)
+- **`fileCheckpointingEnabled` setting** — toggles file snapshots before each edit for `/rewind`; appears in `/config` as **Rewind code (checkpoints)** (settings-doc)
+- **`theme` setting** — sets the color theme (`"auto"`, `"dark"`, `"light"`, daltonized, ANSI, or custom); previously stored only in `~/.claude.json` before v2.1.119 (settings-doc)
+- **`verbose` setting** — shows full tool output instead of truncated summaries; the `--verbose` flag overrides for one session (settings-doc)
+
+### Changed
+
+- **`claude daemon status` version mismatch warning** — command now warns when the running supervisor is on a different version than the invoked `claude`, and instructs `claude daemon stop --any` (or `claude daemon stop` for OS-service installs) to pick up the update (features-doc)
+- **Remote Control push notifications: second toggle added** — setup step now enables both **Push when Claude decides** (proactive) and **Push when actions required** (permission prompts); wording updated from "the on/off toggle" to "the two on/off toggles" (features-doc)
+- **Tool canonical name vs. display label clarified** — documented that the label shown in transcript/dialog (e.g. `Stop Task`) differs from the canonical name used in permission rules and hooks (e.g. `TaskStop`); startup warning catches the mismatch for deny/ask rules (settings-doc)
+- **IDE desktop troubleshooting support links updated** — "Still stuck?" now directs users to Help → Get Support in the desktop app first; GitHub Issues reserved for bugs that also reproduce in the standalone CLI (ide-doc)
+- **`~/.claude.json` migration note updated** — clarifies that pre-v2.1.119 versions stored `theme`, `verbose`, `editorMode`, `autoCompactEnabled`, and `preferredNotifChannel` there, replacing the previous partial list (settings-doc)
+
+### Removed
+
+- **Agent SDK credit note removed from four pages** — the June 15, 2026 note about Agent SDK credits on subscription plans drawing from a separate monthly allowance has been removed from the SDK overview, headless, authentication, and legal-and-compliance docs (agent-sdk-doc, headless-doc, getting-started-doc, security-doc)
+
 ## 26.6.15
 
 **29 references updated across 15 skills:** agent-sdk-doc, agent-teams-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, getting-started-doc, headless-doc, hooks-doc, ide-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, sub-agents-doc
