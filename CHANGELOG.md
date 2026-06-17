@@ -2,6 +2,50 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.17
+
+**29 references updated across 12 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`SystemMessage` subtypes `"informational"` and `"worker_shutting_down"` (Agent SDK)** — two new subtypes documented for session lifecycle events; TypeScript SDK maps each non-`"init"` subtype to its own union type in `SDKMessage` (agent-sdk-doc)
+- **`TaskUpdate` key normalization caveat** — Claude Code repairs close-but-incorrect key names (`id`/`task_id` → `taskId`, `active_form` → `activeForm`) before execution but this repair is not reflected in the stream; SDK docs now show defensive reading patterns for both TypeScript and Python (agent-sdk-doc)
+- **`footerLinksRegexes` setting** — new `settings.json` key that renders clickable footer badge chips when a configured regex matches text in a turn; supports named capture groups for URL/label substitution (settings-doc, features-doc)
+- **`Expiration` field on Bedrock credential-process output** — optional ISO 8601 field; as of v2.1.176 Claude Code caches credentials until 5 minutes before expiry instead of a fixed 1-hour cache (cloud-providers-doc)
+- **`availableModels` alias resolution and fast-mode enforcement (v2.1.176)** — `ANTHROPIC_DEFAULT_*_MODEL` env vars cannot redirect an allowed alias to a model outside the list; `/fast` refuses when it would switch to a blocked Opus model (features-doc, settings-doc)
+- **Advisor pairing validation moved client-side** — Claude Code now validates advisor/main-model pairing before sending; mismatched pairs suppress the advisor rather than error; subagents apply the same check against their own model (features-doc)
+- **Remote Control `/rc failed` indicator** — when a Remote Control connection fails the footer indicator turns red and reads `/rc failed`; selecting it shows the failure reason and a dismiss option; also promoted connection-status notes to a dedicated section (features-doc)
+- **Remote Control auto-generated title localization (v2.1.176)** — auto-generated session titles now match the conversation language or the configured `language` setting (features-doc)
+- **New Remote Control eligibility error messages (v2.1.178)** — "Couldn't verify Remote Control eligibility" and "Couldn't verify your organization's Remote Control policy" documented; replaces old environment-variable-specific troubleshooting (features-doc)
+- **MCP server-level patterns in `disallowedTools`** — `mcp__<server>`, `mcp__<server>__*`, and `mcp__*` patterns now accepted in subagent and SDK `AgentDefinition` `disallowedTools` fields (sub-agents-doc, agent-sdk-doc)
+- **`--add-dir` scans `.claude/agents/`** — directories added with `--add-dir` are now also scanned for subagents (sub-agents-doc)
+- **Nested subagent name resolution (v2.1.178)** — when multiple nested `.claude/agents/` directories define the same `name`, Claude Code uses the definition closest to the working directory (sub-agents-doc)
+- **Nested skills with directory-qualified names** — skills load from nested `.claude/skills/` directories; name clashes surface as `dir:name`; Claude picks the variant matching the files being worked on (skills-doc)
+- **Plugin `skills` path behavior for marketplace-root entries** — when a plugin entry's `source` resolves to the marketplace root, listing specific subdirectories under `skills` makes that list the complete set rather than additive (plugins-doc)
+- **`Tool(param:value)` deny/ask rule syntax** — permission rules can match any scalar top-level tool input parameter with exact value or `*` wildcard (e.g. `Agent(model:opus)`, `Bash(run_in_background:true)`); documented constraints on which fields are matchable (settings-doc)
+- **Workflow save location logic (v2.1.178)** — saving a workflow to the project location now writes to the closest existing `.claude/workflows/` between cwd and repo root; project workflows load from every `.claude/workflows/` along that path; nearest-to-cwd wins on name clash (best-practices-doc)
+- **Output style nearest-to-cwd precedence (v2.1.178)** — when multiple nested `.claude/output-styles/` directories define the same style name, Claude Code uses the one closest to the working directory (features-doc)
+- **v2.1.179 release notes** — covers mid-stream connection drop fix, WSL2 mouse-wheel regression fix, sandbox glob performance fix, and 6+ other bug fixes (operations-doc)
+
+### Changed
+
+- **Agent teams: no separate team-creation step (v2.1.178+)** — `TeamCreate` and `TeamDelete` tools removed; team forms automatically when the first teammate spawns; `team_name` input on Agent tool accepted but ignored; cleanup happens automatically at session end (agent-teams-doc, cli-doc)
+- **Agent teams: team name is now session-derived** — team name is `session-` + first 8 chars of session ID; team config directory removed at session end; task list directory persists across resumed sessions under `cleanupPeriodDays` (agent-teams-doc)
+- **`team_name` field deprecated in hook payloads** — `TaskCreated`, `TaskCompleted`, and `TeammateIdle` hook payloads still carry `team_name` but it now holds the session-derived name and is marked deprecated for future removal (hooks-doc)
+- **`resolvedModel` clarification in hooks** — clarified that `resolvedModel` can differ from the `model` input when `availableModels` or another override applies (hooks-doc)
+- **Permission rule evaluation clarification** — documented that a broad deny rule overrides a narrower allow rule; `WebFetch` domain wildcard behavior clarified (settings-doc)
+- **`Fable` advisor picker note removed** — note that Fable 5 does not appear in the `/advisor` picker was removed; also removed redundant note from the table (features-doc)
+- **Haiku plan-mode upgrade restriction** — clarified that a Haiku session whose Sonnet upgrade is blocked by `availableModels` stays on Haiku rather than upgrading (features-doc)
+- **Fork mode spawn behavior updated** — fork mode no longer replaces general-purpose subagent spawns by default; Claude can spawn a fork by requesting the `fork` subagent type explicitly (sub-agents-doc)
+- **Costs doc: teammate lifecycle wording** — "clean up teams" replaced with "shut down teammates when their work is done" to reflect automatic cleanup (operations-doc)
+- **Settings `/status` description improved** — clarified that a layer only appears in Setting sources when loaded with at least one key; Config tab described as editor for a fixed set of toggles, not a view of `settings.json` (settings-doc)
+- **Subagents discovered from `--add-dir` clarified** — previous wording said `--add-dir` grants file access only; corrected to say `.claude/agents/` inside an added directory is scanned (sub-agents-doc)
+
+### Removed
+
+- **"Clean up the team" section removed** — dedicated section on asking the lead to clean up the team removed; replaced with note that shared directories are cleaned automatically at session end (agent-teams-doc)
+- **Remote Control inline status notes removed** — per-tab inline notes about the `/rc active` indicator removed from "start from CLI" and "start from existing session" tabs; replaced by the new "Check connection status" section (features-doc)
+
 ## 26.6.16
 
 **17 references updated across 8 skills:** agent-sdk-doc, features-doc, getting-started-doc, headless-doc, ide-doc, operations-doc, security-doc, settings-doc
