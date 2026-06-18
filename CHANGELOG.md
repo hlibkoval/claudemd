@@ -2,6 +2,24 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.18
+
+**4 references updated across 4 skills:** memory-doc, operations-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`@import` path escaping with backticks** — import parsing now skips Markdown code spans and fenced code blocks; wrapping `@README` in backticks keeps it literal instead of importing the file (memory-doc)
+- **v2.1.181 release notes** — covers `/config key=value` syntax, `sandbox.allowAppleEvents` setting, `CLAUDE_CLIENT_PRESENCE_FILE` env var, subagent panel improvements, prompt-caching fix on custom `ANTHROPIC_BASE_URL` and Foundry, Write/Edit truncation fix on network/cloud-synced drives, and 20+ other fixes (operations-doc)
+- **`mcp__github` `disallowedTools` YAML example** — added concrete YAML snippet showing how to remove every tool from a single MCP server while keeping all built-ins and other server tools (sub-agents-doc)
+
+### Changed
+
+- **Nested `.claude/skills/` name-clash resolution** — table of skill command-name sources gains a new row: when a nested skills directory's name clashes with another skill, the command is qualified as `<relative-dir>:<skill>` (e.g. `apps/web/.claude/skills/deploy/SKILL.md` → `/apps/web:deploy`) (skills-doc)
+
+### Removed
+
+- **Linux sandbox symlink fix backfilled to v2.1.179** — one additional fix added to the 2.1.179 entry: sandbox now starts correctly when `.claude/skills` or `.claude/hooks` is a symlink (operations-doc)
+
 ## 26.6.17
 
 **29 references updated across 12 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, hooks-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
