@@ -498,6 +498,10 @@
       {
         "url": "https://code.claude.com/docs/en/advisor.md",
         "file": "claude-code-advisor.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/artifacts.md",
+        "file": "claude-code-artifacts.md"
       }
     ],
     "errors-doc": [

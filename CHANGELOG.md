@@ -2,6 +2,43 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.19
+
+**29 references updated across 15 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **Artifact tool** — new built-in `Artifact` tool publishes HTML or Markdown from a session as a private, interactive page on claude.ai; requires Team or Enterprise plan; glossary entry, network allowlist entry (`*.claudeusercontent.com`), and ZDR disabled-features table updated accordingly (features-doc, getting-started-doc, cli-doc, security-doc, settings-doc)
+- **`axScreenReader` / `--ax-screen-reader` / `CLAUDE_AX_SCREEN_READER`** — new setting, CLI flag, and env var (v2.1.181) to render flat, animation-free output for screen readers; forces classic renderer, overrides `tui` setting (cli-doc, settings-doc)
+- **`CLAUDE_CLIENT_PRESENCE_FILE` env var** — v2.1.181 opt-in: point to a file created by a screen-lock listener to suppress Remote Control mobile push notifications while you are at the machine (settings-doc, features-doc)
+- **`disableArtifact` setting and `CLAUDE_CODE_DISABLE_ARTIFACT` / `CLAUDE_CODE_ARTIFACT_AUTO_OPEN` env vars** — new controls to disable the Artifact tool or stop the browser auto-opening on publish (settings-doc)
+- **`sandbox.allowAppleEvents` setting** — v2.1.181 macOS-only opt-in allows `open`, `osascript`, and browser auth flows that fail with error `-600`; documented security trade-off: removes code-execution isolation; honored only from user, managed, or CLI settings (settings-doc, security-doc)
+- **`CLAUDE_CODE_OTEL_DIAG_STDERR` env var** — v2.1.179+ writes OpenTelemetry exporter errors to stderr so misconfigured exporters no longer fail silently (settings-doc)
+- **Additional `api_refusal` OTEL event fields** — nine new fields added: `query_source`, `speed`, `attempt`, `effort`, `server_fallback_hop`, `has_category`, `has_explanation`, `category`, and full attribution fields (`agent.name`, etc.) (operations-doc)
+- **MCP `! Connected · tools fetch failed` status** — new status row in `/mcp` picker when a server connects but fails to list its tools; `claude mcp get <name>` shows the error detail (mcp-doc)
+- **`/config key=value` in Remote Control** — v2.1.181: `/config` with a `key=value` argument now works from mobile and web (features-doc)
+- **Web session `Claude-Session:` git trailer** — v2.1.179: commits created in cloud sessions automatically include a `Claude-Session: <url>` trailer; PR bodies include the session URL (headless-doc)
+- **Skill eval workflow with skill-creator** — new "Evaluate and iterate on a skill" section covering test cases, isolated per-case subagent runs, grading, benchmarking, A/B version comparison, and description tuning; references agentskills.io and skill-creator plugin (skills-doc)
+- **v2.1.183 release notes** — covers auto-mode safety blocks for destructive git/terraform commands, deprecated-model warning, `attribution.sessionUrl` setting, `/config --help`, and 15+ bug fixes (operations-doc)
+
+### Changed
+
+- **Agent teams: `in-process` is now the default `teammateMode`** — default changed from `auto` in v2.1.179; upgraded sessions that used split panes must set `"auto"` explicitly to restore that behavior (agent-teams-doc, cli-doc, settings-doc)
+- **Agent teams panel navigation redesigned** — teammates now appear in an agent panel below the prompt; arrow keys select, Enter opens the transcript, `x` stops the selected teammate; replaces previous Shift+Down cycle (agent-teams-doc)
+- **Idle teammate rows hide after 30 seconds** — v2.1.181: a row disappears after 30s idle and reappears on the teammate's next turn; teammate stays running and addressable while hidden (agent-teams-doc)
+- **Subagent depth limit applies to both foreground and background** — corrected: a subagent at depth five cannot spawn further regardless of foreground/background mode; previous docs said foreground could spawn at any depth (agent-sdk-doc, sub-agents-doc)
+- **Fullscreen link-click requires Cmd/Ctrl** — v2.1.181: plain click no longer opens URLs or file paths; must hold Cmd on macOS or Ctrl on Linux/Windows, matching native terminal behavior (features-doc)
+- **Remote Control failure indicator removed from footer** — on connection failure a notification now appears with the reason; the footer indicator is no longer shown (features-doc)
+- **Bedrock credential process: flat format accepted** — v2.1.181: `aws configure export-credentials --format process` flat output (keys at top level) now accepted in addition to the nested `Credentials` object (cloud-providers-doc)
+- **`peer` origin semantics clarified** — in-process teammate sends have `from` = teammate name and `senderTaskId`; cross-session peers have `from` = sender address with no `senderTaskId`; `name` field reserved (agent-sdk-doc)
+- **Ultrareview: large-diff refusal** — if a PR diff is too large, Claude Code refuses before any review work runs (best-practices-doc)
+- **Plugin marketplace skills path documentation** — rewrote prose into JSON examples showing additive vs. replace behavior for marketplace-root entries (plugins-doc)
+- **`OTEL_LOG_TOOL_DETAILS` now also gates `api_refusal` `category`** — env var description updated to mention the `category` field on refusal events (settings-doc)
+
+### Removed
+
+- **`TeamCreate` / `TeamDelete` tools backfilled to v2.1.178 changelog entry** — entry in the operations changelog updated to note these tools were removed in v2.1.178 (operations-doc)
+
 ## 26.6.18
 
 **4 references updated across 4 skills:** memory-doc, operations-doc, skills-doc, sub-agents-doc
