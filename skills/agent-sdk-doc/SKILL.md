@@ -5,419 +5,328 @@ user-invocable: false
 
 # Agent SDK Documentation
 
-This skill provides the complete official documentation for the Claude Agent SDK — the programmatic interface for embedding Claude Code agents in TypeScript and Python applications. It covers installation, the agent loop, permissions, sessions, custom tools, MCP servers, subagents, streaming, structured outputs, hooks, observability, hosting, and both language API references.
+This skill provides the complete official documentation for the Claude Agent SDK — the Python and TypeScript library that lets you embed Claude Code's autonomous agent loop in your own applications.
 
 ## Quick Reference
 
-### Packages
+### Installation
 
-| Language | Package | Import |
+| Language | Package | Requirement |
 | :--- | :--- | :--- |
-| TypeScript | `@anthropic-ai/claude-agent-sdk` | `import { query } from "@anthropic-ai/claude-agent-sdk"` |
-| Python | `claude-agent-sdk` (`pip install claude-agent-sdk`) | `from claude_agent_sdk import query, ClaudeAgentOptions` |
-
-Old package names (`@anthropic-ai/claude-code`, `claude-code-sdk`, `claude_code_sdk`) and `ClaudeCodeOptions` were renamed; see the migration guide.
-
-### Core Entry Point: `query()`
-
-```typescript
-// TypeScript
-for await (const message of query({ prompt, options })) { ... }
-```
-```python
-# Python
-async for message in query(prompt=prompt, options=ClaudeAgentOptions(...)): ...
-```
-
-Python also provides `ClaudeSDKClient` for multi-turn conversations without manually passing session IDs.
-
-### Message Types
-
-| Type | Subtype | Description |
-| :--- | :--- | :--- |
-| `system` | `init` | Session init; contains `session_id`, `slash_commands`, `tools` |
-| `system` | `compact_boundary` | Context was compacted |
-| `assistant` | — | Claude's response; contains `message.content` blocks |
-| `user` | — | Echoed user turns |
-| `result` | `success` | Final result; contains `result` (string), `session_id`, `total_cost_usd`, `structured_output` |
-| `result` | `error_max_turns` | Stopped at `maxTurns` limit |
-| `result` | `error_max_budget_usd` | Stopped at cost limit |
-| `result` | `error_max_structured_output_retries` | Could not produce valid structured output |
-| `stream_event` (TS) / `StreamEvent` (Py) | — | Raw API streaming event (only with `includePartialMessages`) |
-
-### Key `Options` / `ClaudeAgentOptions` Fields
-
-| Option (TS / Python) | Default | Description |
-| :--- | :--- | :--- |
-| `maxTurns` / `max_turns` | unlimited | Max tool-use round trips |
-| `maxBudgetUsd` / `max_budget_usd` | — | Stop when client-side cost estimate exceeds this USD value |
-| `permissionMode` / `permission_mode` | `"default"` | `default`, `acceptEdits`, `dontAsk`, `bypassPermissions`, `plan`, `auto` (TS only) |
-| `allowedTools` / `allowed_tools` | `[]` | Tools to auto-approve (does not restrict; use `disallowedTools` to block) |
-| `disallowedTools` / `disallowed_tools` | `[]` | Bare name removes tool; scoped rule (e.g. `"Bash(rm *)"`) denies matching calls in all modes |
-| `tools` / `tools` | — | Array of tool names or `{ type: 'preset', preset: 'claude_code' }` |
-| `systemPrompt` / `system_prompt` | minimal | String, or `{ type: 'preset', preset: 'claude_code', append?, excludeDynamicSections? }` |
-| `cwd` | `process.cwd()` | Working directory |
-| `model` | CLI default | Model alias or full ID |
-| `effort` | model default | `low`, `medium`, `high`, `xhigh`, `max` |
-| `mcpServers` / `mcp_servers` | `{}` | MCP server configs |
-| `hooks` | `{}` | Programmatic hook callbacks |
-| `agents` | — | Programmatic subagent definitions (`Record<string, AgentDefinition>`) |
-| `skills` / `skills` | — | `"all"`, list of names, or `[]` to disable all |
-| `settingSources` / `setting_sources` | all | Which filesystem sources to load: `"user"`, `"project"`, `"local"` |
-| `outputFormat` / `output_format` | — | `{ type: 'json_schema', schema }` for structured outputs |
-| `includePartialMessages` / `include_partial_messages` | `false` | Emit raw streaming events |
-| `continue` / `continue_conversation` | `false` | Resume most recent session in `cwd` |
-| `resume` | — | Resume specific session by ID |
-| `forkSession` / `fork_session` | `false` | Fork instead of continuing when used with `resume` |
-| `sessionStore` / `session_store` | — | External session store adapter |
-| `enableFileCheckpointing` / `enable_file_checkpointing` | `false` | Track file changes for rewind |
-| `canUseTool` / `can_use_tool` | — | Callback for tool permission prompts and `AskUserQuestion` |
-| `env` | `process.env` | Subprocess environment (replaces, not merges) |
-| `persistSession` | `true` (TS only) | `false` = in-memory only, no resume |
-
-### Permission Modes
-
-| Mode | Auto-approves | Notes |
-| :--- | :--- | :--- |
-| `default` | Nothing | Hooks/allow rules still fire; unmatched → prompt |
-| `acceptEdits` | File edits + filesystem Bash | Does not approve network Bash |
-| `dontAsk` | Nothing; unmatched → deny | No user prompt |
-| `bypassPermissions` | Everything | Requires `allowDangerouslySkipPermissions: true`; hooks/deny/ask still evaluated |
-| `plan` | Never auto-approves writes | Ask/allow rules apply during exploration; writes always require approval |
-| `auto` | Model classifier decides | TypeScript only |
-
-### Permission Evaluation Order
-
-Hooks → deny rules → ask rules → permission mode → allow rules → `canUseTool`
-
-### Built-in Tools
-
-| Tool | Category | Notes |
-| :--- | :--- | :--- |
-| `Read`, `Write`, `Edit`, `NotebookEdit` | File | `Write`/`Edit`/`NotebookEdit` tracked by file checkpointing |
-| `Bash` | Shell | Commands parsed into AST for permission matching |
-| `Glob`, `Grep` | Search | Read-only; run in parallel |
-| `WebSearch`, `WebFetch` | Web | — |
-| `Agent` | Orchestration | Spawns subagents; must be in `allowedTools` |
-| `Workflow` | Orchestration | Large-scale parallel orchestration (TS v0.3.149+) |
-| `Skill` | Skills | Added automatically when `skills` option is set |
-| `AskUserQuestion` | User input | Multiple-choice clarifying questions; 1–4 questions, 2–4 options each |
-| `TodoWrite` / `TaskCreate` / `TaskUpdate` | Tasks | `TaskCreate`/`TaskUpdate` default since v2.1.142; `TodoWrite` via `CLAUDE_CODE_ENABLE_TASKS=0` |
-
-### MCP Servers
-
-```typescript
-// TypeScript — stdio
-mcpServers: { myserver: { command: "npx", args: ["-y", "my-mcp-server"] } }
-// TypeScript — HTTP/SSE
-mcpServers: { myserver: { type: "http", url: "https://tools.example.com/mcp" } }
-// Wildcard allow
-allowedTools: ["mcp__myserver__*"]
-```
-Tool naming: `mcp__<server>__<tool>`. Auth: `env` field (stdio) or `headers` (HTTP). In-process: use `createSdkMcpServer()`.
-
-### Custom Tools
-
-```typescript
-// TypeScript
-import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod";
-const greet = tool("greet", "Greet a user", { name: z.string() },
-  async ({ name }) => ({ content: [{ type: "text", text: `Hello ${name}` }] }));
-const server = createSdkMcpServer({ name: "my-tools", tools: [greet] });
-// Python
-from claude_agent_sdk import tool, create_sdk_mcp_server
-@tool("greet", "Greet a user", {"name": str})
-async def greet(args): return {"content": [{"type": "text", "text": f"Hello {args['name']}"}]}
-server = create_sdk_mcp_server(name="my-tools", tools=[greet])
-```
-
-Set `annotations: { readOnlyHint: true }` to allow parallel execution. Return `{ isError: true, content: [...] }` for graceful tool errors.
-
-### Tool Search
-
-Enabled by default (disabled on Vertex AI and non-first-party `ANTHROPIC_BASE_URL`). Defers tool definitions from context; agent discovers on demand. Control via `ENABLE_TOOL_SEARCH` env var: unset (on), `"true"` (force on), `"false"` (off), `"auto"` (threshold 10% of context), `"auto:N"` (custom %). Supports up to 10,000 tools; returns 3–5 per search. Not supported on Haiku.
-
-### Sessions
-
-| Need | How |
-| :--- | :--- |
-| Single prompt | Plain `query()` |
-| Multi-turn in one process | `ClaudeSDKClient` (Python) or `continue: true` (TS) |
-| Resume most recent after restart | `continue_conversation=True` / `continue: true` |
-| Resume specific past session | Capture `ResultMessage.session_id`, pass to `resume` |
-| Branch without losing original | `forkSession: true` / `fork_session=True` with `resume` |
-| No disk persistence (TS only) | `persistSession: false` |
-
-Session files: `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`. Functions: `listSessions()`, `getSessionMessages()`, `getSessionInfo()`, `renameSession()`, `tagSession()`.
-
-### Session Storage (External)
-
-```typescript
-import { InMemorySessionStore } from "@anthropic-ai/claude-agent-sdk";
-const store = new InMemorySessionStore(); // dev/test
-// Use with: options: { sessionStore: store }
-// Resume: options: { sessionStore: store, resume: sessionId }
-```
-
-Implement `SessionStore` with `append(key, entries)` and `load(key)` against S3, Redis, Postgres, etc. Reference adapters in `examples/session-stores/` of the TS repo. Mirror writes are best-effort; monitor for `mirror_error` events. Cannot combine with `persistSession: false` or `enableFileCheckpointing`.
-
-### File Checkpointing
-
-```typescript
-// Enable
-options: { enableFileCheckpointing: true, extraArgs: { "replay-user-messages": null } }
-// Rewind
-const checkpoint = message.uuid; // from any AssistantMessage or ResultMessage
-await queryObject.rewindFiles(checkpoint);
-// Python
-await rewind_files(checkpoint_id=checkpoint)
-```
-
-Tracks changes to `Write`, `Edit`, `NotebookEdit` only (not `Bash`). `extraArgs: {"replay-user-messages": null}` required so messages get UUIDs for use as checkpoint IDs.
-
-### Structured Outputs
-
-```typescript
-options: { outputFormat: { type: "json_schema", schema: mySchema } }
-// Access result
-if (message.type === "result" && message.subtype === "success" && message.structured_output) { ... }
-```
-
-Use Zod `z.toJSONSchema(MySchema)` (TS) or `MyModel.model_json_schema()` (Python/Pydantic) to generate schema. Error subtype `error_max_structured_output_retries` on failure.
-
-### Streaming Output
-
-```typescript
-options: { includePartialMessages: true }
-// Check for: message.type === "stream_event"
-// Text: event.type === "content_block_delta" && event.delta.type === "text_delta"
-// Tool input: event.type === "content_block_delta" && event.delta.type === "input_json_delta"
-```
-
-Python: check `isinstance(message, StreamEvent)`, then `event.get("type") == "content_block_delta"`.
-
-### Input Modes
-
-| Mode | How | Supports images? | Supports interruption? |
-| :--- | :--- | :--- | :--- |
-| Single message (default) | `prompt: "string"` | No | No |
-| Streaming input | `prompt: AsyncGenerator<SDKUserMessage>` | Yes | Yes |
-
-Python streaming input requires `ClaudeSDKClient`. Note: generator exceptions in TS produce `"Claude Code process aborted by user"` error; in Python the session stalls silently — enable debug logging if stuck.
-
-### Subagents
-
-Add `"Agent"` to `allowedTools`. Define programmatically:
-
-```typescript
-options: {
-  allowedTools: ["Agent", "Read", "Grep"],
-  agents: {
-    "specialist": {
-      description: "Does X",
-      prompt: "You are a specialist...",
-      tools: ["Read", "Grep"],
-      model: "sonnet",  // alias or full ID
-      background: false,
-      effort: "high",
-    }
-  }
-}
-```
-
-Subagents inherit: `cwd`, `env`, `settingSources`, `permissionMode`. They do NOT inherit: `maxTurns`, `hooks`, `systemPrompt`, `agents`. Resume a subagent by passing `agentId` in `extra_args` of the tool result. Use `Workflow` tool (TS v0.3.149+) for large-scale parallel orchestration.
-
-### Hooks (Programmatic)
-
-```typescript
-// TypeScript
-hooks: {
-  PreToolUse: [{ matcher: "Bash", hooks: [async (input, toolUseId, ctx) => {
-    return { hookSpecificOutput: { permissionDecision: "allow" } };
-  }]}]
-}
-// Python
-hooks={"PreToolUse": [HookMatcher(matcher="Bash", hooks=[my_async_fn])]}
-```
-
-Hook callback receives `(input_data, tool_use_id, context)`. Return `{ continue_: True }` (Python) or `{}` (TS) to pass through. Key decisions: `permissionDecision: "allow"|"deny"|"ask"|"defer"`. Set `async_: True` / `async: true` for non-blocking hooks. 20 hook events total; see hooks reference for full event list.
-
-### Claude Code Features via SDK
-
-Control which filesystem settings load with `settingSources` (`"user"`, `"project"`, `"local"`). `settingSources` does NOT control: `systemPrompt`, `mcpServers`, `permissionMode`, `allowedTools`, or any `query()` option. CLAUDE.md loads from `cwd`, all parent dirs, and user home (`~/.claude/CLAUDE.md`).
-
-### System Prompts
-
-Three starting points:
-- Default (minimal): omit `systemPrompt` — no tool definitions or Claude Code identity
-- Claude Code preset: `systemPrompt: { type: "preset", preset: "claude_code" }`
-- Custom string: `systemPrompt: "You are..."`
-
-Add `append: "extra instructions"` to extend the preset. Set `excludeDynamicSections: true` to move per-session context to the first user message for better prompt-cache reuse across machines.
-
-### Cost Tracking
-
-```typescript
-// On ResultMessage:
-message.total_cost_usd   // client-side estimate (float)
-message.model_usage      // per-model breakdown: { "claude-X": { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens } }
-```
-
-Python: `message.total_cost_usd`, `message.model_usage`. Set `ENABLE_PROMPT_CACHING_1H=1` for 1-hour prompt cache TTL.
-
-### Observability (OpenTelemetry)
-
-```bash
-CLAUDE_CODE_ENABLE_TELEMETRY=1
-CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1   # distributed traces
-OTEL_TRACES_EXPORTER=otlp
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-OTEL_SERVICE_NAME=my-agent
-```
-
-Span names: `claude_code.interaction`, `claude_code.llm_request`, `claude_code.tool`, `claude_code.hook`. W3C trace context propagated automatically.
-
-### User Input and Approvals
-
-Pass `canUseTool` / `can_use_tool` callback to handle tool approvals and `AskUserQuestion` clarifying questions:
-
-```typescript
-canUseTool: async (toolName, input, { suggestions }) => {
-  if (toolName === "AskUserQuestion") { /* display questions, return answers */ }
-  const ok = await promptUser(toolName, input);
-  return ok ? { behavior: "allow", updatedInput: input }
-             : { behavior: "deny", message: "User declined" };
-}
-```
-
-Python requires streaming input mode plus a `PreToolUse` hook returning `{"continue_": True}` to keep the stream open.
-
-### Todo / Task Tracking
-
-Monitor `TaskCreate` and `TaskUpdate` tool_use blocks in the assistant stream. `TaskCreate` adds items (`subject`, `description`); `TaskUpdate` patches by `taskId` with `status` (`pending`/`in_progress`/`completed`/`deleted`). The assigned `taskId` comes back in the tool result, not the tool input. Read `taskId`/`id`/`task_id` defensively (Claude may emit non-canonical key names in the stream).
-
-### Slash Commands
-
-Send as prompt string: `prompt: "/compact"`. Discover available commands from `SystemMessage` init: `message.slash_commands`. Built-in: `/compact`, `/clear` (requires v2.1.117+). Custom commands: `.claude/commands/<name>.md` (legacy) or `.claude/skills/<name>/SKILL.md` (preferred). Support frontmatter `allowed-tools`, `description`, `model`, `argument-hint`; body supports `!`backtick bash execution and `@file` file inclusion.
-
-### Plugins
-
-```typescript
-options: { plugins: [{ type: "local", path: "./my-plugin" }] }
-```
-
-Plugin skills invoked as `/plugin-name:skill-name`. Plugin structure: `.claude-plugin/plugin.json` (optional) with `name`, `version`, `skills`, `hooks`, `mcpServers`. Auto-discovered if manifest is absent.
-
-### Hosting Patterns
-
-| Pattern | Description |
-| :--- | :--- |
-| Ephemeral | New session per task, discard after; simple, no state management |
-| Long-running | One persistent session; use `ClaudeSDKClient` or `continue` |
-| Hybrid | Ephemeral tasks that can resume via session ID on interruption |
-| Multi-agent | Orchestrator spawns specialized subagents via `Agent` tool |
-
-Container baseline: 1 GiB RAM, 5 GiB disk, 1 CPU. For multi-tenant isolation: `settingSources: []`, `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`, per-tenant `CLAUDE_CONFIG_DIR` and `cwd`.
-
-### Secure Deployment
-
-Threat: prompt injection from processed content. Mitigations: permissions system (allow/deny rules), command AST parsing, web search summarization, sandbox mode. Isolation options: sandbox-runtime (lightweight), containers with `--cap-drop ALL --network none` + Unix socket proxy, gVisor (kernel-level isolation), Firecracker microVMs. Credential pattern: run proxy outside agent boundary; agent calls proxy which injects credentials. Filesystem: mount code read-only; exclude `.env`, `~/.aws/credentials`, `~/.ssh`, etc. Use `tmpfs` for ephemeral writes.
-
-### Migration from Old SDK
-
-| Old | New |
-| :--- | :--- |
-| `@anthropic-ai/claude-code` | `@anthropic-ai/claude-agent-sdk` |
-| `claude-code-sdk` / `claude_code_sdk` | `claude-agent-sdk` / `claude_agent_sdk` |
-| `ClaudeCodeOptions` | `ClaudeAgentOptions` |
-| System prompt defaulted to `claude_code` preset | System prompt now minimal (empty); opt in with `{ type: 'preset', preset: 'claude_code' }` |
-| `settingSources` defaulted to empty | `settingSources` now defaults to full filesystem (user + project + local) |
-
-V2 session API (`unstable_v2_createSession`, `unstable_v2_resumeSession`) removed in TS SDK 0.3.142; use `query()` with session options instead.
+| TypeScript | `npm install @anthropic-ai/claude-agent-sdk` | Node.js 18+; bundles the Claude binary |
+| Python | `pip install claude-agent-sdk` | Python 3.10+ |
 
 ### Authentication
 
-| Provider | Env Vars |
+| Provider | Environment variable(s) |
 | :--- | :--- |
-| Direct (Anthropic API) | `ANTHROPIC_API_KEY` |
-| Amazon Bedrock | `ANTHROPIC_BEDROCK_BASE_URL` (or `AWS_*`) |
-| Google Vertex AI | `ANTHROPIC_VERTEX_PROJECT_ID`, `CLOUD_ML_REGION` |
-| Azure AI Foundry | `ANTHROPIC_AZURE_BASE_URL` |
-| Proxy | `ANTHROPIC_BASE_URL` |
+| Anthropic API (default) | `ANTHROPIC_API_KEY` |
+| Amazon Bedrock | `CLAUDE_CODE_USE_BEDROCK=1` + AWS credentials |
+| Claude Platform on AWS | `CLAUDE_CODE_USE_ANTHROPIC_AWS=1` + `ANTHROPIC_AWS_WORKSPACE_ID` + AWS credentials |
+| Google Vertex AI | `CLAUDE_CODE_USE_VERTEX=1` + GCP credentials |
+| Microsoft Azure | `CLAUDE_CODE_USE_FOUNDRY=1` + Azure credentials |
 
-### TypeScript-Only Functions
+### Entry Points
 
-`startup()` — pre-warm CLI subprocess; returns `WarmQuery` handle. `resolveSettings()` — inspect effective settings without spawning Claude. `applyFlagSettings()` — change settings at runtime on a live `Query`. `setPermissionMode()`, `setModel()` — runtime changes on live `Query`. `interrupt()` — cancel current operation.
+| Interface | Python | TypeScript | Best for |
+| :--- | :--- | :--- | :--- |
+| One-off query | `query()` async generator | `query()` async generator | Single tasks, automation scripts |
+| Multi-turn session | `ClaudeSDKClient` (async context manager) | `query()` with `continue: true` | Conversations, follow-ups |
+| Pre-warm subprocess | — | `startup()` returns `WarmQuery` | Low-latency first call |
 
-### Python-Only
+### Built-in Tools
 
-`ClaudeSDKClient` — persistent session client with `async with ClaudeSDKClient(options) as client: await client.query(prompt)` then `async for message in client.receive_response()`.
+| Category | Tools | What they do |
+| :--- | :--- | :--- |
+| File ops | `Read`, `Edit`, `Write` | Read, modify, and create files |
+| Search | `Glob`, `Grep` | Find files by pattern, search content with regex |
+| Execution | `Bash` | Run shell commands, scripts, git operations |
+| Web | `WebSearch`, `WebFetch` | Search the web, fetch and parse pages |
+| Discovery | `ToolSearch` | Dynamically load MCP tool schemas on demand |
+| Orchestration | `Agent`, `Skill`, `AskUserQuestion`, `TaskCreate`, `TaskUpdate` | Spawn subagents, invoke skills, ask the user, track tasks |
+| Monitoring | `Monitor` | Watch a background script, react to each output line |
+
+### Permission Modes
+
+| Mode | Behavior | Use case |
+| :--- | :--- | :--- |
+| `default` | Unlisted tools call `canUseTool` callback; no callback = deny | Interactive apps with custom approval UI |
+| `acceptEdits` | Auto-approves file edits and common filesystem commands (`mkdir`, `touch`, `mv`, `cp`); other Bash falls through | Trusted dev workflows |
+| `plan` | Claude can read/explore but not edit source files | Planning and analysis only |
+| `dontAsk` | Never prompts; anything not pre-approved is denied | Locked-down headless agents |
+| `auto` (TypeScript only) | Model classifier approves or denies each tool call | Autonomous agents with safety guardrails |
+| `bypassPermissions` | Runs all tools without prompting; explicit `ask` rules still prompt; cannot run as root | CI, containers, fully isolated environments |
+
+### Permission Evaluation Order
+
+1. Hooks (can allow or deny outright)
+2. Deny rules (`disallowedTools` / `disallowed_tools`)
+3. Ask rules (from `settings.json`)
+4. Permission mode
+5. Allow rules (`allowedTools` / `allowed_tools`)
+6. `canUseTool` callback (skipped in `dontAsk` mode)
+
+### Allow and Deny Rule Behavior
+
+| Rule | Effect |
+| :--- | :--- |
+| `allowedTools: ["Read", "Grep"]` | Auto-approve these tools; others still available, fall through to mode |
+| `disallowedTools: ["Bash"]` | Remove `Bash` from Claude's context entirely |
+| `disallowedTools: ["Bash(rm *)"]` | Keep `Bash` available; deny calls matching `rm *` in every mode including `bypassPermissions` |
+| `disallowedTools: ["*"]` | Remove all tools from context |
+| `allowedTools: ["mcp__server__*"]` | Allow every tool from a named MCP server |
+
+### Message Types
+
+| Type | Python class | TS `type` field | When emitted |
+| :--- | :--- | :--- | :--- |
+| Session init | `SystemMessage` (subtype `"init"`) | `"system"` subtype `"init"` | First message; carries `session_id` |
+| Claude response | `AssistantMessage` | `"assistant"` | After each model response (TS: content at `.message.content`) |
+| Tool results | `UserMessage` | `"user"` | After tool execution |
+| Streaming chunk | `StreamEvent` | `"stream_event"` | Only when `includePartialMessages: true` |
+| Final result | `ResultMessage` | `"result"` | End of loop; check `subtype` first |
+| Compaction marker | `SystemMessage` (subtype `"compact_boundary"`) | `"system"` subtype `"compact_boundary"` | After automatic context compaction |
+
+### ResultMessage Subtypes
+
+| Subtype | Meaning | `result` field present? |
+| :--- | :--- | :--- |
+| `success` | Task completed normally | Yes |
+| `error_max_turns` | Hit `maxTurns` limit | No |
+| `error_max_budget_usd` | Hit `maxBudgetUsd` limit | No |
+| `error_during_execution` | API error or cancellation interrupted the loop | No |
+| `error_max_structured_output_retries` | No valid structured output within retry limit | No |
+
+All subtypes carry `total_cost_usd`, `usage`, `num_turns`, and `session_id`.
+
+### Key Options (Python: `ClaudeAgentOptions`, TypeScript: `Options`)
+
+| Option (Python / TypeScript) | Default | Description |
+| :--- | :--- | :--- |
+| `allowed_tools` / `allowedTools` | `[]` | Auto-approve listed tools |
+| `disallowed_tools` / `disallowedTools` | `[]` | Block listed tools or patterns |
+| `permission_mode` / `permissionMode` | `"default"` | How unapproved tools are handled |
+| `max_turns` / `maxTurns` | No limit | Maximum tool-use round trips |
+| `max_budget_usd` / `maxBudgetUsd` | No limit | Stop when cost estimate reaches this USD value |
+| `effort` | Model default | `"low"` / `"medium"` / `"high"` / `"xhigh"` / `"max"` |
+| `model` | CLI default | Model ID or alias |
+| `system_prompt` / `systemPrompt` | Minimal | String or preset object |
+| `setting_sources` / `settingSources` | All sources | Which filesystem settings to load (`"user"`, `"project"`, `"local"`) |
+| `resume` | — | Session ID to resume |
+| `continue_conversation` / `continue` | `false` | Resume most recent session in cwd |
+| `fork_session` / `forkSession` | `false` | Fork instead of continuing on resume |
+| `mcp_servers` / `mcpServers` | `{}` | External MCP server configs |
+| `hooks` | — | Programmatic hook callbacks |
+| `agents` | — | Programmatic subagent definitions |
+| `cwd` | `process.cwd()` | Working directory |
+| `include_partial_messages` / `includePartialMessages` | `false` | Emit streaming `StreamEvent` messages |
+| `plugins` | `[]` | Load local plugin directories |
+| `session_store` / `sessionStore` | — | External storage adapter for cross-host resume |
+| `enable_file_checkpointing` / `enableFileCheckpointing` | `false` | Track file changes for rewind |
+| `persist_session` / `persistSession` | `true` | Write session JSONL to disk (TypeScript only) |
+| `thinking` | `"adaptive"` on supported models | `ThinkingConfig` controlling extended thinking |
+| `skills` | — | Skill names to enable, or `"all"` |
+| `output_format` / `outputFormat` | — | JSON Schema for structured output |
+| `can_use_tool` / `canUseTool` | — | Runtime tool approval callback |
+
+### Session Management
+
+| Goal | Python | TypeScript |
+| :--- | :--- | :--- |
+| New session | `query()` (default) | `query()` (default) |
+| Continue most recent | `continue_conversation=True` | `continue: true` |
+| Resume specific session | `resume=session_id` | `resume: sessionId` |
+| Fork session | `resume=id, fork_session=True` | `resume: id, forkSession: true` |
+| Multi-turn in one process | `ClaudeSDKClient` (automatic) | `continue: true` on each call |
+| Session metadata | `list_sessions()`, `get_session_info()`, `rename_session()`, `tag_session()` | `listSessions()`, `getSessionInfo()`, `renameSession()`, `tagSession()` |
+
+Session files are stored at `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`. For cross-host resume, use a `SessionStore` adapter or move the JSONL file.
+
+### Hooks (Programmatic Callbacks)
+
+Registered under `hooks` (TypeScript) or `hooks` dict (Python). Key hook events:
+
+| Event | When it fires | Common uses |
+| :--- | :--- | :--- |
+| `PreToolUse` | Before a tool executes | Validate inputs, block dangerous commands |
+| `PostToolUse` | After a tool returns | Audit outputs, trigger side effects |
+| `UserPromptSubmit` | When a prompt is sent | Inject additional context |
+| `Stop` | When the agent finishes | Validate result, save state |
+| `SubagentStart` / `SubagentStop` | When a subagent spawns or completes | Track parallel tasks |
+| `PreCompact` | Before context compaction | Archive transcript |
+| `SessionStart` / `SessionEnd` | Session lifecycle (TypeScript only) | Resource setup/teardown |
+
+Hook callback returns `{}` to allow, or a `hookSpecificOutput` with `permissionDecision: "deny"` and `permissionDecisionReason` to block. The top-level `decision` / `reason` pattern is deprecated for `PreToolUse`.
+
+Python matchers use `HookMatcher(matcher="Write|Edit", hooks=[callback])`. TypeScript uses `{ matcher: "Write|Edit", hooks: [callback] }`.
+
+### Subagents (`AgentDefinition`)
+
+| Field | Required | Description |
+| :--- | :--- | :--- |
+| `description` | Yes | When Claude should delegate to this agent |
+| `prompt` | Yes | The agent's system prompt |
+| `tools` | No | Allowed tools (inherits parent tools if omitted) |
+| `disallowedTools` | No | Tools to remove |
+| `model` | No | Model alias or ID; `"inherit"` to use parent model |
+| `skills` | No | Skill names to preload |
+| `maxTurns` | No | Turn limit for this subagent |
+| `background` | No | Run as non-blocking background task |
+| `effort` | No | Effort level override |
+| `permissionMode` | No | Permission mode for this subagent |
+| `memory` | No | `"user"`, `"project"`, or `"local"` |
+
+Include `"Agent"` in `allowedTools` to auto-approve subagent invocations. Subagents start with a fresh conversation; only their final message returns to the parent as a tool result.
+
+### MCP Server Config Types
+
+| Transport | Python | TypeScript | Key fields |
+| :--- | :--- | :--- | :--- |
+| stdio (subprocess) | `McpStdioServerConfig` | `McpStdioServerConfig` | `command`, `args`, `env` |
+| SSE | `McpSSEServerConfig` | `McpSSEServerConfig` | `type: "sse"`, `url`, `headers` |
+| HTTP | `McpHttpServerConfig` | `McpHttpServerConfig` | `type: "http"`, `url`, `headers` |
+| In-process SDK server | `McpSdkServerConfig` (via `create_sdk_mcp_server`) | `McpSdkServerConfigWithInstance` (via `createSdkMcpServer`) | `type: "sdk"`, `name`, `instance` |
+
+MCP tools are auto-approved with `mcp__<server>__<tool>` names. Use `mcp__<server>__*` to allow all tools from a server.
+
+### Custom Tools (In-process MCP Server)
+
+Python: use the `@tool` decorator, then `create_sdk_mcp_server(name, tools=[...])`.
+TypeScript: use `tool(name, description, zodSchema, handler)`, then `createSdkMcpServer({ name, tools: [...] })`.
+
+Tool handlers return `{ content: [...], isError?: bool, structuredContent?: object }`. Set `readOnlyHint: true` on annotations to allow parallel execution.
+
+### `settingSources` — What Each Source Loads
+
+| Source | Location | What it loads |
+| :--- | :--- | :--- |
+| `"project"` | `<cwd>/.claude/` and parent dirs | `CLAUDE.md`, `rules/*.md`, project skills, hooks, `settings.json` |
+| `"user"` | `~/.claude/` | User `CLAUDE.md`, `rules/*.md`, user skills, `settings.json` |
+| `"local"` | `<cwd>/.claude/settings.local.json` + parent `CLAUDE.local.md` | Local settings and local memory |
+
+Always loaded regardless of `settingSources`: managed policy settings, `~/.claude.json`, auto memory at `~/.claude/projects/`. For multi-tenant isolation, set `settingSources: []` and `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`.
+
+### Effort Levels
+
+| Level | Behavior | Good for |
+| :--- | :--- | :--- |
+| `"low"` | Minimal reasoning | File lookups, listing directories |
+| `"medium"` | Balanced | Routine edits, standard tasks |
+| `"high"` | Thorough analysis | Refactors, debugging |
+| `"xhigh"` | Extended reasoning depth | Recommended on Fable 5 and Opus 4.7+ |
+| `"max"` | Maximum reasoning | Multi-step problems requiring deep analysis |
+
+### Cost Tracking
+
+`total_cost_usd` / `totalCostUsd` on `ResultMessage` is a client-side estimate — not authoritative billing data. For billing, use the Usage and Cost API or the Claude Console. Track per-step usage from `AssistantMessage.usage`; per-model breakdown from `ResultMessage.modelUsage` / `model_usage`.
+
+### Context Management Tips
+
+- Each subagent gets a fresh context (no parent turns); only its final message goes to the parent.
+- Automatic compaction fires when context approaches the limit; a `compact_boundary` system message is emitted.
+- Use `CLAUDE.md` (via `settingSources`) for persistent instructions that survive compaction.
+- MCP tool search (`ToolSearch`) defers tool schemas until needed, reducing baseline context.
+- Lower `effort` for routine tasks to reduce tokens and cost.
+
+### Hosting / Deployment Patterns
+
+- Every `query()` call spawns a `claude` CLI subprocess; N concurrent sessions = N subprocesses.
+- Pass `cwd` per session to isolate working directories.
+- Session JSONL files live on local disk; they don't survive container restarts without `SessionStore`.
+- Use `SessionStore` adapter to mirror transcripts to external storage for cross-host resume.
+- For Bun single-file compilations, use `extractFromBunfs()` to resolve the bundled CLI binary path.
+
+### Secure Deployment Checklist
+
+- Apply `permissionMode: "bypassPermissions"` only in isolated containers or CI.
+- Use `disallowedTools` or scoped deny rules (e.g., `"Bash(rm *)"`) to block dangerous patterns.
+- Set `settingSources: []` and `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` for multi-tenant isolation.
+- Prefer proxies for credentials rather than injecting API keys directly into the agent environment.
+- Leverage `PreToolUse` hooks to validate or block tool calls before execution.
+
+### Streaming vs. Single Message Input
+
+| Mode | Default | Supports images | Supports mid-session interrupts | Supports queued messages |
+| :--- | :--- | :--- | :--- | :--- |
+| Single message (string `prompt`) | Yes | No | No | No |
+| Streaming input (async generator `prompt`) | No | Yes | Yes | Yes |
+
+Pass an `AsyncGenerator<SDKUserMessage>` as `prompt` to enter streaming input mode. Python uses `ClaudeSDKClient.query(generator)`.
+
+### TypeScript-Only Features
+
+- `startup()` / `WarmQuery` — pre-warm subprocess to eliminate first-call latency
+- `applyFlagSettings()` — change settings on a running session without restart
+- `setPermissionMode()`, `setModel()` — mid-session changes (streaming input mode only)
+- `persistSession: false` — in-memory only session
+- `permissionMode: "auto"` — model classifier for tool approval
+- `Query.interrupt()`, `Query.setMcpServers()`, `Query.reconnectMcpServer()` — live session control
+- `resolveSettings()` — inspect effective merged settings without spawning a session
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Overview](references/claude-code-agent-sdk-overview.md) — SDK capabilities, built-in tools, comparison vs Client SDK/CLI/Managed Agents, install, authentication
-- [Quickstart](references/claude-code-agent-sdk-quickstart.md) — Step-by-step setup, first query, permission modes table, tools-to-capabilities table
-- [Agent Loop](references/claude-code-agent-sdk-agent-loop.md) — Loop mechanics, message types, tool execution, turns, budget, effort levels, context compaction, result subtypes
-- [Claude Code Features](references/claude-code-agent-sdk-claude-code-features.md) — `settingSources`, CLAUDE.md loading, hooks comparison, feature matrix
-- [Cost Tracking](references/claude-code-agent-sdk-cost-tracking.md) — `total_cost_usd`, `model_usage`, cache token fields, deduplication, prompt caching env var
-- [Custom Tools](references/claude-code-agent-sdk-custom-tools.md) — `tool()` helper, `createSdkMcpServer`, `readOnlyHint`, error handling, image/resource return types
-- [File Checkpointing](references/claude-code-agent-sdk-file-checkpointing.md) — Enable, `rewindFiles()`, checkpoint patterns, limitations
-- [Hooks](references/claude-code-agent-sdk-hooks.md) — 20 hook events, `HookMatcher`, callback signatures, permission decisions, async hooks, examples
-- [Hosting](references/claude-code-agent-sdk-hosting.md) — Subprocess model, session patterns, container sizing, multi-tenant isolation
-- [MCP Servers](references/claude-code-agent-sdk-mcp.md) — Transport types (stdio/HTTP/SSE/in-process), wildcard allow, auth, tool search
-- [Migration Guide](references/claude-code-agent-sdk-migration-guide.md) — Package renames, `ClaudeCodeOptions` → `ClaudeAgentOptions`, system prompt and `settingSources` defaults
-- [Modifying System Prompts](references/claude-code-agent-sdk-modifying-system-prompts.md) — Minimal/preset/custom starting points, `excludeDynamicSections`, output styles
-- [Observability](references/claude-code-agent-sdk-observability.md) — OpenTelemetry env vars, span names, W3C trace context, resource tagging
-- [Permissions](references/claude-code-agent-sdk-permissions.md) — 6-step evaluation order, allow/deny rules, all permission modes, `canUseTool`
-- [Plugins](references/claude-code-agent-sdk-plugins.md) — `plugins` option, namespacing, plugin structure, auto-discovery
-- [Python SDK Reference](references/claude-code-agent-sdk-python.md) — `query()`, `ClaudeSDKClient`, `tool()`, `create_sdk_mcp_server()`, `ClaudeAgentOptions`, all message types, session functions
-- [Secure Deployment](references/claude-code-agent-sdk-secure-deployment.md) — Threat model, isolation technologies, credential management, filesystem config
-- [Sessions](references/claude-code-agent-sdk-sessions.md) — `continue`/`resume`/`fork`, `ClaudeSDKClient`, session ID capture, cross-host resume
-- [Skills](references/claude-code-agent-sdk-skills.md) — `skills` option, filesystem locations, `settingSources` requirement, tool restrictions, troubleshooting
-- [Slash Commands](references/claude-code-agent-sdk-slash-commands.md) — Built-in commands, custom commands format, arguments, bash execution, file references
-- [Streaming Output](references/claude-code-agent-sdk-streaming-output.md) — `includePartialMessages`, `StreamEvent` structure, text/tool-call streaming, message flow
-- [Streaming vs Single Mode](references/claude-code-agent-sdk-streaming-vs-single-mode.md) — `AsyncGenerator<SDKUserMessage>` input, image uploads, interruption, single-message limitations
-- [Structured Outputs](references/claude-code-agent-sdk-structured-outputs.md) — `outputFormat`/`output_format`, Zod/Pydantic schemas, `structured_output` field, error handling
-- [Subagents](references/claude-code-agent-sdk-subagents.md) — `AgentDefinition` fields, inheritance, model aliases, `Workflow` tool, background vs foreground
-- [Todo Tracking](references/claude-code-agent-sdk-todo-tracking.md) — `TaskCreate`/`TaskUpdate` monitoring, migration from `TodoWrite`, `taskId` from tool results
-- [Tool Search](references/claude-code-agent-sdk-tool-search.md) — `ENABLE_TOOL_SEARCH` values, auto threshold, Vertex AI behavior, optimize discovery
-- [TypeScript SDK Reference](references/claude-code-agent-sdk-typescript.md) — `query()`, `startup()`, `tool()`, `createSdkMcpServer()`, `Options` type (all fields), `Query` object, message types, session functions
-- [TypeScript V2 Preview (removed)](references/claude-code-agent-sdk-typescript-v2-preview.md) — Removed V2 API reference for `unstable_v2_createSession`; migrate to `query()`
-- [User Input](references/claude-code-agent-sdk-user-input.md) — `canUseTool` callback, tool approval responses, `AskUserQuestion` handling, question format, option previews
-- [Session Storage](references/claude-code-agent-sdk-session-storage.md) — `SessionStore` interface, `InMemorySessionStore`, S3/Redis/Postgres adapters, dual-write architecture, conformance suite
+- [Overview](references/claude-code-agent-sdk-overview.md) — SDK overview, capabilities, comparison to Client SDK and Managed Agents
+- [Quickstart](references/claude-code-agent-sdk-quickstart.md) — Build a bug-fixing agent in minutes; tools and permission modes intro
+- [How the agent loop works](references/claude-code-agent-sdk-agent-loop.md) — Turn lifecycle, message types, context window, compaction, result handling
+- [Claude Code features in the SDK](references/claude-code-agent-sdk-claude-code-features.md) — `settingSources`, CLAUDE.md, skills, hooks from filesystem
+- [Sessions](references/claude-code-agent-sdk-sessions.md) — Continue, resume, fork; `ClaudeSDKClient` vs `query()`; cross-host resume
+- [Streaming vs. single mode](references/claude-code-agent-sdk-streaming-vs-single-mode.md) — When to use streaming input vs. string prompts; image support
+- [Streaming output](references/claude-code-agent-sdk-streaming-output.md) — Real-time token streaming with `includePartialMessages`
+- [Permissions](references/claude-code-agent-sdk-permissions.md) — Permission evaluation order, allow/deny rules, permission modes
+- [Hooks](references/claude-code-agent-sdk-hooks.md) — Programmatic hook callbacks, available events, matchers, outputs
+- [Subagents](references/claude-code-agent-sdk-subagents.md) — `AgentDefinition`, context isolation, parallelization, what subagents inherit
+- [MCP](references/claude-code-agent-sdk-mcp.md) — Transport types, tool search, authentication, error handling
+- [Custom tools](references/claude-code-agent-sdk-custom-tools.md) — In-process MCP server, `@tool` / `tool()`, annotations, images, structured data
+- [Skills](references/claude-code-agent-sdk-skills.md) — Filesystem skills in the SDK, `skills` option
+- [Slash commands](references/claude-code-agent-sdk-slash-commands.md) — Using slash commands (e.g., `/compact`) as SDK prompts
+- [User input](references/claude-code-agent-sdk-user-input.md) — `canUseTool` callback, `AskUserQuestion` tool, interactive approval flows
+- [System prompts](references/claude-code-agent-sdk-modifying-system-prompts.md) — Custom prompts, preset, append, prompt-cache optimization
+- [Structured outputs](references/claude-code-agent-sdk-structured-outputs.md) — JSON Schema output format, validation, retries
+- [Cost tracking](references/claude-code-agent-sdk-cost-tracking.md) — Token usage, `total_cost_usd` caveats, per-step and per-model breakdown
+- [File checkpointing](references/claude-code-agent-sdk-file-checkpointing.md) — Snapshot and revert file changes within a session
+- [Session storage](references/claude-code-agent-sdk-session-storage.md) — `SessionStore` interface for cross-host session persistence
+- [Observability](references/claude-code-agent-sdk-observability.md) — Logging, debug output, hook events in the message stream
+- [Todo tracking](references/claude-code-agent-sdk-todo-tracking.md) — Task creation and tracking with `TaskCreate` / `TaskUpdate`
+- [Tool search](references/claude-code-agent-sdk-tool-search.md) — Deferred MCP tool schema loading via `ToolSearch`
+- [Plugins](references/claude-code-agent-sdk-plugins.md) — Loading local plugins via `plugins` option
+- [Hosting](references/claude-code-agent-sdk-hosting.md) — Subprocess model, session patterns, Docker/Kubernetes, multi-tenant isolation
+- [Secure deployment](references/claude-code-agent-sdk-secure-deployment.md) — Threat model, permissions, sandboxing, credential management, network controls
+- [Migration guide](references/claude-code-agent-sdk-migration-guide.md) — Upgrading from older SDK versions
+- [TypeScript reference](references/claude-code-agent-sdk-typescript.md) — Complete TypeScript API: `query()`, `startup()`, `tool()`, `Options`, all message types, hook types
+- [Python reference](references/claude-code-agent-sdk-python.md) — Complete Python API: `query()`, `ClaudeSDKClient`, `ClaudeAgentOptions`, all message types
+- [TypeScript v2 preview](references/claude-code-agent-sdk-typescript-v2-preview.md) — Notes on removed/deprecated v2 session API
 
 ## Sources
 
 - Overview: https://code.claude.com/docs/en/agent-sdk/overview.md
 - Quickstart: https://code.claude.com/docs/en/agent-sdk/quickstart.md
-- Agent Loop: https://code.claude.com/docs/en/agent-sdk/agent-loop.md
-- Claude Code Features: https://code.claude.com/docs/en/agent-sdk/claude-code-features.md
-- Cost Tracking: https://code.claude.com/docs/en/agent-sdk/cost-tracking.md
-- Custom Tools: https://code.claude.com/docs/en/agent-sdk/custom-tools.md
-- File Checkpointing: https://code.claude.com/docs/en/agent-sdk/file-checkpointing.md
-- Hooks: https://code.claude.com/docs/en/agent-sdk/hooks.md
-- Hosting: https://code.claude.com/docs/en/agent-sdk/hosting.md
-- MCP Servers: https://code.claude.com/docs/en/agent-sdk/mcp.md
-- Migration Guide: https://code.claude.com/docs/en/agent-sdk/migration-guide.md
-- Modifying System Prompts: https://code.claude.com/docs/en/agent-sdk/modifying-system-prompts.md
-- Observability: https://code.claude.com/docs/en/agent-sdk/observability.md
-- Permissions: https://code.claude.com/docs/en/agent-sdk/permissions.md
-- Plugins: https://code.claude.com/docs/en/agent-sdk/plugins.md
-- Python SDK Reference: https://code.claude.com/docs/en/agent-sdk/python.md
-- Secure Deployment: https://code.claude.com/docs/en/agent-sdk/secure-deployment.md
+- How the agent loop works: https://code.claude.com/docs/en/agent-sdk/agent-loop.md
+- Claude Code features in the SDK: https://code.claude.com/docs/en/agent-sdk/claude-code-features.md
 - Sessions: https://code.claude.com/docs/en/agent-sdk/sessions.md
-- Skills: https://code.claude.com/docs/en/agent-sdk/skills.md
-- Slash Commands: https://code.claude.com/docs/en/agent-sdk/slash-commands.md
-- Streaming Output: https://code.claude.com/docs/en/agent-sdk/streaming-output.md
-- Streaming vs Single Mode: https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode.md
-- Structured Outputs: https://code.claude.com/docs/en/agent-sdk/structured-outputs.md
+- Streaming vs. single mode: https://code.claude.com/docs/en/agent-sdk/streaming-vs-single-mode.md
+- Streaming output: https://code.claude.com/docs/en/agent-sdk/streaming-output.md
+- Permissions: https://code.claude.com/docs/en/agent-sdk/permissions.md
+- Hooks: https://code.claude.com/docs/en/agent-sdk/hooks.md
 - Subagents: https://code.claude.com/docs/en/agent-sdk/subagents.md
-- Todo Tracking: https://code.claude.com/docs/en/agent-sdk/todo-tracking.md
-- Tool Search: https://code.claude.com/docs/en/agent-sdk/tool-search.md
-- TypeScript SDK Reference: https://code.claude.com/docs/en/agent-sdk/typescript.md
-- TypeScript V2 Preview (removed): https://code.claude.com/docs/en/agent-sdk/typescript-v2-preview.md
-- User Input: https://code.claude.com/docs/en/agent-sdk/user-input.md
-- Session Storage: https://code.claude.com/docs/en/agent-sdk/session-storage.md
+- MCP: https://code.claude.com/docs/en/agent-sdk/mcp.md
+- Custom tools: https://code.claude.com/docs/en/agent-sdk/custom-tools.md
+- Skills: https://code.claude.com/docs/en/agent-sdk/skills.md
+- Slash commands: https://code.claude.com/docs/en/agent-sdk/slash-commands.md
+- User input: https://code.claude.com/docs/en/agent-sdk/user-input.md
+- System prompts: https://code.claude.com/docs/en/agent-sdk/modifying-system-prompts.md
+- Structured outputs: https://code.claude.com/docs/en/agent-sdk/structured-outputs.md
+- Cost tracking: https://code.claude.com/docs/en/agent-sdk/cost-tracking.md
+- File checkpointing: https://code.claude.com/docs/en/agent-sdk/file-checkpointing.md
+- Session storage: https://code.claude.com/docs/en/agent-sdk/session-storage.md
+- Observability: https://code.claude.com/docs/en/agent-sdk/observability.md
+- Todo tracking: https://code.claude.com/docs/en/agent-sdk/todo-tracking.md
+- Tool search: https://code.claude.com/docs/en/agent-sdk/tool-search.md
+- Plugins: https://code.claude.com/docs/en/agent-sdk/plugins.md
+- Hosting: https://code.claude.com/docs/en/agent-sdk/hosting.md
+- Secure deployment: https://code.claude.com/docs/en/agent-sdk/secure-deployment.md
+- Migration guide: https://code.claude.com/docs/en/agent-sdk/migration-guide.md
+- TypeScript reference: https://code.claude.com/docs/en/agent-sdk/typescript.md
+- Python reference: https://code.claude.com/docs/en/agent-sdk/python.md
+- TypeScript v2 preview: https://code.claude.com/docs/en/agent-sdk/typescript-v2-preview.md
