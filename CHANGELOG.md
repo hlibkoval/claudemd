@@ -2,6 +2,33 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.22
+
+**14 references updated across 7 skills:** agent-sdk-doc, cli-doc, features-doc, headless-doc, ide-doc, mcp-doc, operations-doc, settings-doc
+
+### New
+
+- **`SDKRateLimitEvent` `credits_required` fields** — three new fields on rate-limit events: `errorCode: "credits_required"` signals exhausted subscription usage, `canUserPurchaseCredits` indicates whether the user can buy credits, and `hasChargeableSavedPaymentMethod` indicates a saved payment method is on file; requires v2.1.181 (agent-sdk-doc)
+- **`disableClaudeAiConnectors` setting** — v2.1.182 setting (any-scope, any-source-true semantics) to disable claude.ai MCP connectors; replaces `ENABLE_CLAUDEAI_MCP_SERVERS=false` as the preferred per-project/org control; `--mcp-config` servers are unaffected; does not apply to cloud sessions (mcp-doc, settings-doc)
+- **`deniedMcpServers` accepts claude.ai connector names** — v2.1.182: `serverName` in `deniedMcpServers` now accepts any non-empty string so claude.ai connectors can be blocked by display name (e.g. `"claude.ai Slack"`); `allowedMcpServers` still restricts to alphanumeric/hyphen/underscore; use `serverUrl` when robustness to renames is needed (mcp-doc)
+- **Background subagent wait cap in `-p` mode** — v2.1.182: non-interactive mode waits up to 10 minutes (default) for background subagents/workflows whose result is part of output, then terminates and exits; adjustable via `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS`, set to `0` for no limit (headless-doc, settings-doc)
+- **`attribution.sessionUrl` key** — v2.1.182: set to `false` to omit the `Claude-Session` trailer from commits and the session link from PR bodies in web and Remote Control sessions (headless-doc, settings-doc)
+- **`CLAUDE_CODE_CONNECT_TIMEOUT_MS` env var** — timeout in milliseconds for the connect, TLS, and response-header phase of a streaming API request (default 60 000 ms); set to `0` to rely on `API_TIMEOUT_MS` alone (settings-doc)
+- **`remoteControlAtStartup` setting** — v2.1.119: set to `true`/`false` to always or never auto-connect Remote Control at session start; appears in `/config` as **Enable Remote Control for all sessions** (settings-doc)
+- **v2.1.185 release notes** — stream-stall hint text changed to "Waiting for API response · will retry in …" and now triggers after 20s of silence instead of 10s (operations-doc)
+
+### Changed
+
+- **`/config` named shorthand keys** — v2.1.182: `/config` now accepts named shorthand keys such as `theme=dark` and `model=sonnet` in addition to raw setting keys; help flag changed from `/config help` to `/config --help` (cli-doc)
+- **Settings keybindings table updated** — `settings:close` (Enter) replaced by `select:accept` (Enter, Space) to change a setting or open its submenu, and `confirm:no` (Escape) to close the panel; clarified that changes apply immediately so Escape closes with changes saved (cli-doc)
+- **Deprecated-model warning on stderr in non-interactive mode** — v2.1.182: model retirement/remap warning is now written to stderr in print mode (`-p`); suppressed for `--output-format json` and `stream-json`; also covers `model` set in subagent frontmatter (features-doc)
+- **Auto-mode safety: additional destructive commands blocked** — v2.1.182: `git reset --hard`, `git checkout -- .`, `git restore .`, `git clean -fd`, `git stash drop/clear` blocked when uncommitted work is presumed; `git commit --amend` blocked when HEAD commit was not made this session; `terraform/pulumi/cdk/terragrunt destroy` and plans that destroy resources blocked (settings-doc)
+- **`ENABLE_CLAUDEAI_MCP_SERVERS` description updated** — doc now directs per-project/org use cases to `disableClaudeAiConnectors` setting instead (settings-doc)
+
+### Removed
+
+- Minor wording/formatting updates across ide-doc (Chrome extension troubleshooting), settings-doc (settings error startup notice mention removed)
+
 ## 26.6.19
 
 **29 references updated across 15 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, features-doc, getting-started-doc, headless-doc, mcp-doc, operations-doc, plugins-doc, security-doc, settings-doc, skills-doc, sub-agents-doc
