@@ -3,13 +3,13 @@ name: errors-doc
 user-invocable: false
 ---
 
-# Error Reference Documentation
+# Errors Documentation
 
 This skill provides the complete official documentation for Claude Code runtime errors — what each error message means and how to recover from it.
 
 ## Quick Reference
 
-### Error Index
+### Error Message Index
 
 | Message | Category |
 | :--- | :--- |
@@ -34,8 +34,9 @@ This skill provides the complete official documentation for Claude Code runtime 
 | `OAuth token revoked` / `OAuth token has expired` | Authentication |
 | `does not meet scope requirement user:profile` | Authentication |
 | `Unable to connect to API` | Network |
+| `Waiting for API response · will retry in` | Network / Automatic retries |
 | `SSL certificate verification failed` | Network |
-| `403` with `x-deny-reason: host_not_allowed` in a cloud or routine session | Network |
+| `403` with `x-deny-reason: host_not_allowed` | Network (cloud session) |
 | `Prompt is too long` | Request errors |
 | `Error during compaction: Conversation too long` | Request errors |
 | `Request too large` | Request errors |
@@ -53,108 +54,110 @@ This skill provides the complete official documentation for Claude Code runtime 
 
 ### Automatic Retries
 
-Claude Code retries transient failures up to 10 times with exponential backoff before surfacing an error. The spinner shows `Retrying in Ns · attempt x/y` while retrying.
+Claude Code retries transient failures up to 10 times (capped at 15 as of v2.1.186) with exponential backoff before showing an error. Retried automatically: server errors, 529 overloaded, request timeouts, temporary 429 throttles, dropped connections.
+
+Retry tuning env vars:
 
 | Variable | Default | Effect |
 | :--- | :--- | :--- |
-| `CLAUDE_CODE_MAX_RETRIES` | 10 | Number of retry attempts |
-| `API_TIMEOUT_MS` | 600000 | Per-request timeout in milliseconds |
+| `CLAUDE_CODE_MAX_RETRIES` | 10 | Number of retry attempts (max 15 as of v2.1.186) |
+| `CLAUDE_CODE_RETRY_WATCHDOG` | unset | Set to `1` in CI to retry 429/529 indefinitely |
+| `API_TIMEOUT_MS` | 600000 | Per-request timeout in ms |
+
+When no data arrives for 20 seconds (v2.1.185+; 10 seconds on older versions), the spinner shows `Waiting for API response · will retry in … · check your network`. The request has not failed yet.
 
 ### Server Errors
 
-| Error | Cause | Recovery |
+| Error | Cause | Fix |
 | :--- | :--- | :--- |
-| `500 Internal server error` | Unexpected failure inside API infrastructure | Check status.claude.com; retry; run `/feedback` if it persists |
-| `Repeated 529 Overloaded errors` | API at capacity (not your quota) | Check status.claude.com; retry after a few minutes; switch model with `/model` |
-| `Request timed out` | API did not respond within deadline (default 10 min) | Retry; break work into smaller prompts; raise `API_TIMEOUT_MS` for slow networks |
-| Auto mode classifier unavailable | Classifier model overloaded; classifier returned bad response; transcript too long | Retry after a few seconds; run `/compact` if transcript exceeded context window; approve manually |
+| `500 Internal server error` | Unexpected failure inside the API | Check status.claude.com, wait, retry; run `/feedback` if it persists |
+| `Repeated 529 Overloaded errors` | API temporarily at capacity | Check status.claude.com, wait, try `/model` to switch models |
+| `Request timed out` | API did not respond before connection deadline | Retry; break large tasks into smaller prompts; raise `API_TIMEOUT_MS` |
+| Auto mode classifier failures | Classifier overloaded, returned unparseable response, or transcript exceeded context window | Retry; run `/compact` for context window case; interactive sessions fall back to manual approval |
 
-### Usage Limit Errors
+### Usage Limits
 
-| Error | Cause | Recovery |
+| Error | Cause | Fix |
 | :--- | :--- | :--- |
-| `You've hit your session/weekly limit` | Subscription rolling allowance exhausted | Wait for reset time shown; run `/usage`; buy credits with `/usage-credits`; upgrade plan |
-| `Usage credits required for 1M context` | 1M context not included in your plan | Run `/model` to switch to standard context; run `/usage-credits` to enable metered billing |
-| `Server is temporarily limiting requests` | Short-lived API throttle, unrelated to quota | Wait briefly and retry; check status.claude.com |
-| `Request rejected (429)` | Rate limit for your API key or provider project | Run `/status` to confirm credential; lower `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY`; request higher tier |
-| `Credit balance is too low` | Console org ran out of prepaid credits | Add credits at platform.claude.com; enable auto-reload; switch to subscription auth |
+| `You've hit your session/weekly limit` | Subscription rolling allowance exhausted | Wait for reset time shown; `/usage` to check limits; `/usage-credits` to buy more |
+| `Usage credits required for 1M context` | 1M context window requires metered billing | `/model` to switch to non-1M variant; `/usage-credits` to enable; set `CLAUDE_CODE_DISABLE_1M_CONTEXT=1` to hide 1M variants |
+| `Server is temporarily limiting requests` | Short-lived server-side throttle, unrelated to plan quota | Wait briefly, retry |
+| `Request rejected (429)` | Rate limit for your API key / Bedrock / Vertex project | Check `/status` for active credential; reduce concurrency; lower `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` |
+| `Credit balance is too low` | Console organization out of prepaid credits | Add credits at platform.claude.com/settings/billing; enable auto-reload |
 
 ### Authentication Errors
 
-| Error | Cause | Recovery |
-| :--- | :--- | :--- |
-| `Not logged in` | No valid credential for this session | Run `/login`; confirm `ANTHROPIC_API_KEY` is exported |
-| `Could not resolve authentication method` | Session reached API client without any credential (common in background/cloud sessions) | Upgrade to v2.1.174+; confirm env vars set in worker process environment |
-| `Invalid API key` | Key rejected by API | Check for typos; confirm key not revoked; run `env \| grep ANTHROPIC` for stale keys |
-| `This organization has been disabled` | Stale `ANTHROPIC_API_KEY` from disabled org overrides subscription login | Unset `ANTHROPIC_API_KEY` from shell profile; relaunch `claude` |
-| `Organization has disabled API key authentication` | Admin turned off API keys for org | Unset `ANTHROPIC_API_KEY` or `apiKeyHelper`; run `/login` |
-| `Organization has disabled Claude subscription access` | Server-side org setting blocking subscription login | Ask admin to enable; or use Console API key instead |
-| `Routines are disabled by your organization's policy` | Admin disabled routines at org level | Ask admin to enable at claude.ai/admin-settings/claude-code |
-| `OAuth token revoked or expired` | Login no longer valid | Run `/login`; if it recurs run `/logout` then `/login` |
-| `does not meet scope requirement user:profile` | Token predates newer OAuth scope | Run `/login` to mint new token (no need to log out first) |
+Run `/status` to see which credential is currently active.
 
-### Network and Connection Errors
+| Error | Fix |
+| :--- | :--- |
+| `Not logged in` | `/login`; confirm `ANTHROPIC_API_KEY` is exported; configure `apiKeyHelper` for CI |
+| `Could not resolve authentication method` | Upgrade to v2.1.174+; confirm credentials are in the worker's environment, not just your interactive shell |
+| `Invalid API key` | Check for typos; run `env | grep ANTHROPIC` for stale keys; confirm `apiKeyHelper` script output |
+| `This organization has been disabled` | Unset `ANTHROPIC_API_KEY` from shell and profile; relaunch |
+| `Your organization has disabled API key authentication` | Unset `ANTHROPIC_API_KEY` and/or remove `apiKeyHelper` setting; `/login` with claude.ai account |
+| `Your organization has disabled Claude subscription access` | Ask admin to enable access; or use Console API key instead |
+| `Routines are disabled by your organization's policy` | Ask admin to enable Routines at claude.ai/admin-settings/claude-code |
+| `OAuth token revoked or expired` | `/logout` then `/login` |
+| `OAuth scope requirement: user:profile` | `/login` to mint a new token (no need to log out first) |
 
-| Error | Cause | Recovery |
+### Network Errors
+
+| Error | Cause | Fix |
 | :--- | :--- | :--- |
-| `Unable to connect to API` (ECONNREFUSED, ECONNRESET, ETIMEDOUT) | No internet, VPN blocking `api.anthropic.com`, or unconfigured proxy | Run `curl -I https://api.anthropic.com`; set `HTTPS_PROXY`; check `/etc/resolv.conf` on WSL; quit Docker Desktop |
-| `SSL certificate verification failed` | Corporate proxy intercepting TLS with its own cert | Set `NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.pem`; do NOT set `NODE_TLS_REJECT_UNAUTHORIZED=0` |
-| `403` with `x-deny-reason: host_not_allowed` | Cloud session/routine blocked by sandbox network policy | In routine/cloud session settings, change Network access to Custom; add the blocked domain to Allowed domains |
+| `Unable to connect to API` | No internet, VPN blocking api.anthropic.com, proxy not configured | `curl -I https://api.anthropic.com` to test; set `HTTPS_PROXY`; set `ANTHROPIC_BASE_URL` for LLM gateways |
+| `SSL certificate verification failed` | Corporate proxy intercepting TLS with its own cert | Set `NODE_EXTRA_CA_CERTS=/path/to/ca-bundle.pem`; never set `NODE_TLS_REJECT_UNAUTHORIZED=0` |
+| `403 x-deny-reason: host_not_allowed` | Cloud session / routine blocked by network policy | Edit cloud environment settings: change Network access to Custom and add the blocked domain to Allowed domains |
 
 ### Request Errors
 
-| Error | Cause | Recovery |
+| Error | Cause | Fix |
 | :--- | :--- | :--- |
-| `Prompt is too long` | Conversation + files exceed model's context window | Run `/compact` or `/clear`; run `/context` for breakdown; disable unused MCP servers; trim CLAUDE.md |
-| `Error during compaction: Conversation too long` | Not enough free context to produce the compaction summary | Press Esc twice to step back; then `/compact`; or run `/clear` and `/resume` |
-| `Request too large` (max 30 MB) | HTTP request body too large before tokenization | Press Esc twice to remove oversized content; reference large files by path instead of pasting |
-| `Image was too large` | Pasted image exceeds API limits | Resize to under 8000px on longest edge (2000px when many images in context); take tighter screenshot |
-| `Unable to resize image` | Image processor could not downscale image | Convert to PNG/JPEG/GIF/WebP; resize below stated limit before attaching |
-| `PDF too large` / `PDF is password protected` / `PDF not valid` | PDF exceeds 100 pages/32 MB, is encrypted, or corrupt | Extract text with `pdftotext`; remove password; re-export from source application |
-| `Extra inputs are not permitted` | Gateway stripped `anthropic-beta` header | Configure gateway to forward `anthropic-beta`; or set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` |
-| `There's an issue with the selected model` | Model name not recognized or no access | Run `/model`; use alias (e.g., `sonnet`) instead of versioned ID; check `ANTHROPIC_MODEL` env var and settings files in priority order |
-| `Claude Opus is not available with the Claude Pro plan` | Plan does not include selected model | Run `/model` and pick an included model; re-authenticate if you recently upgraded |
-| `thinking.type.enabled is not supported for this model` | Claude Code version too old for Opus 4.7/4.8 | Run `claude update`; Opus 4.7 needs v2.1.111+, Opus 4.8 needs v2.1.154+ |
-| `max_tokens must be greater than thinking.budget_tokens` | Thinking budget exceeds provider's output limit | Lower `MAX_THINKING_TOKENS` or raise `CLAUDE_CODE_MAX_OUTPUT_TOKENS` |
-| `API Error: 400 due to tool use concurrency issues` | Conversation history corrupted after interrupted tool call or mid-stream edit | Run `claude update` if on Opus 4.7/4.8 before v2.1.156; then run `/rewind` to step back to a clean checkpoint |
-| Usage Policy refusal | Content in conversation triggered Usage Policy check | Press Esc twice or `/rewind` to step back; rephrase; or `/clear` to start fresh |
+| `Prompt is too long` | Conversation + files exceeds model context window | `/compact` or `/clear`; `/context` to inspect usage; disable unused MCP servers; trim `CLAUDE.md` |
+| `Error during compaction: Conversation too long` | Not enough free context for compaction summary | Press Esc twice to step back several turns, then `/compact`; or `/clear` |
+| `Request too large (max 30 MB)` | Raw request body exceeded byte limit | Press Esc twice; reference large files by path instead of pasting |
+| `Image was too large` | Pasted image exceeds size/dimension limits | Resize before pasting (max 8000px longest edge; 2000px with many images in context); as of v2.1.142 Claude Code auto-replaces with placeholder |
+| `Unable to resize image` | Native image processor failed | Convert to PNG/JPEG/GIF/WebP; resize below stated limit |
+| `PDF too large` / `PDF is password protected` | PDF exceeds 100 pages / 32 MB, or is protected | Read by page range; extract text with `pdftotext`; remove password or re-export |
+| `Extra inputs are not permitted` | Proxy/gateway dropped `anthropic-beta` header | Configure gateway to forward `anthropic-beta`; fallback: set `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1` |
+| `There's an issue with the selected model` | Model not recognized or no account access | Interactive: `/model`; non-interactive: `--model` flag or `ANTHROPIC_MODEL`; use aliases (`sonnet`, `opus`) instead of versioned IDs |
+| `Claude Opus is not available with the Claude Pro plan` | Plan does not include selected model | `/model` to pick an included model; `/logout` + `/login` after upgrading plan |
+| `thinking.type.enabled is not supported for this model` | Claude Code version too old for Opus 4.7 / 4.8 | `claude update`; Opus 4.7 needs v2.1.111+, Opus 4.8 needs v2.1.154+ |
+| `max_tokens must be greater than thinking.budget_tokens` | Extended thinking budget exceeds provider's output limit | Lower `MAX_THINKING_TOKENS` or raise `CLAUDE_CODE_MAX_OUTPUT_TOKENS` |
+| `400 due to tool use concurrency issues` | Conversation history has inconsistent tool/thinking blocks | Update to v2.1.156+ for Opus 4.7/4.8; `/rewind` or Esc twice to step back to a checkpoint |
+| Usage Policy refusal | Content triggered Usage Policy check | Press Esc twice or `/rewind` to step back and rephrase; `/clear` for a fresh session |
 
 ### Response Quality Checklist
 
-When responses seem lower quality than expected with no error shown:
+When responses seem lower quality but no error is shown:
 
-| Check | Command | Notes |
-| :--- | :--- | :--- |
-| Model selection | `/model` | Confirm you are on the intended model; check `ANTHROPIC_MODEL` env var |
-| Effort level | `/effort` | Raise for hard debugging or design work; use `ultrathink` shortcut |
-| Context pressure | `/context` | Near-full window degrades quality; run `/compact` or `/clear` |
-| Stale instructions | `/doctor` | Flags oversized memory files and subagent definitions |
+| Check | Command |
+| :--- | :--- |
+| Confirm active model | `/model` |
+| Check reasoning effort level | `/effort` |
+| Inspect context window usage | `/context` |
+| Check for oversized memory/MCP definitions | `/doctor` |
+| Compact or clear context if near capacity | `/compact` or `/clear` |
+| Step back past a bad turn and rephrase | Esc twice or `/rewind` |
+| Report a regression | `/feedback` |
 
-When a response goes wrong, **rewind rather than correct in-thread**: press Esc twice or run `/rewind` to step back before the bad turn and rephrase. Correcting in-thread anchors later answers to the wrong attempt.
-
-Claude Code does not silently change model versions. It can switch in three cases: a configured `--fallback-model` activates (shown in transcript), a Bedrock/Vertex startup check finds the default unavailable, or automatic model fallback on Fable 5 (shown in transcript).
+Claude Code does not silently change models except in three cases: a configured `--fallback-model` takes over after an availability error; a Bedrock/Vertex startup check finds the default model unavailable; or Fable 5 automatic model fallback moves to the default Opus model.
 
 ### Reporting Errors
 
-| Situation | Action |
-| :--- | :--- |
-| Error not listed here or fix did not help | Run `/feedback` inside Claude Code to send transcript + description to Anthropic |
-| `/feedback` unavailable (Bedrock, Vertex, Foundry) | `/feedback` saves a local archive to send to your account rep |
-| Local config problem | Run `/doctor` |
-| Active incident | Check status.claude.com |
-| Known GitHub issues | Search github.com/anthropics/claude-code/issues |
+- Run `/feedback` inside Claude Code to send the transcript and description to Anthropic (also offers to open a prefilled GitHub issue)
+- Run `/doctor` to check for local configuration problems
+- Check [status.claude.com](https://status.claude.com) for active incidents
+- Search [existing issues](https://github.com/anthropics/claude-code/issues) on GitHub
 
-Other guides for related errors:
-- MCP connection/auth failures: see MCP documentation
-- Hook script failures: see Hooks documentation (`/hooks` > Debug hooks)
-- Install / filesystem permission errors: see Troubleshoot installation and login
+For errors from other components: MCP issues → see `mcp-doc`; hook failures → see `hooks-doc`; installation errors → see the troubleshoot-install doc.
 
 ## Full Documentation
 
 For the complete official documentation, see the reference files:
 
-- [Error Reference](references/claude-code-errors.md) — Complete error catalog with messages, causes, and step-by-step recovery for every runtime error Claude Code can display
+- [Error reference](references/claude-code-errors.md) — Complete list of runtime error messages with causes and recovery steps
 
 ## Sources
 
-- Error Reference: https://code.claude.com/docs/en/errors.md
+- Error reference: https://code.claude.com/docs/en/errors.md
