@@ -52,6 +52,10 @@
       {
         "url": "https://code.claude.com/docs/en/plugin-hints.md",
         "file": "claude-code-plugin-hints.md"
+      },
+      {
+        "url": "https://code.claude.com/docs/en/plugin-relevance.md",
+        "file": "claude-code-plugin-relevance.md"
       }
     ],
     "mcp-doc": [

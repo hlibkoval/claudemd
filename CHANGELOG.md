@@ -2,6 +2,40 @@
 
 All notable upstream documentation changes detected by `/update` are documented here.
 
+## 26.6.23
+
+**22 references updated across 11 skills:** agent-sdk-doc, agent-teams-doc, best-practices-doc, cli-doc, cloud-providers-doc, errors-doc, features-doc, mcp-doc, operations-doc, plugins-doc, settings-doc, skills-doc, sub-agents-doc
+
+### New
+
+- **`claude mcp login` / `claude mcp logout` CLI commands** — run a configured MCP server's OAuth flow from the shell without opening the `/mcp` panel; `--no-browser` flag prints the authorization URL for SSH sessions; `claude mcp logout <name>` clears stored credentials (cli-doc, mcp-doc)
+- **`CLAUDE_CODE_RETRY_WATCHDOG` env var** — set to `1` in unattended sessions (CI, eval harnesses) to retry `429` and `529` capacity errors indefinitely instead of stopping after `CLAUDE_CODE_MAX_RETRIES`; backs off up to 5 minutes between attempts (agent-sdk-doc, errors-doc, settings-doc)
+- **`CLAUDE_CODE_FORCE_STRIKETHROUGH` env var** — set to `1` to force strikethrough rendering for `~~text~~` on terminals where it is supported but not auto-detected (e.g. over SSH without `TERM_PROGRAM` forwarded) (settings-doc)
+- **`respondToBashCommands` setting** — controls whether Claude responds to the output of `!` shell commands automatically; default `true` (v2.1.186 behavior); set to `false` to restore context-only behavior (cli-doc, settings-doc)
+- **`teammateMode: "iterm2"` value** — explicitly targets iTerm2 native split panes via the `it2` CLI; shows an install prompt when `it2` is missing; also exposed as `--teammate-mode iterm2` CLI flag (agent-teams-doc, cli-doc, settings-doc)
+- **Background subagent permission prompts** — as of v2.1.186 background subagents surface permission prompts in the main session naming which subagent is asking; pressing Esc denies only that tool call without stopping the subagent; replaces the previous auto-deny behavior (cli-doc, sub-agents-doc)
+- **`/login` "refresh credentials" option for Claude Platform on AWS** — when `awsAuthRefresh` is configured, `/login` shows a **Claude Platform on AWS · refresh credentials** option that re-reads AWS credentials without restarting (cloud-providers-doc)
+- **`relevance` marketplace plugin field** — signals to Claude Code when to suggest a plugin to users; takes effect only for admin-allowlisted marketplaces; requires v2.1.152 (plugins-doc)
+- **v2.1.186 release notes** — full release entry documenting all changes shipped in v2.1.186 (operations-doc)
+
+### Changed
+
+- **`CLAUDE_CODE_MAX_RETRIES` capped at 15** — values above 15 are now clamped; for longer retry windows in unattended sessions use `CLAUDE_CODE_RETRY_WATCHDOG` instead (agent-sdk-doc, errors-doc, settings-doc)
+- **`CLAUDE_CODE_CONNECT_TIMEOUT_MS` removed** — marked as removed in v2.1.186; now a no-op; use `API_TIMEOUT_MS` for per-request timeout (settings-doc)
+- **Shell mode `!` auto-responds** — Claude now responds to `!` command output automatically upon landing in the transcript; `respondToBashCommands: false` restores the prior context-only behavior (cli-doc)
+- **`/review [PR]` uses `/code-review medium` engine** — description updated to clarify it reviews GitHub pull requests by number using the same engine as `/code-review`, with a PR picker when no argument is given (cli-doc)
+- **Ultrareview comparison table expanded** — comparison now covers `/code-review`, `/review <pr>`, and `/code-review ultra` as three distinct commands with separate rows for target, depth, duration, cost, and best-use (best-practices-doc)
+- **`/workflows` agent list filter key `f`** — press `f` in the agent detail view to filter the agent list by status; press again to cycle (best-practices-doc)
+- **`SendMessage` tool no longer requires agent teams** — resuming subagents by agent ID or name now works without `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`; structured team-protocol messages still require agent teams (cli-doc, sub-agents-doc)
+- **`CLAUDE_CODE_FORCE_SESSION_PERSISTENCE` description updated** — tmux case now auto-detected since v2.1.178; doc updated to mention `screen` sessions and remove tmux workaround guidance (settings-doc)
+- **`--add-dir` settings loading clarified** — table entry updated to note that both `settings.json` and `settings.local.json` are loaded, and that only `enabledPlugins` and `extraKnownMarketplaces` keys apply (settings-doc)
+- **Malformed skill frontmatter handling** — Claude Code now loads the skill body with empty metadata instead of failing silently; `/skill-name` still works but description matching is unavailable; `--debug` shows the parse error (skills-doc)
+- **Git-based plugin source pinning caveat for AWS CodeCommit** — docs now note that fetching by SHA requires the host to support it; AWS CodeCommit does not, so `ref` must still exist there (plugins-doc)
+
+### Removed
+
+- Minor wording/formatting updates across features-doc (prompt library tip updated from `/review` to `/code-review`), operations-doc (monitoring usage `CLAUDE_CODE_MAX_RETRIES` cap note)
+
 ## 26.6.22
 
 **14 references updated across 7 skills:** agent-sdk-doc, cli-doc, features-doc, headless-doc, ide-doc, mcp-doc, operations-doc, settings-doc
